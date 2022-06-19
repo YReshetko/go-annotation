@@ -23,6 +23,8 @@ const (
 
 type Node interface {
 	Name() string
+	Dir() string
+	FileName() string
 	GoNode() ast.Node
 	FileSpec() *ast.File
 	NodeType() NodeType
@@ -39,6 +41,8 @@ var _ Node = (*internalNode)(nil)
 type internalNode struct {
 	name     string
 	goNode   ast.Node
+	dir      string
+	fileName string
 	fileSpec *ast.File
 	inner    []Node
 	nodeType NodeType
@@ -52,6 +56,8 @@ func newInternalNode(n nodes.Node) internalNode {
 	return internalNode{
 		name:     n.Name,
 		goNode:   n.GoNode,
+		dir:      n.Dir,
+		fileName: n.FileName,
 		fileSpec: n.FileSpec,
 		inner:    intNode,
 		nodeType: map[nodes.NodeType]NodeType{
@@ -66,6 +72,12 @@ func newInternalNode(n nodes.Node) internalNode {
 
 func (i internalNode) Name() string {
 	return i.name
+}
+func (i internalNode) Dir() string {
+	return i.dir
+}
+func (i internalNode) FileName() string {
+	return i.fileName
 }
 
 func (i internalNode) GoNode() ast.Node {
