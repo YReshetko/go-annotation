@@ -28,7 +28,7 @@ func ReadProject(path string) ([]Node, error) {
 				processedNodes, proceed := processNode(node)
 				for _, n := range processedNodes {
 					n.FileSpec = fileSpec
-					n.Dir = strings.TrimRight(path, info.Name())
+					n.Dir = dirByPath(path, info.Name())
 					n.FileName = info.Name()
 					nodes = append(nodes, n)
 				}
@@ -41,6 +41,15 @@ func ReadProject(path string) ([]Node, error) {
 	})
 
 	return nodes, err
+}
+
+func dirByPath(fullFilePath, fileName string) string {
+	dir := strings.TrimRight(fullFilePath, fileName)
+	if dir[len(dir)-1] == '/' {
+		return dir[:len(dir)-1]
+	}
+	return dir
+
 }
 
 func isGoFile(info fs.FileInfo) bool {
