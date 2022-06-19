@@ -4,13 +4,16 @@ import (
 	"github.com/YReshetko/go-annotation/internal/annotation/tag"
 	"github.com/YReshetko/go-annotation/internal/environment"
 	"github.com/YReshetko/go-annotation/internal/nodes"
+	"github.com/YReshetko/go-annotation/internal/output"
 )
 
 func Process() {
 	args := environment.LoadArguments()
-	nodes := panicOnErr(nodes.ReadProject(args.ProjectPath))
+	annotatedNodes := panicOnErr(nodes.ReadProject(args.ProjectPath))
 
-	for _, node := range nodes {
+	usedProcessors := map[AnnotationProcessor]struct{}{}
+
+	for _, node := range annotatedNodes {
 		intNode := newInternalNode(node)
 
 		for _, annotation := range node.Annotations {
@@ -23,11 +26,24 @@ func Process() {
 				continue
 			}
 
+			usedProcessors[p] = struct{}{}
 			err := p.Process(tag.Parse(a, annotation), intNode)
 			if err != nil {
 				panic(err)
 			}
 		}
+	}
+	for processor, _ := range usedProcessors {
+		pOut := processor.Output()
+		o := map[string][]byte{}
+		// TODO validate duplications
+		for path, data := range pOut {
+			o[string(path)] = data
+		}
+		if err := output.Save(args, o); err != nil {
+			panic(err)
+		}
+
 	}
 }
 
