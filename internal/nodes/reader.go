@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"io/fs"
 	"path/filepath"
+	"strings"
 
 	"github.com/YReshetko/go-annotation/internal/annotation"
 )
@@ -27,7 +28,7 @@ func ReadProject(path string) ([]Node, error) {
 				processedNodes, proceed := processNode(node)
 				for _, n := range processedNodes {
 					n.FileSpec = fileSpec
-					n.Dir = path
+					n.Dir = strings.TrimRight(path, info.Name())
 					n.FileName = info.Name()
 					nodes = append(nodes, n)
 				}
