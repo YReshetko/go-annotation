@@ -19,6 +19,8 @@ const (
 type Node struct {
 	Annotations []annotation.Annotation
 	Name        string
+	Dir         string
+	FileName    string
 	GoNode      ast.Node
 	FileSpec    *ast.File
 	Inner       []Node

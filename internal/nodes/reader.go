@@ -27,6 +27,8 @@ func ReadProject(path string) ([]Node, error) {
 				processedNodes, proceed := processNode(node)
 				for _, n := range processedNodes {
 					n.FileSpec = fileSpec
+					n.Dir = path
+					n.FileName = info.Name()
 					nodes = append(nodes, n)
 				}
 
