@@ -27,9 +27,9 @@ func ReadProject(path string) ([]Node, error) {
 			ast.Inspect(fileSpec, func(node ast.Node) bool {
 				processedNodes, proceed := processNode(node)
 				for _, n := range processedNodes {
-					n.FileSpec = fileSpec
-					n.Dir = dirByPath(path, info.Name())
-					n.FileName = info.Name()
+					n.Metadata.FileSpec = fileSpec
+					n.Metadata.Dir = dirByPath(path, info.Name())
+					n.Metadata.FileName = info.Name()
 					nodes = append(nodes, n)
 				}
 
@@ -65,10 +65,12 @@ func processNode(node ast.Node) ([]Node, bool) {
 		}
 		return []Node{
 			{
+				Metadata: Metadata{
+					Name: v.Name.Name,
+					Type: Function,
+				},
 				Annotations: a,
-				Name:        v.Name.Name,
 				GoNode:      v,
-				Type:        Function,
 			},
 		}, false
 
@@ -99,11 +101,13 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 				return nil
 			}
 			return &Node{
+				Metadata: Metadata{
+					Name: v.Name.Name,
+					Type: Structure,
+				},
 				Annotations: a,
-				Name:        v.Name.Name,
 				GoNode:      v,
 				Inner:       fields,
-				Type:        Structure,
 			}
 
 		case *ast.InterfaceType:
@@ -112,10 +116,12 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 				return nil
 			}
 			return &Node{
+				Metadata: Metadata{
+					Name: v.Name.Name,
+					Type: Interface,
+				},
 				Annotations: a,
-				Name:        v.Name.Name,
 				GoNode:      v,
-				Type:        Interface,
 			}
 		}
 	case *ast.ValueSpec:
@@ -128,10 +134,12 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 			return nil
 		}
 		return &Node{
+			Metadata: Metadata{
+				Name: v.Names[0].Name,
+				Type: Variable,
+			},
 			Annotations: a,
-			Name:        v.Names[0].Name,
 			GoNode:      v,
-			Type:        Variable,
 		}
 	}
 	return nil
@@ -153,10 +161,12 @@ func processFields(params *ast.FieldList) []Node {
 			continue
 		}
 		nodes = append(nodes, Node{
+			Metadata: Metadata{
+				Name: field.Names[0].Name,
+				Type: Field,
+			},
 			Annotations: a,
-			Name:        field.Names[0].Name,
 			GoNode:      field,
-			Type:        Field,
 		})
 	}
 	return nodes

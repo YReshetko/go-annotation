@@ -16,13 +16,17 @@ const (
 	Variable  NodeType = "variable"
 )
 
+type Metadata struct {
+	Name     string
+	Dir      string
+	FileName string
+	Type     NodeType
+	FileSpec *ast.File
+}
+
 type Node struct {
 	Annotations []annotation.Annotation
-	Name        string
-	Dir         string
-	FileName    string
+	Metadata    Metadata
 	GoNode      ast.Node
-	FileSpec    *ast.File
 	Inner       []Node
-	Type        NodeType
 }

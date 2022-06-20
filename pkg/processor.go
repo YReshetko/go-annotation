@@ -39,13 +39,8 @@ type AnnotationProcessor interface {
 var _ Node = (*internalNode)(nil)
 
 type internalNode struct {
-	name     string
-	goNode   ast.Node
-	dir      string
-	fileName string
-	fileSpec *ast.File
-	inner    []Node
-	nodeType NodeType
+	n     nodes.Node
+	inner []Node
 }
 
 func newInternalNode(n nodes.Node) internalNode {
@@ -54,42 +49,37 @@ func newInternalNode(n nodes.Node) internalNode {
 		intNode[i] = newInternalNode(node)
 	}
 	return internalNode{
-		name:     n.Name,
-		goNode:   n.GoNode,
-		dir:      n.Dir,
-		fileName: n.FileName,
-		fileSpec: n.FileSpec,
-		inner:    intNode,
-		nodeType: map[nodes.NodeType]NodeType{
-			nodes.Field:     Field,
-			nodes.Structure: Structure,
-			nodes.Interface: Interface,
-			nodes.Function:  Function,
-			nodes.Variable:  Variable,
-		}[n.Type],
+		n:     n,
+		inner: intNode,
 	}
 }
 
 func (i internalNode) Name() string {
-	return i.name
+	return i.n.Metadata.Name
 }
 func (i internalNode) Dir() string {
-	return i.dir
+	return i.n.Metadata.Dir
 }
 func (i internalNode) FileName() string {
-	return i.fileName
+	return i.n.Metadata.FileName
 }
 
 func (i internalNode) GoNode() ast.Node {
-	return i.goNode
+	return i.n.GoNode
 }
 
 func (i internalNode) FileSpec() *ast.File {
-	return i.fileSpec
+	return i.n.Metadata.FileSpec
 }
 
 func (i internalNode) NodeType() NodeType {
-	return i.nodeType
+	return map[nodes.NodeType]NodeType{
+		nodes.Field:     Field,
+		nodes.Structure: Structure,
+		nodes.Interface: Interface,
+		nodes.Function:  Function,
+		nodes.Variable:  Variable,
+	}[i.n.Metadata.Type]
 }
 
 func (i internalNode) InnerNodes() []Node {
