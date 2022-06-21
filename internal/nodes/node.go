@@ -13,6 +13,7 @@ const (
 	Structure NodeType = "structure"
 	Field     NodeType = "field"
 	Function  NodeType = "function"
+	Method    NodeType = "method"
 	Variable  NodeType = "variable"
 )
 

@@ -5,11 +5,16 @@ import (
 )
 
 func CastAnnotation[T Annotation](a Annotation) T {
-	t, ok := a.(T)
+	t, ok := TryCastAnnotation[T](a)
 	if !ok {
 		panic("unable parse annotation")
 	}
 	return t
+}
+
+func TryCastAnnotation[T Annotation](a Annotation) (T, bool) {
+	t, ok := a.(T)
+	return t, ok
 }
 
 func MethodReceiver(decl *ast.FuncDecl) string {

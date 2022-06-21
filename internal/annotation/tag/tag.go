@@ -151,7 +151,7 @@ func newTag(t string) (tag, error) {
 
 	return tag{
 		required:     strings.ToLower(m["required"]) == "true",
-		defaultValue: m["default"],
+		defaultValue: m["defaultValue"],
 		name:         m["name"],
 	}, nil
 }

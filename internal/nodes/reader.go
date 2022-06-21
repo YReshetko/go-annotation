@@ -63,11 +63,15 @@ func processNode(node ast.Node) ([]Node, bool) {
 		if !ok {
 			return nil, false
 		}
+		nodeType := Function
+		if v.Recv != nil {
+			nodeType = Method
+		}
 		return []Node{
 			{
 				Metadata: Metadata{
 					Name: v.Name.Name,
-					Type: Function,
+					Type: nodeType,
 				},
 				Annotations: a,
 				GoNode:      v,
@@ -96,7 +100,7 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 		switch t := v.Type.(type) {
 		case *ast.StructType:
 			a, ok := annotation.Parse(n.Doc.Text())
-			fields := processFields(t.Fields)
+			fields := processFields(t.Fields, Field)
 			if len(fields) == 0 && !ok {
 				return nil
 			}
@@ -112,7 +116,8 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 
 		case *ast.InterfaceType:
 			a, ok := annotation.Parse(n.Doc.Text())
-			if !ok {
+			fields := processFields(t.Methods, Method)
+			if len(fields) == 0 && !ok {
 				return nil
 			}
 			return &Node{
@@ -122,6 +127,7 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 				},
 				Annotations: a,
 				GoNode:      v,
+				Inner:       fields,
 			}
 		}
 	case *ast.ValueSpec:
@@ -145,7 +151,7 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 	return nil
 }
 
-func processFields(params *ast.FieldList) []Node {
+func processFields(params *ast.FieldList, nodeType NodeType) []Node {
 	if params == nil {
 		return nil
 	}
@@ -156,14 +162,11 @@ func processFields(params *ast.FieldList) []Node {
 
 	nodes := []Node{}
 	for _, field := range params.List {
-		a, ok := annotation.Parse(field.Doc.Text())
-		if !ok {
-			continue
-		}
+		a, _ := annotation.Parse(field.Doc.Text())
 		nodes = append(nodes, Node{
 			Metadata: Metadata{
 				Name: field.Names[0].Name,
-				Type: Field,
+				Type: nodeType,
 			},
 			Annotations: a,
 			GoNode:      field,

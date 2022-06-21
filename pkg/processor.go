@@ -3,6 +3,7 @@ package pkg
 import (
 	"go/ast"
 
+	"github.com/YReshetko/go-annotation/internal/annotation/tag"
 	"github.com/YReshetko/go-annotation/internal/nodes"
 )
 
@@ -18,6 +19,7 @@ const (
 	Structure NodeType = "structure"
 	Field     NodeType = "field"
 	Function  NodeType = "function"
+	Method    NodeType = "method"
 	Variable  NodeType = "variable"
 )
 
@@ -29,6 +31,7 @@ type Node interface {
 	FileSpec() *ast.File
 	NodeType() NodeType
 	InnerNodes() []Node
+	Annotations() []Annotation
 }
 
 type AnnotationProcessor interface {
@@ -36,52 +39,71 @@ type AnnotationProcessor interface {
 	Output() map[Path]Data
 }
 
-var _ Node = (*internalNode)(nil)
+var _ Node = (*node)(nil)
 
-type internalNode struct {
-	n     nodes.Node
-	inner []Node
+type node struct {
+	n           nodes.Node
+	inner       []node
+	annotations []Annotation
 }
 
-func newInternalNode(n nodes.Node) internalNode {
-	intNode := make([]Node, len(n.Inner))
+func newNode(n nodes.Node) node {
+	intNode := make([]node, len(n.Inner))
 	for i, node := range n.Inner {
-		intNode[i] = newInternalNode(node)
+		intNode[i] = newNode(node)
 	}
-	return internalNode{
-		n:     n,
-		inner: intNode,
+	var annptations []Annotation
+	for _, annotation := range n.Annotations {
+		a, ok := annotations[annotation.Name()]
+		if !ok {
+			continue
+		}
+		annptations = append(annptations, tag.Parse(a, annotation))
+	}
+	return node{
+		n:           n,
+		inner:       intNode,
+		annotations: annptations,
 	}
 }
 
-func (i internalNode) Name() string {
+func (i node) Name() string {
 	return i.n.Metadata.Name
 }
-func (i internalNode) Dir() string {
+func (i node) Dir() string {
 	return i.n.Metadata.Dir
 }
-func (i internalNode) FileName() string {
+func (i node) FileName() string {
 	return i.n.Metadata.FileName
 }
 
-func (i internalNode) GoNode() ast.Node {
+func (i node) GoNode() ast.Node {
 	return i.n.GoNode
 }
 
-func (i internalNode) FileSpec() *ast.File {
+func (i node) FileSpec() *ast.File {
 	return i.n.Metadata.FileSpec
 }
 
-func (i internalNode) NodeType() NodeType {
+func (i node) NodeType() NodeType {
 	return map[nodes.NodeType]NodeType{
 		nodes.Field:     Field,
 		nodes.Structure: Structure,
 		nodes.Interface: Interface,
 		nodes.Function:  Function,
+		nodes.Method:    Method,
 		nodes.Variable:  Variable,
 	}[i.n.Metadata.Type]
 }
 
-func (i internalNode) InnerNodes() []Node {
-	return i.inner
+func (i node) InnerNodes() []Node {
+	out := make([]Node, len(i.inner))
+	for i, n := range i.inner {
+		out[i] = n
+	}
+	return out
+}
+
+func (i node) Annotations() []Annotation {
+	return i.annotations
 }
