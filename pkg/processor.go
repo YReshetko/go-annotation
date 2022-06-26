@@ -4,7 +4,7 @@ import (
 	"go/ast"
 
 	"github.com/YReshetko/go-annotation/internal/annotation/tag"
-	"github.com/YReshetko/go-annotation/internal/nodes"
+	"github.com/YReshetko/go-annotation/internal/module"
 )
 
 type Path string
@@ -34,20 +34,28 @@ type Node interface {
 	Annotations() []Annotation
 }
 
+type Selector struct {
+	PackageImport string
+	TypeName      string
+}
+
 type AnnotationProcessor interface {
 	Process(annotation Annotation, node Node) error
 	Output() map[Path]Data
+	SetLookup(lookup Lookup)
 }
+
+type Lookup func(Node, Selector) Node
 
 var _ Node = (*node)(nil)
 
 type node struct {
-	n           nodes.Node
+	n           module.Node
 	inner       []node
 	annotations []Annotation
 }
 
-func newNode(n nodes.Node) node {
+func newNode(n module.Node) node {
 	intNode := make([]node, len(n.Inner))
 	for i, node := range n.Inner {
 		intNode[i] = newNode(node)
@@ -86,13 +94,13 @@ func (i node) FileSpec() *ast.File {
 }
 
 func (i node) NodeType() NodeType {
-	return map[nodes.NodeType]NodeType{
-		nodes.Field:     Field,
-		nodes.Structure: Structure,
-		nodes.Interface: Interface,
-		nodes.Function:  Function,
-		nodes.Method:    Method,
-		nodes.Variable:  Variable,
+	return map[module.NodeType]NodeType{
+		module.Field:     Field,
+		module.Structure: Structure,
+		module.Interface: Interface,
+		module.Function:  Function,
+		module.Method:    Method,
+		module.Variable:  Variable,
 	}[i.n.Metadata.Type]
 }
 

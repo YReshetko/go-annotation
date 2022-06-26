@@ -8,7 +8,9 @@ import (
 	"github.com/YReshetko/go-annotation/pkg"
 )
 
-type Processor struct{}
+type Processor struct {
+	lookup pkg.Lookup
+}
 
 func init() {
 	p := &Processor{}
@@ -36,43 +38,77 @@ func (p *Processor) processMapper(m Mapper, node pkg.Node) error {
 
 	fmt.Println("Mapper: ", m.Name, node.NodeType(), len(node.InnerNodes()))
 	for _, n := range node.InnerNodes() {
-		fmt.Printf("%T\n", n.GoNode())
-		f, ok := n.GoNode().(*ast.Field)
-		if !ok {
-			return fmt.Errorf("expected *ast.Field, but got: %T", n.GoNode())
-		}
-		ft, ok := f.Type.(*ast.FuncType)
-		if !ok {
-			return fmt.Errorf("expected *ast.Field, but got: %T", f.Type)
+		fs, err := pkg.FunctionSignature(n.GoNode())
+		if err != nil {
+			return err
 		}
 
-		fmt.Println("Function name", f.Names[0].Name, "names:", f.Names)
+		for _, param := range fs.Params {
+			if param.Selector != "" {
+				packageImport := findImport(node.FileSpec(), param.Selector)
+				externalNode := p.lookup(node, pkg.Selector{
+					PackageImport: packageImport,
+					TypeName:      param.TypeName,
+				})
 
-		for _, v := range ft.Params.List {
-			fmt.Println("Params", v.Names)
-		}
-		/*	for _, v := range ft.TypeParams.List {
-			fmt.Println("Type", v.Names)
-		}*/
-		for _, v := range ft.Results.List {
-			fmt.Println("Results", v.Names)
+				fmt.Printf("External node: %+v\n", externalNode)
+			}
 		}
 
-		fmt.Printf("%T\n", f.Type)
+		fmt.Printf("Function signature: %+v\n", fs)
 
-		for _, a2 := range n.Annotations() {
-			fmt.Println("internal Mapping:", pkg.CastAnnotation[Mapping](a2), n.NodeType(), len(n.InnerNodes()))
-		}
+		/*		for _, a2 := range n.Annotations() {
+				fmt.Println("internal Mapping:", pkg.CastAnnotation[Mapping](a2), n.NodeType(), len(n.InnerNodes()))
+			}*/
 
 	}
 	return nil
 }
 
+func findImport(f *ast.File, alias string) string {
+	var found bool
+	var out string
+	ast.Inspect(f, func(node ast.Node) bool {
+		if found {
+			return false
+		}
+		imp, ok := node.(*ast.ImportSpec)
+		if !ok {
+			return true
+		}
+		impPath := unquote(imp.Path.Value)
+		if imp.Name != nil && imp.Name.Name == alias {
+			found = true
+			out = impPath
+			return false
+		}
+		if strings.HasSuffix(impPath, "/"+alias) || strings.HasSuffix(strings.ReplaceAll(impPath, "-", "_"), "/"+alias) {
+			found = true
+			out = impPath
+			return false
+		}
+		return true
+	})
+
+	return out
+}
+
+func unquote(s string) string {
+	out := strings.TrimSpace(s)
+	if out[0] == '"' && out[len(out)-1] == '"' {
+		return out[1 : len(out)-1]
+	}
+	return out
+}
+
 func (p *Processor) processMapping(m Mapping, node pkg.Node) error {
-	fmt.Println("Mapping: ", m.Source, m.Target, node.NodeType(), len(node.InnerNodes()))
+	// fmt.Println("Mapping: ", m.Source, m.Target, node.NodeType(), len(node.InnerNodes()))
 	return nil
 }
 
 func (p *Processor) Output() map[pkg.Path]pkg.Data {
 	return nil
+}
+func (p *Processor) SetLookup(lookup pkg.Lookup) {
+	p.lookup = lookup
 }

@@ -1,68 +1,55 @@
-package nodes
+package module
 
 import (
 	"go/ast"
-	"go/parser"
-	"go/token"
-	"io/fs"
-	"path/filepath"
-	"strings"
 
 	"github.com/YReshetko/go-annotation/internal/annotation"
 )
 
-func ReadProject(path string) ([]Node, error) {
-	nodes := []Node{}
-	err := filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if isGoFile(info) {
-			fset := token.NewFileSet()
-			fileSpec, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
-			if err != nil {
-				return err
-			}
+type NodeType string
 
-			ast.Inspect(fileSpec, func(node ast.Node) bool {
-				processedNodes, proceed := processNode(node)
-				for _, n := range processedNodes {
-					n.Metadata.FileSpec = fileSpec
-					n.Metadata.Dir = dirByPath(path, info.Name())
-					n.Metadata.FileName = info.Name()
-					nodes = append(nodes, n)
-				}
+const (
+	Interface NodeType = "interface"
+	Structure NodeType = "structure"
+	Field     NodeType = "field"
+	Function  NodeType = "function"
+	Method    NodeType = "method"
+	Variable  NodeType = "variable"
+)
 
-				return proceed
-			})
-
-		}
-		return nil
-	})
-
-	return nodes, err
+type Metadata struct {
+	Name     string
+	Dir      string
+	FileName string
+	Type     NodeType
+	FileSpec *ast.File
 }
 
-func dirByPath(fullFilePath, fileName string) string {
-	dir := strings.TrimRight(fullFilePath, fileName)
-	if dir[len(dir)-1] == '/' {
-		return dir[:len(dir)-1]
+type Node struct {
+	Annotations []annotation.Annotation
+	Metadata    Metadata
+	GoNode      ast.Node
+	Inner       []Node
+
+	Selector selector
+}
+
+func (n Node) hasAnnotations() bool {
+	if len(n.Annotations) > 0 {
+		return true
 	}
-	return dir
-
-}
-
-func isGoFile(info fs.FileInfo) bool {
-	return !info.IsDir() && info.Name()[len(info.Name())-2:] == "go"
+	for _, node := range n.Inner {
+		if node.hasAnnotations() {
+			return true
+		}
+	}
+	return false
 }
 
 func processNode(node ast.Node) ([]Node, bool) {
 	switch v := node.(type) {
 	case *ast.FuncDecl:
-		a, ok := annotation.Parse(v.Doc.Text())
-		if !ok {
-			return nil, false
-		}
+		a, _ := annotation.Parse(v.Doc.Text())
 		nodeType := Function
 		if v.Recv != nil {
 			nodeType = Method
@@ -95,13 +82,17 @@ func processNode(node ast.Node) ([]Node, bool) {
 }
 
 func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
+	a, _ := annotation.Parse(n.Doc.Text())
 	switch v := spec.(type) {
 	case *ast.TypeSpec:
 		switch t := v.Type.(type) {
 		case *ast.StructType:
-			a, ok := annotation.Parse(n.Doc.Text())
+			ad, ok := annotation.Parse(v.Doc.Text())
+			if ok {
+				a = append(a, ad...)
+			}
 			fields := processFields(t.Fields, Field)
-			if len(fields) == 0 && !ok {
+			if len(fields) == 0 {
 				return nil
 			}
 			return &Node{
@@ -115,9 +106,12 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 			}
 
 		case *ast.InterfaceType:
-			a, ok := annotation.Parse(n.Doc.Text())
+			ad, ok := annotation.Parse(v.Doc.Text())
+			if ok {
+				a = append(a, ad...)
+			}
 			fields := processFields(t.Methods, Method)
-			if len(fields) == 0 && !ok {
+			if len(fields) == 0 {
 				return nil
 			}
 			return &Node{
@@ -135,9 +129,9 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 		if len(doc) == 0 {
 			doc = v.Doc.Text()
 		}
-		a, ok := annotation.Parse(doc)
-		if !ok {
-			return nil
+		ad, ok := annotation.Parse(doc)
+		if ok {
+			a = append(a, ad...)
 		}
 		return &Node{
 			Metadata: Metadata{
