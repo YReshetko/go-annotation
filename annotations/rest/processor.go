@@ -126,3 +126,5 @@ func (p *Processor) Output() map[annotation.Path]annotation.Data {
 
 	return o.get()
 }
+
+func (p *Processor) SetLookup(lookup annotation.Lookup) {}
