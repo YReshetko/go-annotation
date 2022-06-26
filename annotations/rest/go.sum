@@ -1,5 +1,5 @@
-github.com/YReshetko/go-annotation v0.0.9 h1:c2JHPgnYy9yNHZhCim1itQg/M07CAb/CwoB1VxNo/a0=
-github.com/YReshetko/go-annotation v0.0.9/go.mod h1:hu3So//a/8c1vvSI6jF41MIl1MQyWcBcG0agJTWEcNc=
+github.com/YReshetko/go-annotation v0.0.11 h1:ZM88LKkkSQ5bgOfCUryK+/DbsUVbrctCRqkP21tsa8g=
+github.com/YReshetko/go-annotation v0.0.11/go.mod h1:hu3So//a/8c1vvSI6jF41MIl1MQyWcBcG0agJTWEcNc=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
