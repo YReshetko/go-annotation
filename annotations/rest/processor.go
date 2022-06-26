@@ -20,6 +20,7 @@ func init() {
 
 func (p *Processor) Process(an annotation.Annotation, node annotation.Node) error {
 	a := annotation.CastAnnotation[Rest](an)
+	fmt.Printf("Processing node: %+v\n", node)
 	switch node.NodeType() {
 	case annotation.Structure:
 		return p.processStructure(a, node)
@@ -63,7 +64,7 @@ func (p *Processor) processStructure(rest Rest, node annotation.Node) error {
 }
 
 func (p *Processor) processMethod(rest Rest, node annotation.Node) error {
-	fmt.Println("Function processing: ", rest, node)
+	fmt.Println("Method processing: ", rest, node)
 	if !p.validateHTTPMethod(rest.Method) {
 		return fmt.Errorf("invalid HTTP method: %s", rest.Method)
 	}
