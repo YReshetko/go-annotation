@@ -13,6 +13,8 @@ type Arguments struct {
 	GoFile    string
 	GoLine    string
 	GoPackage string
+	GoPath    string
+	GoBin     string
 }
 
 func LoadArguments() Arguments {
@@ -32,5 +34,7 @@ func LoadArguments() Arguments {
 		GoFile:      os.Getenv("GOFILE"),
 		GoLine:      os.Getenv("GOLINE"),
 		GoPackage:   os.Getenv("GOPACKAGE"),
+		GoPath:      os.Getenv("GOPATH"),
+		GoBin:       os.Getenv("GOBIN"),
 	}
 }

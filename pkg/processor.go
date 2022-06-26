@@ -3,7 +3,8 @@ package pkg
 import (
 	"go/ast"
 
-	"github.com/YReshetko/go-annotation/internal/nodes"
+	"github.com/YReshetko/go-annotation/internal/annotation/tag"
+	"github.com/YReshetko/go-annotation/internal/module"
 )
 
 type Path string
@@ -18,6 +19,7 @@ const (
 	Structure NodeType = "structure"
 	Field     NodeType = "field"
 	Function  NodeType = "function"
+	Method    NodeType = "method"
 	Variable  NodeType = "variable"
 )
 
@@ -29,59 +31,87 @@ type Node interface {
 	FileSpec() *ast.File
 	NodeType() NodeType
 	InnerNodes() []Node
+	Annotations() []Annotation
+}
+
+type Selector struct {
+	PackageImport string
+	TypeName      string
 }
 
 type AnnotationProcessor interface {
 	Process(annotation Annotation, node Node) error
 	Output() map[Path]Data
+	SetLookup(lookup Lookup)
 }
 
-var _ Node = (*internalNode)(nil)
+type Lookup func(Node, Selector) Node
 
-type internalNode struct {
-	n     nodes.Node
-	inner []Node
+var _ Node = (*node)(nil)
+
+type node struct {
+	n           module.Node
+	inner       []node
+	annotations []Annotation
 }
 
-func newInternalNode(n nodes.Node) internalNode {
-	intNode := make([]Node, len(n.Inner))
+func newNode(n module.Node) node {
+	intNode := make([]node, len(n.Inner))
 	for i, node := range n.Inner {
-		intNode[i] = newInternalNode(node)
+		intNode[i] = newNode(node)
 	}
-	return internalNode{
-		n:     n,
-		inner: intNode,
+	var annptations []Annotation
+	for _, annotation := range n.Annotations {
+		a, ok := annotations[annotation.Name()]
+		if !ok {
+			continue
+		}
+		annptations = append(annptations, tag.Parse(a, annotation))
+	}
+	return node{
+		n:           n,
+		inner:       intNode,
+		annotations: annptations,
 	}
 }
 
-func (i internalNode) Name() string {
+func (i node) Name() string {
 	return i.n.Metadata.Name
 }
-func (i internalNode) Dir() string {
+func (i node) Dir() string {
 	return i.n.Metadata.Dir
 }
-func (i internalNode) FileName() string {
+func (i node) FileName() string {
 	return i.n.Metadata.FileName
 }
 
-func (i internalNode) GoNode() ast.Node {
+func (i node) GoNode() ast.Node {
 	return i.n.GoNode
 }
 
-func (i internalNode) FileSpec() *ast.File {
+func (i node) FileSpec() *ast.File {
 	return i.n.Metadata.FileSpec
 }
 
-func (i internalNode) NodeType() NodeType {
-	return map[nodes.NodeType]NodeType{
-		nodes.Field:     Field,
-		nodes.Structure: Structure,
-		nodes.Interface: Interface,
-		nodes.Function:  Function,
-		nodes.Variable:  Variable,
+func (i node) NodeType() NodeType {
+	return map[module.NodeType]NodeType{
+		module.Field:     Field,
+		module.Structure: Structure,
+		module.Interface: Interface,
+		module.Function:  Function,
+		module.Method:    Method,
+		module.Variable:  Variable,
 	}[i.n.Metadata.Type]
 }
 
-func (i internalNode) InnerNodes() []Node {
-	return i.inner
+func (i node) InnerNodes() []Node {
+	out := make([]Node, len(i.inner))
+	for i, n := range i.inner {
+		out[i] = n
+	}
+	return out
+}
+
+func (i node) Annotations() []Annotation {
+	return i.annotations
 }
