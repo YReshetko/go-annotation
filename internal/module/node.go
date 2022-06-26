@@ -92,9 +92,6 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 				a = append(a, ad...)
 			}
 			fields := processFields(t.Fields, Field)
-			if len(fields) == 0 {
-				return nil
-			}
 			return &Node{
 				Metadata: Metadata{
 					Name: v.Name.Name,
@@ -111,9 +108,6 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 				a = append(a, ad...)
 			}
 			fields := processFields(t.Methods, Method)
-			if len(fields) == 0 {
-				return nil
-			}
 			return &Node{
 				Metadata: Metadata{
 					Name: v.Name.Name,
