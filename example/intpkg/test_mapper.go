@@ -1,36 +1,35 @@
 package intpkg
 
-import "github.com/YReshetko/go-annotation/example/intpkg/model"
-
-type UserDTO struct {
-}
+import (
+	"fmt"
+	"github.com/YReshetko/go-annotation/example/intpkg/model/api"
+	"github.com/YReshetko/go-annotation/example/intpkg/model/db"
+	"github.com/google/uuid"
+)
 
 // UserDTOMapper my test DTO mapper
 // Mapper(name="UserDTOMapperImplementation")
 // @Mapper
-type UserDTOMapper interface {
+type UserMapper interface {
 
 	// ToUserDTO my test DTO mapper function
-	// @Mapping(target="fn", source="firstName")
-	// @Mapping(target="ln", source="lastName")
-	ToUserDTO(user model.User, i *int, udto UserDTOMapper, fn func(rt int) float32, f **model.ExternalFunction, in interface{}, st struct{}, e error) *UserDTO
+	// @Mapping(target="FirstName", source="Name")
+	// @Mapping(target="Contact.Email", source="Email")
+	DBToAPI(user db.User) api.User
 
-	ToUser(UserDTO) *model.User
+	//APIToDB(user api.User) db.User
 }
 
-// Comment of the group
-type (
-
-	// BlockUserDTOMapper my test DTO mapper
-	// Mapper(name="UserDTOMapperImplementation")
-	// @Mapper
-	BlockUserDTOMapper interface {
-
-		// ToUserDTO my test DTO mapper function
-		// @Mapping(target="fn", source="firstName")
-		// @Mapping(target="ln", source="lastName")
-		ToUserDTO(user model.User, i *int, udto UserDTOMapper, fn func(rt int) float32, f **model.ExternalFunction, in interface{}, st struct{}, e error) *UserDTO
-
-		ToUser(UserDTO) *model.User
+func fdfsf(user db.User) api.User {
+	res_0 := api.User{}
+	res_0.ID = uuid.UUID{}
+	res_0.FirstName = &user.Name
+	if user.Age != nil {
+		res_0.Age = fmt.Sprintf("%f", *user.Age)
 	}
-)
+	res_0.Address = &api.Address{}
+	res_0.Contact = &api.Contact{}
+	res_0.Contact.Email = user.Email
+
+	return res_0
+}

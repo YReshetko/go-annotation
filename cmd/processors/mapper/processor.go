@@ -36,69 +36,160 @@ func (p *Processor) processMapper(m Mapper, node pkg.Node) error {
 	mapperName := strings.ReplaceAll(m.Name, "*", node.Name())
 	fmt.Println("New mapper name:", mapperName)
 
-	fmt.Println("Mapper: ", m.Name, node.NodeType(), len(node.InnerNodes()))
 	for _, n := range node.InnerNodes() {
+		var ann []Mapping
+		for _, annotation := range n.Annotations() {
+			m, ok := annotation.(Mapping)
+			if !ok {
+				continue
+			}
+			ann = append(ann, m)
+		}
+		fmt.Println("Annotations:", ann)
 		fs, err := pkg.FunctionSignature(n.GoNode())
 		if err != nil {
 			return err
 		}
 
-		for _, param := range fs.Params {
-			if param.Selector != "" {
-				packageImport := findImport(node.FileSpec(), param.Selector)
-				externalNode := p.lookup(node, pkg.Selector{
-					PackageImport: packageImport,
-					TypeName:      param.TypeName,
-				})
-
-				fmt.Printf("External node: %+v\n", externalNode)
+		resBuilders := p.buildersByFields("res", fs.Results, node)
+		paramBuilders := p.buildersByFields("val", fs.Params, node)
+		fmt.Println("================ Result ==================")
+		for _, v := range resBuilders {
+			for _, builder := range v {
+				builder.print("")
+			}
+		}
+		fmt.Println("================ Fields ==================")
+		for _, v := range paramBuilders {
+			for _, builder := range v {
+				builder.print("")
 			}
 		}
 
-		fmt.Printf("Function signature: %+v\n", fs)
-
-		/*		for _, a2 := range n.Annotations() {
-				fmt.Println("internal Mapping:", pkg.CastAnnotation[Mapping](a2), n.NodeType(), len(n.InnerNodes()))
-			}*/
+		fmt.Println("================ Search ===================")
+		for _, mapping := range ann {
+			for k, builders := range resBuilders {
+				fmt.Println(builders[0].find(k + "." + mapping.Target))
+			}
+			for k, builders := range paramBuilders {
+				fmt.Println(builders[0].find(k + "." + mapping.Source))
+			}
+		}
+		fmt.Println("================ Lines ===================")
+		bc := BuildContext{
+			imports: map[string]string{},
+			lines:   []string{},
+		}
+		for _, v := range resBuilders {
+			for _, builder := range v {
+				builder.mapping("", &bc, paramBuilders, ann)
+			}
+		}
+		for a, p := range bc.imports {
+			fmt.Println(p, a)
+		}
+		for _, line := range bc.lines {
+			fmt.Println(line)
+		}
 
 	}
 	return nil
 }
 
-func findImport(f *ast.File, alias string) string {
-	var found bool
-	var out string
-	ast.Inspect(f, func(node ast.Node) bool {
-		if found {
-			return false
+func (p *Processor) buildersByFields(namePrefix string, fields []pkg.NodeField, node pkg.Node) map[string][]ResultBuilder {
+	builders := make(map[string][]ResultBuilder)
+	for i, field := range fields {
+		if field.FieldType != pkg.StructureFieldType && field.FieldType != pkg.SelectorFieldType {
+			// TODO extend to other types
+			continue
 		}
-		imp, ok := node.(*ast.ImportSpec)
-		if !ok {
-			return true
+		name := field.Name
+		if len(name) == 0 {
+			field.Name = fmt.Sprintf("%s_%d", namePrefix, i)
+			name = field.Name
 		}
-		impPath := unquote(imp.Path.Value)
-		if imp.Name != nil && imp.Name.Name == alias {
-			found = true
-			out = impPath
-			return false
-		}
-		if strings.HasSuffix(impPath, "/"+alias) || strings.HasSuffix(strings.ReplaceAll(impPath, "-", "_"), "/"+alias) {
-			found = true
-			out = impPath
-			return false
+
+		builders[name] = p.processParam(field, node)
+	}
+	return builders
+}
+
+func (p *Processor) fieldsList(n pkg.Node) []ResultBuilder {
+	//out := []string{}
+	out := []ResultBuilder{}
+	ast.Inspect(n.GoNode(), func(node ast.Node) bool {
+		switch v := node.(type) {
+		case *ast.Field:
+			params := pkg.Param(v)
+			for _, param := range params {
+				out = append(out, p.processParam(param, n)...)
+			}
 		}
 		return true
 	})
-
 	return out
 }
 
-func unquote(s string) string {
-	out := strings.TrimSpace(s)
-	if out[0] == '"' && out[len(out)-1] == '"' {
-		return out[1 : len(out)-1]
+func (p *Processor) processParam(param pkg.NodeField, n pkg.Node) []ResultBuilder {
+	switch param.FieldType {
+	case pkg.BasicFieldType, pkg.InterfaceFieldType:
+		return []ResultBuilder{
+			{
+				typeName:    param.TypeName,
+				fieldName:   param.Name,
+				builderType: Value,
+				isPointer:   param.IsPointer,
+			},
+		}
+	case pkg.SelectorFieldType:
+		rb := ResultBuilder{
+			pkg:         getParamImport(param, n),
+			selector:    param.Selector,
+			typeName:    param.TypeName,
+			fieldName:   param.Name,
+			builderType: Instance,
+			isPointer:   param.IsPointer,
+		}
+		s := pkg.Selector{
+			TypeName:      rb.typeName,
+			PackageImport: rb.pkg,
+		}
+		externalNode := p.lookup(n, s)
+		if externalNode.NodeType() != pkg.Structure {
+			return []ResultBuilder{rb}
+		}
+		extFields := p.fieldsList(externalNode)
+		rb.children = extFields
+		return []ResultBuilder{rb}
+	case pkg.ArrayFieldType:
+		return []ResultBuilder{
+			{
+				builderType: Array,
+				isPointer:   param.IsPointer,
+				fieldName:   param.Name,
+				children:    p.processParam(*param.Value, n),
+			},
+		}
+	case pkg.MapFieldType:
+		return []ResultBuilder{
+			{
+				builderType: Map,
+				isPointer:   param.IsPointer,
+				fieldName:   param.Name,
+				children:    p.processParam(*param.Value, n),
+			},
+		}
 	}
-	return out
+	return nil
+}
+
+func getParamImport(field pkg.NodeField, n pkg.Node) string {
+	if field.Selector != "" {
+		return pkg.FindImport(n.FileSpec(), field.Selector)
+	}
+	// TODO Move the package calculation to annotation tool Lookup to get rid of metadata exported to processors
+	return n.ModuleName() + "/" + n.Dir()
+
 }
 
 func (p *Processor) processMapping(m Mapping, node pkg.Node) error {
