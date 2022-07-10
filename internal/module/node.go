@@ -15,6 +15,7 @@ const (
 	Function  NodeType = "function"
 	Method    NodeType = "method"
 	Variable  NodeType = "variable"
+	Type      NodeType = "type"
 )
 
 type Metadata struct {
@@ -31,7 +32,8 @@ type Node struct {
 	GoNode      ast.Node
 	Inner       []Node
 
-	Selector selector
+	Selector   selector
+	ModuleName string
 }
 
 func (n Node) hasAnnotations() bool {
@@ -116,6 +118,19 @@ func processSpec(n *ast.GenDecl, spec ast.Spec) *Node {
 				Annotations: a,
 				GoNode:      v,
 				Inner:       fields,
+			}
+		case *ast.ArrayType:
+			ad, ok := annotation.Parse(v.Doc.Text())
+			if ok {
+				a = append(a, ad...)
+			}
+			return &Node{
+				Metadata: Metadata{
+					Name: v.Name.Name,
+					Type: Type,
+				},
+				Annotations: a,
+				GoNode:      v,
 			}
 		}
 	case *ast.ValueSpec:

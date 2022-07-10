@@ -131,7 +131,7 @@ func (m Module) findNode(nodePath, typeName string) Node {
 				if n.Metadata.Name == typeName {
 					out = n
 					out.Metadata.FileSpec = fileSpec
-					out.Metadata.Dir = m.moduleRoot
+					out.Metadata.Dir = nodePath
 					out.Metadata.FileName = info.Name()
 					found = true
 					return false
@@ -165,5 +165,5 @@ func modSpec(path string) *modfile.File {
 }
 
 func isGoFile(info fs.FileInfo) bool {
-	return !info.IsDir() && info.Name()[len(info.Name())-2:] == "go"
+	return filepath.Ext(info.Name()) == ".go"
 }

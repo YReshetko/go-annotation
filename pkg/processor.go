@@ -21,6 +21,7 @@ const (
 	Function  NodeType = "function"
 	Method    NodeType = "method"
 	Variable  NodeType = "variable"
+	Type      NodeType = "type"
 )
 
 type Node interface {
@@ -32,6 +33,7 @@ type Node interface {
 	NodeType() NodeType
 	InnerNodes() []Node
 	Annotations() []Annotation
+	ModuleName() string
 }
 
 type Selector struct {
@@ -101,6 +103,7 @@ func (i node) NodeType() NodeType {
 		module.Function:  Function,
 		module.Method:    Method,
 		module.Variable:  Variable,
+		module.Type:      Type,
 	}[i.n.Metadata.Type]
 }
 
@@ -114,4 +117,8 @@ func (i node) InnerNodes() []Node {
 
 func (i node) Annotations() []Annotation {
 	return i.annotations
+}
+
+func (i node) ModuleName() string {
+	return i.n.ModuleName
 }

@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"go/ast"
+	"strings"
 )
 
 func CastAnnotation[T Annotation](a Annotation) T {
@@ -55,17 +56,23 @@ func FunctionSignature(n ast.Node) (FuncSignature, error) {
 	}, nil
 }
 
-func ParamList(pl *ast.FieldList) []FuncParam {
-	var out []FuncParam
+func ParamList(pl *ast.FieldList) []NodeField {
+	var out []NodeField
 	for _, field := range pl.List {
-		n := names(field.Names)
-		for _, name := range n {
-			fp := FuncParam{
-				Exp:  field.Type,
-				Name: name,
-			}
-			out = append(out, funcParam(field.Type, fp))
+		out = append(out, Param(field)...)
+	}
+	return out
+}
+
+func Param(p *ast.Field) []NodeField {
+	var out []NodeField
+	n := names(p.Names)
+	for _, name := range n {
+		fp := NodeField{
+			Exp:  p.Type,
+			Name: name,
 		}
+		out = append(out, funcParam(p.Type, fp))
 	}
 	return out
 }
@@ -81,11 +88,24 @@ func names(n []*ast.Ident) []string {
 	return out
 }
 
-func funcParam(expr ast.Expr, fp FuncParam) FuncParam {
+func funcParam(expr ast.Expr, fp NodeField) NodeField {
 	switch e := expr.(type) {
 	case *ast.StarExpr:
 		fp.IsPointer = true
 		fp = funcParam(e.X, fp)
+	case *ast.SliceExpr:
+		fp.FieldType = ArrayFieldType
+		v := funcParam(e.X, NodeField{})
+		fp.Value = &v
+	case *ast.ArrayType:
+		fp.FieldType = ArrayFieldType
+		v := funcParam(e.Elt, NodeField{})
+		fp.Value = &v
+	case *ast.MapType:
+		fp.FieldType = MapFieldType
+		key := funcParam(e.Key, NodeField{})
+		value := funcParam(e.Value, NodeField{})
+		fp.Key, fp.Value = &key, &value
 	case *ast.SelectorExpr:
 		if e.X != nil {
 			si, ok := e.X.(*ast.Ident)
@@ -95,36 +115,58 @@ func funcParam(expr ast.Expr, fp FuncParam) FuncParam {
 		}
 		if e.Sel != nil {
 			_, ok := primitives[e.Sel.Name]
+			if ok {
+				fp.FieldType = BasicFieldType
+			} else {
+				fp.FieldType = SelectorFieldType
+			}
 			fp.TypeName = e.Sel.Name
-			fp.IsBasicType = ok
 		}
 	case *ast.Ident:
 		_, ok := primitives[e.Name]
+		if ok {
+			fp.FieldType = BasicFieldType
+		} else {
+			fp.FieldType = SelectorFieldType
+		}
 		fp.TypeName = e.Name
-		fp.IsBasicType = ok
 	case *ast.StructType:
-		fp.TypeName = "struct"
+		fp.FieldType = StructureFieldType
 	case *ast.InterfaceType:
-		fp.TypeName = "interface"
+		fp.FieldType = InterfaceFieldType
 	case *ast.FuncType:
-		fp.TypeName = "function"
+		fp.FieldType = FunctionFieldType
 	}
 	return fp
 }
 
 type FuncSignature struct {
 	Name    string
-	Params  []FuncParam
-	Results []FuncParam
+	Params  []NodeField
+	Results []NodeField
 }
 
-type FuncParam struct {
-	Name        string
-	IsPointer   bool
-	IsBasicType bool
-	Selector    string
-	TypeName    string
-	Exp         ast.Expr
+type NodeFieldType string
+
+const (
+	InterfaceFieldType = "interface"
+	StructureFieldType = "struct"
+	FunctionFieldType  = "function"
+	ArrayFieldType     = "array"
+	MapFieldType       = "map"
+	BasicFieldType     = "basic"
+	SelectorFieldType  = "selector"
+)
+
+type NodeField struct {
+	Name      string
+	IsPointer bool
+	Selector  string
+	TypeName  string
+	FieldType NodeFieldType
+	Exp       ast.Expr
+	Key       *NodeField
+	Value     *NodeField
 }
 
 var primitives = map[string]struct{}{
@@ -148,4 +190,42 @@ var primitives = map[string]struct{}{
 	"byte":       {},
 	"rune":       {},
 	"any":        {},
+}
+
+//========================== Import =================
+
+func FindImport(f *ast.File, alias string) string {
+	var found bool
+	var out string
+	ast.Inspect(f, func(node ast.Node) bool {
+		if found {
+			return false
+		}
+		imp, ok := node.(*ast.ImportSpec)
+		if !ok {
+			return true
+		}
+		impPath := unquote(imp.Path.Value)
+		if imp.Name != nil && imp.Name.Name == alias {
+			found = true
+			out = impPath
+			return false
+		}
+		if strings.HasSuffix(impPath, "/"+alias) || strings.HasSuffix(strings.ReplaceAll(impPath, "-", "_"), "/"+alias) {
+			found = true
+			out = impPath
+			return false
+		}
+		return true
+	})
+
+	return out
+}
+
+func unquote(s string) string {
+	out := strings.TrimSpace(s)
+	if out[0] == '"' && out[len(out)-1] == '"' {
+		return out[1 : len(out)-1]
+	}
+	return out
 }

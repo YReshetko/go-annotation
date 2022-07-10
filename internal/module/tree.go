@@ -10,12 +10,13 @@ type selector struct {
 }
 
 func (s *selector) put(v string) selector {
-	newSelector := selector{}
+	newSelector := selector{
+		pkg: s.pkg,
+	}
 	if s.next == nil {
-		newSelector.pkg = pkg(v)
+		newSelector.next = &selector{pkg: pkg(v)}
 		return newSelector
 	}
-	newSelector.pkg = s.pkg
 	next := s.next.put(v)
 	newSelector.next = &next
 	return newSelector

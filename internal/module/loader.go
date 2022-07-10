@@ -36,6 +36,7 @@ func (l *Loader) AllAnnotatedNodes(s selector) ([]Node, error) {
 	nodes := m.annotatedNodes()
 	for i, _ := range nodes {
 		nodes[i].Selector = s
+		nodes[i].ModuleName = m.moduleName()
 	}
 
 	return nodes, nil
@@ -51,9 +52,11 @@ func (l *Loader) FindNode(s selector, pkg, typeName string) (Node, error) {
 	}
 
 	moduleAndPath := m.subModuleAndPath(pkg)
-	if pkg == m.moduleName() {
+	// TODO fix hacky check for root module `moduleAndPath.moduleName == l.tree.m.moduleName()`
+	if pkg == m.moduleName() || moduleAndPath.moduleName == l.tree.m.moduleName() {
 		out := m.findNode(moduleAndPath.path, typeName)
 		out.Selector = s
+		out.ModuleName = m.moduleName()
 		return out, nil
 	}
 
@@ -62,6 +65,7 @@ func (l *Loader) FindNode(s selector, pkg, typeName string) (Node, error) {
 	if ok {
 		out := nm.findNode(moduleAndPath.path, typeName)
 		out.Selector = newSelector
+		out.ModuleName = nm.moduleName()
 		return out, nil
 	}
 
@@ -73,6 +77,7 @@ func (l *Loader) FindNode(s selector, pkg, typeName string) (Node, error) {
 	}
 	out := loadedModule.findNode(moduleAndPath.path, typeName)
 	out.Selector = newSelector
+	out.ModuleName = loadedModule.moduleName()
 
 	return out, nil
 }
