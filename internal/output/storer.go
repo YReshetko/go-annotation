@@ -3,6 +3,7 @@ package output
 import (
 	"go/format"
 	"os"
+	"path/filepath"
 
 	"github.com/YReshetko/go-annotation/internal/environment"
 )
@@ -26,5 +27,5 @@ func Save(_ environment.Arguments, data map[string][]byte) error {
 }
 
 func isGoFile(path string) bool {
-	return path[len(path)-3:] == ".go"
+	return filepath.Ext(path) == ".go"
 }

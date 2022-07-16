@@ -4,6 +4,7 @@ import (
 	"go/ast"
 
 	"github.com/YReshetko/go-annotation/internal/annotation"
+	"github.com/YReshetko/go-annotation/internal/debug"
 )
 
 type NodeType string
@@ -78,7 +79,7 @@ func processNode(node ast.Node) ([]Node, bool) {
 		return nodes, false
 
 	default:
-		//fmt.Printf("%T, %+v\n", v, v)
+		debug.Debug("%T, %+v\n", v, v)
 	}
 	return nil, true
 }
