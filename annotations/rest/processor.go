@@ -8,27 +8,45 @@ import (
 	annotation "github.com/YReshetko/go-annotation/pkg"
 )
 
-type Processor struct {
-	mapping map[handlerMetadata]handlerMapping
-}
-
 func init() {
 	annotation.Register(Rest{}, &Processor{
 		mapping: make(map[handlerMetadata]handlerMapping),
 	})
 }
 
-func (p *Processor) Process(an annotation.Annotation, node annotation.Node) error {
-	a := annotation.CastAnnotation[Rest](an)
-	fmt.Printf("Processing node: %+v\n", node)
-	switch node.NodeType() {
-	case annotation.Structure:
-		return p.processStructure(a, node)
-	case annotation.Method:
-		return p.processMethod(a, node)
-	default:
-		panic("Rest annotation can be used for structure or function only")
+var _ annotation.AnnotationProcessor = (*Processor)(nil)
+
+type Processor struct {
+	mapping map[handlerMetadata]handlerMapping
+}
+
+func (p *Processor) Process(node annotation.Node) error {
+	annotations := annotation.FindAnnotations[Rest](node.Annotations())
+	if len(annotations) == 0 {
+		return nil
 	}
+
+	if len(annotations) > 1 {
+		return fmt.Errorf("expected 1 rest annotatio, but got: %d", len(annotations))
+	}
+
+	n := node.Node()
+	switch nt := n.(type) {
+	case *ast.TypeSpec:
+		return p.processStructure(annotations[0], node, nt)
+	case *ast.FuncDecl:
+		return p.processMethod(annotations[0], node, nt)
+	default:
+		return fmt.Errorf("unexpected node type %T - %t", n, n)
+	}
+}
+
+func (p *Processor) Version() string {
+	return "0.0.1"
+}
+
+func (p *Processor) Name() string {
+	return "Rest"
 }
 
 type handlerMetadata struct {
@@ -43,11 +61,11 @@ type handlerMapping struct {
 	mapping map[string]string
 }
 
-func (p *Processor) processStructure(rest Rest, node annotation.Node) error {
+func (p *Processor) processStructure(rest Rest, node annotation.Node, s *ast.TypeSpec) error {
 	fmt.Println("Structure processing: ", rest, node)
 	key := handlerMetadata{
-		pkg:        node.FileSpec().Name.Name,
-		structName: node.Name(),
+		pkg:        node.PackageName(),
+		structName: s.Name.Name,
 		dir:        node.Dir(),
 		fileName:   node.FileName(),
 	}
@@ -63,24 +81,19 @@ func (p *Processor) processStructure(rest Rest, node annotation.Node) error {
 	return nil
 }
 
-func (p *Processor) processMethod(rest Rest, node annotation.Node) error {
+func (p *Processor) processMethod(rest Rest, node annotation.Node, f *ast.FuncDecl) error {
 	fmt.Println("Method processing: ", rest, node)
 	if !p.validateHTTPMethod(rest.Method) {
 		return fmt.Errorf("invalid HTTP method: %s", rest.Method)
 	}
 
-	fnNode, ok := node.GoNode().(*ast.FuncDecl)
-	if !ok {
-		return fmt.Errorf("expected ast.FuncDecl node, but got %T", node.GoNode())
-	}
-
-	recvName := annotation.MethodReceiver(fnNode)
+	recvName := MethodReceiver(f)
 	if recvName == "" {
-		return fmt.Errorf("expected method receiver, but got empty for %s", node.Name())
+		return fmt.Errorf("expected method receiver, but got empty for %s", f.Name.Name)
 	}
 
 	key := handlerMetadata{
-		pkg:        node.FileSpec().Name.Name,
+		pkg:        node.PackageName(),
 		structName: recvName,
 		dir:        node.Dir(),
 		fileName:   node.FileName(),
@@ -91,7 +104,7 @@ func (p *Processor) processMethod(rest Rest, node annotation.Node) error {
 		return fmt.Errorf("no mapping for %s", key)
 	}
 
-	v.mapping[rest.Method] = fnNode.Name.Name
+	v.mapping[rest.Method] = f.Name.Name
 
 	return nil
 }
@@ -111,7 +124,7 @@ func (p *Processor) validateHTTPMethod(m string) bool {
 	return ok
 }
 
-func (p *Processor) Output() map[annotation.Path]annotation.Data {
+func (p *Processor) Output() map[string][]byte {
 	fmt.Println(p.mapping)
 	o, err := newOutput()
 	if err != nil {
@@ -128,4 +141,18 @@ func (p *Processor) Output() map[annotation.Path]annotation.Data {
 	return o.get()
 }
 
-func (p *Processor) SetLookup(lookup annotation.Lookup) {}
+func MethodReceiver(decl *ast.FuncDecl) string {
+	if decl.Recv == nil {
+		return ""
+	}
+
+	for _, v := range decl.Recv.List {
+		switch rv := v.Type.(type) {
+		case *ast.StarExpr:
+			return rv.X.(*ast.Ident).Name
+		case *ast.UnaryExpr:
+			return rv.X.(*ast.Ident).Name
+		}
+	}
+	return ""
+}

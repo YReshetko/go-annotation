@@ -2,22 +2,11 @@ package environment
 
 import "os"
 
-type Arguments struct {
-	Args []string
+var (
+	projectPath = ""
+)
 
-	GenToolPath string
-	ProjectPath string
-
-	GoArch    string
-	GoOS      string
-	GoFile    string
-	GoLine    string
-	GoPackage string
-	GoPath    string
-	GoBin     string
-}
-
-func LoadArguments() Arguments {
+func init() {
 	if len(os.Args) < 2 {
 		panic("Requires project path to process annotations")
 	}
@@ -25,16 +14,10 @@ func LoadArguments() Arguments {
 	for i, v := range os.Args {
 		args[i] = v
 	}
-	return Arguments{
-		Args:        args,
-		GenToolPath: args[0],
-		ProjectPath: args[1],
-		GoArch:      os.Getenv("GOARCH"),
-		GoOS:        os.Getenv("GOOS"),
-		GoFile:      os.Getenv("GOFILE"),
-		GoLine:      os.Getenv("GOLINE"),
-		GoPackage:   os.Getenv("GOPACKAGE"),
-		GoPath:      os.Getenv("GOPATH"),
-		GoBin:       os.Getenv("GOBIN"),
-	}
+
+	projectPath = args[1]
+}
+
+func ProjectRoot() string {
+	return projectPath
 }
