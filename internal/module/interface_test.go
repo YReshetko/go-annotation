@@ -29,12 +29,6 @@ func TestLoad_Success(t *testing.T) {
 	assert.Contains(t, m.Files(), "internal/module/module.go")
 }
 
-func TestLoad_Fail(t *testing.T) {
-	_, err := module.Load("./")
-	require.Error(t, err)
-	assert.ErrorContains(t, err, "go.mod file not found")
-}
-
 func TestSubmodule_Success(t *testing.T) {
 	m, err := module.Load(root)
 	require.NoError(t, err)

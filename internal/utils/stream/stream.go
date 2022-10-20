@@ -4,7 +4,7 @@ package stream
 
 // NOTE: depending on this buffer and number of original array the functions OfSlice, OfMap, Map can be blockable or non blockable
 // You always must use the functions that finalize stream: ForEach, Stream.Value
-const buffer = 3
+const buffer = 10
 
 type Stream[T any] chan T
 
