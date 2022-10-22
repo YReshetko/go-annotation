@@ -2,8 +2,8 @@
 
 package stream
 
-// NOTE: depending on this buffer and number of original array the functions OfSlice, OfMap, Map can be blockable or non blockable
-// You always must use the functions that finalize stream: ForEach, Stream.Value
+// NOTE: depending on this buffer and number of original array the functions OfSlice, OfMap, Map, FlatMap, MapPair can be blockable or non blockable
+// You always must use the functions that finalize stream: Stream.Range, Stream.RangeErr, Stream.ToSlice
 const buffer = 10
 
 type Stream[T any] struct {

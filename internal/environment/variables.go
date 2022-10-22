@@ -1,10 +1,13 @@
 package environment
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
 const (
 	modSubPath = "/pkg/mod"
-	version    = "0.0.x"
+	version    = "0.0.2-alpha"
 )
 
 func GoPath() string {
@@ -12,7 +15,7 @@ func GoPath() string {
 }
 
 func ModPath() string {
-	return GoPath() + modSubPath
+	return filepath.Join(GoPath(), modSubPath)
 }
 
 func ToolVersion() string {

@@ -69,6 +69,7 @@ func storeData(a AnnotationProcessor) {
 
 	for path, data := range po {
 		if err := output.Store(path, data, meta); err != nil {
+			//fmt.Println(string(data))
 			panic(err)
 		}
 	}

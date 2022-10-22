@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	annotation.Register(Rest{}, &Processor{
+	annotation.Register[Rest](&Processor{
 		mapping: make(map[handlerMetadata]handlerMapping),
 	})
 }
@@ -27,7 +27,7 @@ func (p *Processor) Process(node annotation.Node) error {
 	}
 
 	if len(annotations) > 1 {
-		return fmt.Errorf("expected 1 rest annotatio, but got: %d", len(annotations))
+		return fmt.Errorf("expected 1 rest annotation, but got: %d", len(annotations))
 	}
 
 	n := node.Node()

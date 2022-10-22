@@ -7,7 +7,6 @@ import (
 
 type Annotation any
 
-// TODO Make node for processing
 type Node interface {
 	Annotations() []Annotation
 	Node() ast.Node
@@ -31,24 +30,26 @@ type AnnotationProcessor interface {
 var processors = map[string]AnnotationProcessor{}
 var annotations = map[string]Annotation{}
 
-func Register(annotation Annotation, processor AnnotationProcessor) {
-	if reflect.TypeOf(annotation).Kind() != reflect.Struct {
+func Register[T Annotation](processor AnnotationProcessor) {
+	var v T
+	if reflect.TypeOf(v).Kind() != reflect.Struct {
 		panic("unable to register non-struct annotation")
 	}
-	annotationName := reflect.TypeOf(annotation).Name()
+	annotationName := reflect.TypeOf(v).Name()
 	processors[annotationName] = processor
-	annotations[annotationName] = annotation
+	annotations[annotationName] = v
 }
 
 func processorByAnnotationName(n string) AnnotationProcessor {
 	return processors[n]
 }
 
-func processor(annotation Annotation) (AnnotationProcessor, bool) {
-	if reflect.TypeOf(annotation).Kind() != reflect.Struct {
+func processor[T Annotation]() (AnnotationProcessor, bool) {
+	var v T
+	if reflect.TypeOf(v).Kind() != reflect.Struct {
 		panic("unable to retrieve non-struct annotation")
 	}
-	annotationName := reflect.TypeOf(annotation).Name()
+	annotationName := reflect.TypeOf(v).Name()
 	a, ok := processors[annotationName]
 	return a, ok
 }

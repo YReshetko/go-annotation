@@ -1,12 +1,25 @@
 package pkg
 
-import . "github.com/YReshetko/go-annotation/internal/utils/stream"
+import (
+	"go/ast"
+
+	. "github.com/YReshetko/go-annotation/internal/utils/stream"
+)
 
 func FindAnnotations[T any](a []Annotation) []T {
-	return Map(OfSlice(a).Filter(func(a Annotation) bool {
-		_, ok := a.(T)
-		return ok
-	}), func(t Annotation) T {
-		return t.(T)
-	}).ToSlice()
+	return Map(OfSlice(a).Filter(ofType[T]), toType[T]).ToSlice()
+}
+
+func ofType[T any](a Annotation) bool {
+	_, ok := a.(T)
+	return ok
+}
+
+func toType[T any](a Annotation) T {
+	return a.(T)
+}
+
+func CastNode[T ast.Node](n Node) (T, bool) {
+	v, ok := n.Node().(T)
+	return v, ok
 }
