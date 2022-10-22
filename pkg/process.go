@@ -19,16 +19,14 @@ func Process() {
 	m := panicOnError(module.Load(root))
 
 	// Execute processors for annotations
-	err := MapPair(Map(OfSlice(m.Files()), func(t string) string {
-		return filepath.Join(m.Root(), t)
-	}), toAstFile).ForEachErr(moduleNodeProcessor(m))
+	err := MapPair(OfSlice(m.Files()).Map(joinPath(m.Root())), toAstFile).RangeErr(moduleNodeProcessor(m))
 	if err != nil {
 		panic(err)
 	}
 
 	// Persist required data for annotation processors
 	Map(OfMap(processors), ExtractVal2[string, AnnotationProcessor]()).
-		Filter(DistinctBy(annotationProcessorDistinct)).ForEach(storeData)
+		Filter(DistinctBy(annotationProcessorDistinct)).Range(storeData)
 }
 
 func moduleNodeProcessor(m module.Module) func(Pair[string, *goAST.File]) error {
@@ -50,7 +48,7 @@ func moduleNodeProcessor(m module.Module) func(Pair[string, *goAST.File]) error 
 				Filter(Distinct[string]()), processorByAnnotationName).
 				Filter(NonNil[AnnotationProcessor]()).
 				Filter(DistinctBy(annotationProcessorDistinct)).
-				ForEachErr(processNode(internalNode))
+				RangeErr(processNode(internalNode))
 
 			return err == nil
 		})
@@ -115,6 +113,12 @@ func annotationProcessorDistinct(a AnnotationProcessor) string {
 
 func toParsedAnnotationName(a parser.Annotation) string {
 	return a.Name()
+}
+
+func joinPath(root string) func(string) string {
+	return func(path string) string {
+		return filepath.Join(root, path)
+	}
 }
 
 func toAstFile(p string) *goAST.File {

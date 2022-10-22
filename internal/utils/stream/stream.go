@@ -6,47 +6,50 @@ package stream
 // You always must use the functions that finalize stream: ForEach, Stream.Value
 const buffer = 10
 
-type Stream[T any] chan T
+type Stream[T any] struct {
+	ch   chan T
+	size int
+}
 
 type Pair[A, B any] struct {
 	Val1 A
 	Val2 B
 }
 
+func (s Stream[T]) close() {
+	close(s.ch)
+}
+
 func (s Stream[T]) ToSlice() []T {
 	var out []T
-	for t := range s {
-		//fmt.Println("ToSlice")
+	for t := range s.ch {
 		out = append(out, t)
 	}
 	return out
 }
 
 func (s Stream[T]) Filter(f func(T) bool) Stream[T] {
-	out := OfSlice[T](nil)
+	out := of[T](s.size)
 	go func() {
-		defer close(out)
-		for t := range s {
+		defer out.close()
+		for t := range s.ch {
 			if f(t) {
-				//fmt.Println("Filter")
-				out <- t
+				out.ch <- t
 			}
 		}
 	}()
 	return out
 }
 
-func (s Stream[T]) ForEach(f func(T)) {
-	for t := range s {
-		//fmt.Println("ForEach")
+func (s Stream[T]) Range(f func(T)) {
+	for t := range s.ch {
 		f(t)
 	}
 }
 
-func (s Stream[T]) ForEachErr(f func(T) error) error {
+func (s Stream[T]) RangeErr(f func(T) error) error {
 	var err error
-	for t := range s {
-		//fmt.Println("ForEachErr")
+	for t := range s.ch {
 		if err == nil {
 			err = f(t)
 		}
@@ -55,52 +58,43 @@ func (s Stream[T]) ForEachErr(f func(T) error) error {
 }
 
 func Map[T, E any](s Stream[T], f func(T) E) Stream[E] {
-	out := OfSlice[E](nil)
-	go func() {
-		defer close(out)
-		for t := range s {
-			//fmt.Println("Map")
-			out <- f(t)
-		}
-	}()
-	return out
+	return processing(s, func(t T, s Stream[E]) {
+		s.ch <- f(t)
+	})
 }
 
 func MapPair[T, E any](s Stream[T], f func(T) E) Stream[Pair[T, E]] {
-	out := OfSlice[Pair[T, E]](nil)
-	go func() {
-		defer close(out)
-		for t := range s {
-			//fmt.Println("MapPair")
-			e := f(t)
-			out <- Pair[T, E]{Val1: t, Val2: e}
-		}
-	}()
-	return out
+	return processing(s, func(t T, s Stream[Pair[T, E]]) {
+		s.ch <- Pair[T, E]{Val1: t, Val2: f(t)}
+	})
 }
 
 func FlatMap[T, E any](s Stream[T], f func(T) []E) Stream[E] {
-	out := OfSlice[E](nil)
+	return processing(s, func(t T, s Stream[E]) {
+		for _, v := range f(t) {
+			s.ch <- v
+		}
+	})
+}
+
+func processing[T, R any](in Stream[T], fn func(T, Stream[R])) Stream[R] {
+	out := of[R](in.size)
 	go func() {
-		defer close(out)
-		for t := range s {
-			for _, v := range f(t) {
-				//fmt.Println("FlatMap")
-				out <- v
-			}
+		defer out.close()
+		for t := range in.ch {
+			fn(t, out)
 		}
 	}()
 	return out
 }
 
 func OfSlice[T any](v []T) Stream[T] {
-	s := make(chan T, buffer)
+	s := of[T](len(v))
 	if len(v) != 0 {
 		go func() {
-			defer close(s)
+			defer s.close()
 			for _, t := range v {
-				//fmt.Println("OfSlice")
-				s <- t
+				s.ch <- t
 			}
 		}()
 	}
@@ -108,15 +102,29 @@ func OfSlice[T any](v []T) Stream[T] {
 }
 
 func OfMap[K comparable, V any](m map[K]V) Stream[Pair[K, V]] {
-	s := OfSlice[Pair[K, V]](nil)
+	s := of[Pair[K, V]](len(m))
 	if len(m) != 0 {
 		go func() {
-			defer close(s)
+			defer s.close()
 			for k, v := range m {
-				//fmt.Println("OfSlice")
-				s <- Pair[K, V]{Val1: k, Val2: v}
+				s.ch <- Pair[K, V]{Val1: k, Val2: v}
 			}
 		}()
 	}
 	return s
+}
+
+func of[T any](l int) Stream[T] {
+	return Stream[T]{
+		ch:   make(chan T, l),
+		size: l,
+	}
+}
+
+func (s Stream[T]) FlatMap(f func(T) []T) Stream[T] {
+	return FlatMap(s, f)
+}
+
+func (s Stream[T]) Map(f func(T) T) Stream[T] {
+	return Map(s, f)
 }
