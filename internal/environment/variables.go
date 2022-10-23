@@ -6,12 +6,17 @@ import (
 )
 
 const (
-	modSubPath = "/pkg/mod"
-	version    = "0.0.2-alpha"
+	modSubPath    = "/pkg/mod"
+	goHomeSubPath = "/src"
+	version       = "0.0.2-alpha"
 )
 
 func GoPath() string {
 	return os.Getenv("GOPATH")
+}
+
+func GoHome() string {
+	return filepath.Join(GoPath(), goHomeSubPath)
 }
 
 func ModPath() string {

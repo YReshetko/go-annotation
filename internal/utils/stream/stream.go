@@ -57,6 +57,16 @@ func (s Stream[T]) RangeErr(f func(T) error) error {
 	return err
 }
 
+func (s Stream[T]) One() T {
+	var out T
+	for t := range s.ch {
+		if !NonNil[T]()(out) {
+			out = t
+		}
+	}
+	return out
+}
+
 func Map[T, E any](s Stream[T], f func(T) E) Stream[E] {
 	return processing(s, func(t T, s Stream[E]) {
 		s.ch <- f(t)

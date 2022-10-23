@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func lookup(path string) (module, error) {
+func loadModule(path string) (module, error) {
 	path, err := filepath.Abs(path)
 	if err != nil {
 		return module{}, fmt.Errorf("unable to define absolut path %s: %w", path, err)

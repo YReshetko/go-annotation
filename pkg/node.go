@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/YReshetko/go-annotation/internal/lookup"
 	ast2 "go/ast"
 	"path/filepath"
 
@@ -59,4 +60,8 @@ func (n *node) PackageName() string {
 
 func (n *node) Imports() []*ast2.ImportSpec {
 	return n.f.Imports
+}
+
+func (n *node) FindImportByAlias(alias string) (string, bool) {
+	return lookup.FindImportByAlias(n.m, n.f, alias)
 }

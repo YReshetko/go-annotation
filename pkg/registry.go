@@ -8,16 +8,22 @@ import (
 type Annotation any
 
 type Node interface {
+	// Base API
+
 	Annotations() []Annotation
 	Node() ast.Node
-
 	AnnotatedNode(ast.Node) Node
 
-	// TODO Define all required methods
+	// Metadata API
+
 	Dir() string
 	FileName() string
 	PackageName() string
 	Imports() []*ast.ImportSpec
+
+	// Lookup API
+
+	FindImportByAlias(alias string) (string, bool)
 }
 
 type AnnotationProcessor interface {

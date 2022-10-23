@@ -11,7 +11,7 @@ type Module interface {
 }
 
 func Load(path string) (Module, error) {
-	m, err := lookup(path)
+	m, err := loadModule(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load module: %w", err)
 	}
@@ -24,5 +24,14 @@ func Find(m Module, importPath string) (Module, error) {
 		return nil, errors.New("can not cast module to required internal type")
 	}
 
-	return mod.find(importPath)
+	out, err := mod.find(importPath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find module: %w", err)
+	}
+
+	if out == (*module)(nil) {
+		return nil, nil
+	}
+
+	return out, nil
 }

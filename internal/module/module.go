@@ -1,14 +1,14 @@
 package module
 
 import (
-	"errors"
 	"fmt"
-	"github.com/YReshetko/go-annotation/internal/environment"
 	"path/filepath"
 	"strings"
 
 	"golang.org/x/mod/modfile"
 	module2 "golang.org/x/mod/module"
+
+	"github.com/YReshetko/go-annotation/internal/environment"
 )
 
 type module struct {
@@ -37,17 +37,16 @@ func (m *module) Root() string {
 
 func (m *module) find(importPath string) (*module, error) {
 	if m.mod == nil {
-		for _, file := range m.files {
-			if strings.HasSuffix(importPath, file) {
-				return m, nil
-			}
+		if m.hasImportPath(importPath) {
+			return m, nil
 		}
+		// TODO Try to lookup module in GO_HOME/GO_ROOT
 		return nil, nil
 	}
 
 	mn := m.findClosestModuleName(importPath)
 	if len(mn) == 0 {
-		return nil, errors.New("module not found for: " + importPath)
+		return nil, fmt.Errorf("module not found for: %s", importPath)
 	}
 
 	// Return self module
@@ -63,10 +62,10 @@ func (m *module) find(importPath string) (*module, error) {
 	// Preload and return module
 	path, ok := m.escapedPath(mn)
 	if !ok {
-		return nil, errors.New("unable to build submodule path for: " + importPath)
+		return nil, fmt.Errorf("unable to build submodule path for: %s", importPath)
 	}
 	modulePath := filepath.Join(environment.ModPath(), path)
-	subModule, err := lookup(modulePath)
+	subModule, err := loadModule(modulePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to preload submodule %s, due to: %w", importPath, err)
 	}
@@ -122,6 +121,17 @@ func (m *module) findClosestModuleName(importPath string) string {
 	}
 
 	return out[ind]
+}
+
+func (m *module) hasImportPath(importPath string) bool {
+	modRoot := strings.TrimPrefix(m.root, environment.GoHome()+"/")
+	for _, file := range m.files {
+		file = filepath.Join(modRoot, file)
+		if strings.HasPrefix(file, importPath) {
+			return true
+		}
+	}
+	return false
 }
 
 func (m *module) escapedPath(moduleName string) (string, bool) {

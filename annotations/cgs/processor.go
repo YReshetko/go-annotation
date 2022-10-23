@@ -23,6 +23,7 @@ type toGenerate struct {
 	node        *ast.TypeSpec
 	annotation  Constructor
 	packageName string
+	an          annotation.Node
 }
 
 func (p *Processor) Process(node annotation.Node) error {
@@ -44,6 +45,7 @@ func (p *Processor) Process(node annotation.Node) error {
 		node:        n,
 		annotation:  annotations[0],
 		packageName: node.PackageName(),
+		an:          node,
 	})
 
 	return nil
