@@ -45,7 +45,7 @@ func (n *node) AnnotatedNode(v ast2.Node) Node {
 }
 
 func (n *node) Root() string {
-	return filepath.Dir(n.m.Root())
+	return n.m.Root()
 }
 
 func (n *node) Dir() string {

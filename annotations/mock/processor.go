@@ -14,16 +14,18 @@ import (
 
 func init() {
 	annotation.Register[Mock](&Processor{
-		out:   map[string][]byte{},
-		cache: &generator.Cache{},
+		out:     map[string][]byte{},
+		cache:   &generator.Cache{},
+		toRerun: []string{},
 	})
 }
 
 var _ annotation.AnnotationProcessor = (*Processor)(nil)
 
 type Processor struct {
-	out   map[string][]byte
-	cache generator.Cacher
+	out     map[string][]byte
+	cache   generator.Cacher
+	toRerun []string
 }
 
 func (p *Processor) Process(node annotation.Node) error {
@@ -71,6 +73,18 @@ func (p *Processor) Process(node annotation.Node) error {
 		return fmt.Errorf("attemption to save same file with different data twice: %s", outputFile)
 	}
 
+	if mod == generator.Package {
+		data, err = ingestMockAnnotation(data)
+		if err != nil {
+			return fmt.Errorf("unable to ingest generated code for %s: %w", mockName, err)
+		}
+		toFile, err := filepath.Rel(node.Root(), outputFile)
+		if err != nil {
+			return fmt.Errorf("unable to build relativ path %s: %w", outputFile, err)
+		}
+		p.toRerun = append(p.toRerun, toFile)
+	}
+
 	p.out[outputFile] = data
 
 	return nil
@@ -88,6 +102,14 @@ func (p *Processor) Name() string {
 	return "Mock"
 }
 
+func (p *Processor) ToRerun() []string {
+	return p.toRerun
+}
+
+func (p *Processor) Clear() {
+	p.toRerun = []string{}
+	p.out = map[string][]byte{}
+}
 func extractTypeName(node annotation.Node) (string, generator.FakeMode, error) {
 	var nameIdent *ast.Ident
 	mod := generator.InterfaceOrFunction

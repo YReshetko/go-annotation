@@ -39,6 +39,14 @@ func TestParserSuccess(t *testing.T) {
 				assert.Empty(t, annotations[0].Params())
 			},
 		},
+		{"single line annotation with empty param", `// @SomeAnnotation(name="")`,
+			func(t *testing.T, annotations []parser.Annotation) {
+				require.Len(t, annotations, 1)
+				assert.Equal(t, "SomeAnnotation", annotations[0].Name())
+				assert.Len(t, annotations[0].Params(), 1)
+				assert.Empty(t, annotations[0].Params()["name"])
+			},
+		},
 		{"single line annotation with params", `// @RestAnnotation(method="GET", endpoint="/api/v1/rest")`,
 			func(t *testing.T, annotations []parser.Annotation) {
 				require.Len(t, annotations, 1)

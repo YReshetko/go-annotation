@@ -1,4 +1,4 @@
-// @Mock(name="HandlersMock")
+// Package handlers annotation: @Mock(name="HandlersMock", sub="pkg_mocks")
 package handlers
 
 import "net/http"
@@ -51,6 +51,18 @@ type (
 		Proxy() SomeHandler
 		SetProxy(SomeHandler) error
 	}
+
+	// DockCommentSomeInternalHandler
+	/**
+	* test interface for mocking
+	* Annotations:
+	*		@Mock(name="DockCommentSomeInternalHandler", sub="mocks_2")
+	 */
+	DockCommentSomeInternalHandler interface {
+		Handle(r http.Request) (http.Response, error)
+		Proxy() SomeHandler
+		SetProxy(SomeHandler) error
+	}
 )
 
 // FunctionForTestingItsTool test interface for mocking
@@ -62,6 +74,12 @@ type FunctionForTestingItsTool func(SomeInternalHandler, http.Response) http.Req
 func DoSomething(r http.Request) {
 
 }
+
+/**
+ * DoSomeAnother some doc
+ * @tag <code>Markup<</code>
+ * @param response documentation
+ */
 func DoSomeAnother(response http.Response) {
 
 }

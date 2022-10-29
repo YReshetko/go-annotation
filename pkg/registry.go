@@ -34,7 +34,13 @@ type AnnotationProcessor interface {
 	Name() string
 }
 
+type Rerunable interface {
+	ToRerun() []string
+	Clear()
+}
+
 var processors = map[string]AnnotationProcessor{}
+var rerunable = map[string]Rerunable{}
 var annotations = map[string]Annotation{}
 
 func Register[T Annotation](processor AnnotationProcessor) {
@@ -45,10 +51,18 @@ func Register[T Annotation](processor AnnotationProcessor) {
 	annotationName := reflect.TypeOf(v).Name()
 	processors[annotationName] = processor
 	annotations[annotationName] = v
+
+	if r, ok := processor.(Rerunable); ok {
+		rerunable[processorKey(processor)] = r
+	}
 }
 
 func processorByAnnotationName(n string) AnnotationProcessor {
 	return processors[n]
+}
+
+func processorKey(p AnnotationProcessor) string {
+	return p.Name() + p.Version()
 }
 
 func processor[T Annotation]() (AnnotationProcessor, bool) {
