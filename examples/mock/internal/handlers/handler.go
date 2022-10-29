@@ -1,3 +1,4 @@
+// @Mock(name="HandlersMock")
 package handlers
 
 import "net/http"
@@ -56,3 +57,11 @@ type (
 // Annotations:
 //		@Mock(sub="mocks_2")
 type FunctionForTestingItsTool func(SomeInternalHandler, http.Response) http.Request
+
+// Testing package interface
+func DoSomething(r http.Request) {
+
+}
+func DoSomeAnother(response http.Response) {
+
+}

@@ -37,7 +37,7 @@ func (p *Processor) Process(node annotation.Node) error {
 	}
 
 	a := annotations[0]
-	typeName, err := extractTypeName(node)
+	typeName, mod, err := extractTypeName(node)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (p *Processor) Process(node annotation.Node) error {
 	}
 
 	f, err := generator.NewFake(
-		generator.InterfaceOrFunction,
+		mod,
 		typeName,
 		node.Dir(),
 		mockName,
@@ -88,26 +88,30 @@ func (p *Processor) Name() string {
 	return "Mock"
 }
 
-func extractTypeName(node annotation.Node) (string, error) {
+func extractTypeName(node annotation.Node) (string, generator.FakeMode, error) {
 	var nameIdent *ast.Ident
+	mod := generator.InterfaceOrFunction
 	switch n := node.Node().(type) {
 	case *ast.TypeSpec:
 		nameIdent = n.Name
 		switch n.Type.(type) {
 		case *ast.InterfaceType, *ast.FuncType, *ast.Ident:
 		default:
-			return "", fmt.Errorf("expected mocked type one of [*ast.InterfaceType, *ast.FuncType, *ast.Ident], but got %T for %s", n.Type, nameIdent.String())
+			return "", mod, fmt.Errorf("expected mocked type one of [*ast.InterfaceType, *ast.FuncType, *ast.Ident], but got %T for %s", n.Type, nameIdent.String())
 		}
 
 	case *ast.FuncDecl:
 		nameIdent = n.Name
+	case *ast.File:
+		nameIdent = n.Name
+		mod = generator.Package
 	default:
-		return "", fmt.Errorf("expected mocked type is *ast.TypeSpec or *ast.FuncDecl, but got %T", node.Node())
+		return "", mod, fmt.Errorf("expected mocked type one of [ast.TypeSpec, *ast.FuncDecl, *ast.File], but got %T", node.Node())
 	}
 	if nameIdent.String() == "" {
-		return "", fmt.Errorf("unable to prepare mock for interface in %s", node.Dir())
+		return "", mod, fmt.Errorf("unable to prepare mock for interface in %s", node.Dir())
 	}
-	return nameIdent.String(), nil
+	return nameIdent.String(), mod, nil
 }
 
 func createMockInterfaceName(nameTemplate, interfaceName string) (string, error) {
