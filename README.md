@@ -114,7 +114,7 @@ func (p *SomeAnnotationProcessor) Process(_ annotation.Node) error {
 
 func (p *SomeAnnotationProcessor) Output() map[string][]byte {
     // Prepare processing results and return:
-    // map.key (string) - relative file path (module root is a base path) (for example: /internal/handler/rest.gen.go)
+    // map.key (string) - absolute file path (processed dir can be taken from annotation.Node: node.Dir())
     // map.value ([]byte) - resulting file data (for example .go file)
 }
 

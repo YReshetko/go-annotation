@@ -2,7 +2,9 @@ package pkg
 
 import (
 	"go/ast"
+	"go/token"
 
+	"github.com/YReshetko/go-annotation/internal/utils/astutils"
 	. "github.com/YReshetko/go-annotation/internal/utils/stream"
 )
 
@@ -22,4 +24,8 @@ func toType[T any](a Annotation) T {
 func CastNode[T ast.Node](n Node) (T, bool) {
 	v, ok := n.Node().(T)
 	return v, ok
+}
+
+func BytesToAST(data []byte) (ast.Node, *token.FileSet, error) {
+	return astutils.BytesToAST(data)
 }

@@ -3,6 +3,9 @@ package pkg
 import (
 	"fmt"
 	goAST "go/ast"
+	"go/printer"
+	"go/token"
+	"os"
 	"path/filepath"
 
 	"github.com/YReshetko/go-annotation/internal/ast"
@@ -19,8 +22,33 @@ func Process() {
 	root := environment.ProjectRoot()
 	m := panicOnError(module.Load(root))
 
+	run(m, m.Files())
+
+	if len(rerunable) > 0 {
+		f := filesToReRun()
+		for ; len(f) > 0; f = filesToReRun() {
+			run(m, f)
+		}
+	}
+}
+
+func filesToReRun() []string {
+	return FlatMap(Map(OfMap(rerunable), ExtractVal2[string, Rerunable]()), filesToRerun).
+		Filter(isNotEmpty).ToSlice()
+}
+
+func isNotEmpty(s string) bool {
+	return len(s) > 0
+}
+func filesToRerun(t Rerunable) []string {
+	defer t.Clear()
+	out := t.ToRerun()
+	return out
+}
+
+func run(m module.Module, files []string) {
 	// Execute processors for annotations
-	err := MapPair(OfSlice(m.Files()).Map(joinPath(m.Root())), toAstFile).RangeErr(moduleNodeProcessor(m))
+	err := MapPair(OfSlice(files).Map(joinPath(m.Root())), toAstFile).RangeErr(moduleNodeProcessor(m))
 	if err != nil {
 		panic(err)
 	}
@@ -53,6 +81,9 @@ func moduleNodeProcessor(m module.Module) func(Pair[string, *goAST.File]) error 
 
 			return err == nil
 		})
+		if err != nil {
+			printer.Fprint(os.Stdout, &token.FileSet{}, f)
+		}
 		return err
 	}
 }
