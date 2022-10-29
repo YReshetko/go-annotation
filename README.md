@@ -1,13 +1,13 @@
 # go-annotation
-go-annotation is a [Go programming language][golang] library to build a toolchain for code generation by annotated comments. 
+go-annotation is a [Go programming language](https://golang.org) library to build a toolchain for code generation by annotated comments. 
 
 # Go 1.18+
 
 ---
 
 # Terms
-**Annotation** - in the library scope annotation is a part of go comment that have syntax `@<annotation_name>{<field_name_1>="<field_value_1>, ..."}`. 
-For example: `@Rest{method="GET", path="/api/v1/pet"}`, fields can be omitted: `@Mock`
+**Annotation** - in the library scope annotation is a part of go comment that have syntax `@<annotation_name>(<field_name_1>="<field_value_1>, ...")`. 
+For example: `@Rest(method="GET", path="/api/v1/pet")`, fields can be omitted: `@Mock`
 
 **Annotation processor** - is a client code that implements [_**pkg.AnnotationProcessor**_](https://github.com/YReshetko/go-annotation/blob/master/pkg/registry.go#L29) interface which receives parsed annotations along with _**ast.Node**_ metadata. 
 
@@ -30,7 +30,7 @@ In general, developer needs to pass next steps for implementing generator:
 ### Custom annotation definition
 
 First of all we need to define a go structure that represents particular annotation in code. Let's take `@Rest` as an example:
-`@Rest{method="GET", path="/api/v1/pet"}`. Then corresponding structure would look like
+`@Rest(method="GET", path="/api/v1/pet")`. Then corresponding structure would look like
 
 ```go
 type Rest struct {

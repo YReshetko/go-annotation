@@ -16,6 +16,7 @@ type Node interface {
 
 	// Metadata API
 
+	Root() string
 	Dir() string
 	FileName() string
 	PackageName() string

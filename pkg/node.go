@@ -44,6 +44,10 @@ func (n *node) AnnotatedNode(v ast2.Node) Node {
 	return newNode(n.m, n.p, n.f, n.n, filledAnnotations(a))
 }
 
+func (n *node) Root() string {
+	return filepath.Dir(n.m.Root())
+}
+
 func (n *node) Dir() string {
 	return filepath.Dir(n.p)
 }

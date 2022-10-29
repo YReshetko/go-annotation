@@ -1,0 +1,141 @@
+package mock
+
+import (
+	"bytes"
+	"fmt"
+	"go/ast"
+	"path/filepath"
+	"text/template"
+
+	"github.com/maxbrunsfeld/counterfeiter/v6/generator"
+
+	annotation "github.com/YReshetko/go-annotation/pkg"
+)
+
+func init() {
+	annotation.Register[Mock](&Processor{
+		out:   map[string][]byte{},
+		cache: &generator.Cache{},
+	})
+}
+
+var _ annotation.AnnotationProcessor = (*Processor)(nil)
+
+type Processor struct {
+	out   map[string][]byte
+	cache generator.Cacher
+}
+
+func (p *Processor) Process(node annotation.Node) error {
+	annotations := annotation.FindAnnotations[Mock](node.Annotations())
+	if len(annotations) == 0 {
+		return nil
+	}
+
+	if len(annotations) > 1 {
+		return fmt.Errorf("expected 1 mock annotation, but got: %d", len(annotations))
+	}
+
+	a := annotations[0]
+	typeName, err := extractTypeName(node)
+	if err != nil {
+		return err
+	}
+
+	mockName, err := createMockInterfaceName(a.Name, typeName)
+	if err != nil {
+		return err
+	}
+
+	f, err := generator.NewFake(
+		generator.InterfaceOrFunction,
+		typeName,
+		node.Dir(),
+		mockName,
+		a.SubPackage,
+		"",
+		node.Root(),
+		p.cache,
+	)
+	if err != nil {
+		return fmt.Errorf("unable to prepare generator for %s: %w", typeName, err)
+	}
+
+	data, err := f.Generate(true)
+	if err != nil {
+		return fmt.Errorf("unable to generate mock for %s: %w", typeName, err)
+	}
+
+	outputFile := filepath.Join(node.Dir(), a.SubPackage, toSnakeCase(mockName)+".gen.go")
+	if _, ok := p.out[outputFile]; ok {
+		return fmt.Errorf("attemption to save same file with different data twice: %s", outputFile)
+	}
+
+	p.out[outputFile] = data
+
+	return nil
+}
+
+func (p *Processor) Output() map[string][]byte {
+	return p.out
+}
+
+func (p *Processor) Version() string {
+	return "0.0.1"
+}
+
+func (p *Processor) Name() string {
+	return "Mock"
+}
+
+func extractTypeName(node annotation.Node) (string, error) {
+	var nameIdent *ast.Ident
+	switch n := node.Node().(type) {
+	case *ast.TypeSpec:
+		nameIdent = n.Name
+		switch n.Type.(type) {
+		case *ast.InterfaceType, *ast.FuncType, *ast.Ident:
+		default:
+			return "", fmt.Errorf("expected mocked type one of [*ast.InterfaceType, *ast.FuncType, *ast.Ident], but got %T for %s", n.Type, nameIdent.String())
+		}
+
+	case *ast.FuncDecl:
+		nameIdent = n.Name
+	default:
+		return "", fmt.Errorf("expected mocked type is *ast.TypeSpec or *ast.FuncDecl, but got %T", node.Node())
+	}
+	if nameIdent.String() == "" {
+		return "", fmt.Errorf("unable to prepare mock for interface in %s", node.Dir())
+	}
+	return nameIdent.String(), nil
+}
+
+func createMockInterfaceName(nameTemplate, interfaceName string) (string, error) {
+	tmpl, err := template.New("mock_name").Parse(nameTemplate)
+	if err != nil {
+		return "", fmt.Errorf("unable to parse Mock annotation name tmplate %s: %w", interfaceName, err)
+	}
+	buf := bytes.NewBufferString("")
+	if err = tmpl.Execute(buf, map[string]string{"TypeName": interfaceName}); err != nil {
+		return "", fmt.Errorf("unable to prepare mock name %s: %w", interfaceName, err)
+	}
+	return buf.String(), nil
+}
+
+func toSnakeCase(s string) string {
+	size := 'a' - 'A'
+	out := ""
+	for i, ch := range s {
+		if ch >= 'A' && ch <= 'Z' {
+			if i == 0 {
+				out += string(ch + size)
+			} else {
+				out += "_" + string(ch+size)
+			}
+		} else {
+			out += string(ch)
+		}
+
+	}
+	return out
+}
