@@ -1,4 +1,4 @@
-package pkg
+package annotation
 
 import (
 	"github.com/YReshetko/go-annotation/internal/lookup"

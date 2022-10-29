@@ -1,3 +1,3 @@
-package dashed
+package anythingelse
 
 type Exported struct{}

@@ -17,7 +17,7 @@ func SomeTestFunction() {
 
 	_ = Config
 
-	_ = dashed.Exported{}
+	_ = anythingelse.Exported{}
 
 	_ = spew.Config
 }

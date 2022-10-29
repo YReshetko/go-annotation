@@ -1,8 +1,10 @@
 package main
 
-import "github.com/YReshetko/go-annotation/pkg"
-import _ "github.com/YReshetko/go-annotation/annotations/cgs"
+import (
+	_ "github.com/YReshetko/go-annotation/annotations/cgs"
+	"github.com/YReshetko/go-annotation/pkg"
+)
 
 func main() {
-	pkg.Process()
+	annotation.Process()
 }

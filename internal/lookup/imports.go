@@ -37,7 +37,7 @@ func getLocalPackageName(m module.Module, spec *ast.ImportSpec) string {
 
 	if m != nil {
 		return OfSlice(m.Files()).
-			Map(utils.Root).
+			//Map(utils.Root).
 			Filter(hasPathSuffix(importPath)).
 			Map(fileToPackageName(m.Root())).
 			One()

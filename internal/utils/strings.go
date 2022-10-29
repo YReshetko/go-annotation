@@ -1,6 +1,8 @@
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 func TrimQuotes(s string) string {
 	return strings.Trim(s, "\"")
@@ -11,5 +13,9 @@ func LastDir(s string) string {
 }
 
 func Root(s string) string {
+	index := strings.LastIndex(s, "/")
+	if index == -1 {
+		return s
+	}
 	return s[:strings.LastIndex(s, "/")]
 }

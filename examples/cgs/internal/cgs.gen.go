@@ -40,19 +40,19 @@ func NewTheThirdStruct(a SomeStructure, b *SomeStructure, c int, d int, fn func(
 	}
 }
 
-func NewStackStruct[T stack[T]](a stack[T], q queue[stack[T]], fn func(**SomeStructure) AnotherStruct) StackStruct[T] {
+func NewStackStruct[T stack[T]](q queue[stack[T]], fn func(**SomeStructure) AnotherStruct, a stack[T]) StackStruct[T] {
 	return StackStruct[T]{
-		a:  a,
 		q:  q,
 		fn: fn,
+		a:  a,
 	}
 }
 
-func NewStackQueueStruct[T comparable, V constraints.Integer](fn func(**SomeStructure) AnotherStruct, buff bytes.Buffer, a stack[T], q queue[V]) StackQueueStruct[T, V] {
+func NewStackQueueStruct[T comparable, V constraints.Integer](a stack[T], q queue[V], fn func(**SomeStructure) AnotherStruct, buff bytes.Buffer) StackQueueStruct[T, V] {
 	return StackQueueStruct[T, V]{
-		fn:   fn,
-		buff: buff,
 		a:    a,
 		q:    q,
+		fn:   fn,
+		buff: buff,
 	}
 }

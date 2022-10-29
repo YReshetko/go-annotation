@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	pkg.Process()
+	annotation.Process()
 }

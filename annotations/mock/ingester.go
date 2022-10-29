@@ -6,11 +6,11 @@ import (
 	"go/ast"
 	"go/printer"
 
-	"github.com/YReshetko/go-annotation/internal/utils/astutils"
+	annotation "github.com/YReshetko/go-annotation/pkg"
 )
 
 func ingestMockAnnotation(data []byte) ([]byte, error) {
-	fileSpec, fset, err := astutils.BytesToAST(data)
+	fileSpec, fset, err := annotation.BytesToAST(data)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert bytes to AST: %w", err)
 	}

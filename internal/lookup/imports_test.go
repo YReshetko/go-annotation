@@ -28,7 +28,7 @@ func TestFindImportByAlias(t *testing.T) {
 		{".", "github.com/davecgh/go-spew/spew"},
 		{"_", "github.com/davecgh/go-spew/spew"},
 		{"spew", "github.com/davecgh/go-spew/spew"},
-		{"dashed", "github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package"},
+		{"anythingelse", "github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package"},
 	}
 
 	for _, s := range toTest {
