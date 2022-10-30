@@ -12,6 +12,16 @@ import (
 )
 
 type GenericInterfaceMock struct {
+	GetStub        func() float32
+	getMutex       sync.RWMutex
+	getArgsForCall []struct {
+	}
+	getReturns struct {
+		result1 float32
+	}
+	getReturnsOnCall map[int]struct {
+		result1 float32
+	}
 	ProcessStub        func(int, []float32) (chan int, float32)
 	processMutex       sync.RWMutex
 	processArgsForCall []struct {
@@ -28,6 +38,59 @@ type GenericInterfaceMock struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *GenericInterfaceMock) Get() float32 {
+	fake.getMutex.Lock()
+	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
+	fake.getArgsForCall = append(fake.getArgsForCall, struct {
+	}{})
+	stub := fake.GetStub
+	fakeReturns := fake.getReturns
+	fake.recordInvocation("Get", []interface{}{})
+	fake.getMutex.Unlock()
+	if stub != nil {
+		return stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *GenericInterfaceMock) GetCallCount() int {
+	fake.getMutex.RLock()
+	defer fake.getMutex.RUnlock()
+	return len(fake.getArgsForCall)
+}
+
+func (fake *GenericInterfaceMock) GetCalls(stub func() float32) {
+	fake.getMutex.Lock()
+	defer fake.getMutex.Unlock()
+	fake.GetStub = stub
+}
+
+func (fake *GenericInterfaceMock) GetReturns(result1 float32) {
+	fake.getMutex.Lock()
+	defer fake.getMutex.Unlock()
+	fake.GetStub = nil
+	fake.getReturns = struct {
+		result1 float32
+	}{result1}
+}
+
+func (fake *GenericInterfaceMock) GetReturnsOnCall(i int, result1 float32) {
+	fake.getMutex.Lock()
+	defer fake.getMutex.Unlock()
+	fake.GetStub = nil
+	if fake.getReturnsOnCall == nil {
+		fake.getReturnsOnCall = make(map[int]struct {
+			result1 float32
+		})
+	}
+	fake.getReturnsOnCall[i] = struct {
+		result1 float32
+	}{result1}
 }
 
 func (fake *GenericInterfaceMock) Process(arg1 int, arg2 []float32) (chan int, float32) {
@@ -103,6 +166,8 @@ func (fake *GenericInterfaceMock) ProcessReturnsOnCall(i int, result1 chan int, 
 func (fake *GenericInterfaceMock) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.getMutex.RLock()
+	defer fake.getMutex.RUnlock()
 	fake.processMutex.RLock()
 	defer fake.processMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

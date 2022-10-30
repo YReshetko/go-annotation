@@ -117,9 +117,9 @@ func extractTypeName(node annotation.Node) (string, generator.FakeMode, error) {
 	case *ast.TypeSpec:
 		nameIdent = n.Name
 		switch n.Type.(type) {
-		case *ast.InterfaceType, *ast.FuncType, *ast.IndexListExpr, *ast.Ident:
+		case *ast.InterfaceType, *ast.FuncType, *ast.IndexListExpr, *ast.IndexExpr, *ast.Ident:
 		default:
-			return "", mod, fmt.Errorf("expected mocked type one of [*ast.InterfaceType, *ast.FuncType, *ast.Ident], but got %T for %s", n.Type, nameIdent.String())
+			return "", mod, fmt.Errorf("expected mocked type one of [*ast.InterfaceType, *ast.FuncType, *ast.IndexListExpr, *ast.IndexExpr, *ast.Ident], but got %T for %s", n.Type, nameIdent.String())
 		}
 
 	case *ast.FuncDecl:
