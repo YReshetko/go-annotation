@@ -39,6 +39,15 @@ type Rerunable interface {
 	Clear()
 }
 
+var _ AnnotationProcessor = (*noopProcessor)(nil)
+
+type noopProcessor struct{}
+
+func (n noopProcessor) Process(Node) error        { return nil }
+func (n noopProcessor) Output() map[string][]byte { return nil }
+func (n noopProcessor) Version() string           { return "" }
+func (n noopProcessor) Name() string              { return "noop" }
+
 var processors = map[string]AnnotationProcessor{}
 var rerunable = map[string]Rerunable{}
 var annotations = map[string]Annotation{}
@@ -55,6 +64,10 @@ func Register[T Annotation](processor AnnotationProcessor) {
 	if r, ok := processor.(Rerunable); ok {
 		rerunable[processorKey(processor)] = r
 	}
+}
+
+func RegisterNoop[T Annotation]() {
+	Register[T](noopProcessor{})
 }
 
 func processorByAnnotationName(n string) AnnotationProcessor {
