@@ -13,12 +13,13 @@ import (
 
 func NewSomeSomeStructureThisIsMyTemplate(c *bool, d **complex128) SomeStructure {
 	return SomeStructure{
-		c:       c,
-		d:       d,
-		slice2:  []map[chan int]string{},
-		maps:    make(map[chan []int]struct{ A http.Request }, 5),
-		chanals: make(chan []struct{ A http.Request }),
-		slice:   make([]map[chan int]string, 5, 10),
+		c:          c,
+		d:          d,
+		slice:      make([]map[chan int]string, 5, 10),
+		slice2:     []map[chan int]string{},
+		maps:       make(map[chan []int]struct{ A http.Request }, 5),
+		chanals:    make(chan []struct{ A http.Request }),
+		chanalsCap: make(chan []struct{ A http.Request }, 5),
 	}
 }
 
@@ -26,27 +27,16 @@ type SomeStructureOption func(*SomeStructure)
 
 func NewSomeSomeStructureThisIsMyTemplateOptional(opts ...SomeStructureOption) SomeStructure {
 	rt := &SomeStructure{
-		slice:   make([]map[chan int]string, 5, 10),
-		slice2:  []map[chan int]string{},
-		maps:    make(map[chan []int]struct{ A http.Request }, 5),
-		chanals: make(chan []struct{ A http.Request }),
+		chanalsCap: make(chan []struct{ A http.Request }, 5),
+		slice:      make([]map[chan int]string, 5, 10),
+		slice2:     []map[chan int]string{},
+		maps:       make(map[chan []int]struct{ A http.Request }, 5),
+		chanals:    make(chan []struct{ A http.Request }),
 	}
 	for _, o := range opts {
 		o(rt)
 	}
 	return *rt
-}
-
-func WithSlice(v []map[chan int]string) SomeStructureOption {
-	return func(rt *SomeStructure) {
-		rt.slice = v
-	}
-}
-
-func WithSlice2(v []map[chan int]string) SomeStructureOption {
-	return func(rt *SomeStructure) {
-		rt.slice2 = v
-	}
 }
 
 func WithMaps(v map[chan []int]struct{ A http.Request }) SomeStructureOption {
@@ -61,6 +51,12 @@ func WithChanals(v chan []struct{ A http.Request }) SomeStructureOption {
 	}
 }
 
+func WithChanalsCap(v chan []struct{ A http.Request }) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.chanalsCap = v
+	}
+}
+
 func WithC(v *bool) SomeStructureOption {
 	return func(rt *SomeStructure) {
 		rt.c = v
@@ -70,6 +66,18 @@ func WithC(v *bool) SomeStructureOption {
 func WithD(v **complex128) SomeStructureOption {
 	return func(rt *SomeStructure) {
 		rt.d = v
+	}
+}
+
+func WithSlice(v []map[chan int]string) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.slice = v
+	}
+}
+
+func WithSlice2(v []map[chan int]string) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.slice2 = v
 	}
 }
 
@@ -92,6 +100,12 @@ func NewAnotherStructOptional(opts ...AnotherStructOption) AnotherStruct {
 	return *rt
 }
 
+func WithA(v SomeStructure) AnotherStructOption {
+	return func(rt *AnotherStruct) {
+		rt.a = v
+	}
+}
+
 func WithB(v *SomeStructure) AnotherStructOption {
 	return func(rt *AnotherStruct) {
 		rt.b = v
@@ -110,27 +124,21 @@ func WithBuff(v bytes.Buffer) AnotherStructOption {
 	}
 }
 
-func WithA(v SomeStructure) AnotherStructOption {
-	return func(rt *AnotherStruct) {
-		rt.a = v
-	}
-}
-
-func NewTheThirdStruct(fn func(**SomeStructure) AnotherStruct, a SomeStructure, b *SomeStructure, c int, d int) TheThirdStruct {
+func NewTheThirdStruct(a SomeStructure, b *SomeStructure, c int, d int, fn func(**SomeStructure) AnotherStruct) TheThirdStruct {
 	return TheThirdStruct{
-		fn: fn,
 		a:  a,
 		b:  b,
 		c:  c,
 		d:  d,
+		fn: fn,
 	}
 }
 
-func NewStackStruct[T stack[T]](a stack[T], q queue[stack[T]], fn func(**SomeStructure) AnotherStruct) StackStruct[T] {
+func NewStackStruct[T stack[T]](q queue[stack[T]], fn func(**SomeStructure) AnotherStruct, a stack[T]) StackStruct[T] {
 	return StackStruct[T]{
-		a:  a,
 		q:  q,
 		fn: fn,
+		a:  a,
 	}
 }
 
@@ -140,13 +148,16 @@ func NewStackQueueStruct[T comparable, V constraints.Integer](a stack[T], q queu
 		q:    q,
 		fn:   fn,
 		buff: buff,
+		str:  make(chan map[T][]V),
 	}
 }
 
 type StackQueueStructOption[T comparable, V constraints.Integer] func(*StackQueueStruct[T, V])
 
 func NewStackQueueStructOptional[T comparable, V constraints.Integer](opts ...StackQueueStructOption[T, V]) *StackQueueStruct[T, V] {
-	rt := &StackQueueStruct[T, V]{}
+	rt := &StackQueueStruct[T, V]{
+		str: make(chan map[T][]V),
+	}
 	for _, o := range opts {
 		o(rt)
 	}
@@ -174,5 +185,11 @@ func WithSQSFn[T comparable, V constraints.Integer](v func(**SomeStructure) Anot
 func WithSQSBuff[T comparable, V constraints.Integer](v bytes.Buffer) StackQueueStructOption[T, V] {
 	return func(rt *StackQueueStruct[T, V]) {
 		rt.buff = v
+	}
+}
+
+func WithSQSStr[T comparable, V constraints.Integer](v chan map[T][]V) StackQueueStructOption[T, V] {
+	return func(rt *StackQueueStruct[T, V]) {
+		rt.str = v
 	}
 }

@@ -25,8 +25,10 @@ type SomeStructure struct {
 	maps map[chan []int]struct{ A http.Request }
 	// @Init
 	chanals chan []struct{ A http.Request }
-	c       *bool
-	d       **complex128
+	// @Init(cap="5")
+	chanalsCap chan []struct{ A http.Request }
+	c          *bool
+	d          **complex128
 }
 
 // @Constructor(name="NewAnotherStructOverride", type="pointer")
@@ -62,6 +64,8 @@ type StackQueueStruct[T comparable, V constraints.Integer] struct {
 	q    queue[V]
 	fn   func(**SomeStructure) AnotherStruct
 	buff bytes.Buffer
+	// @Init
+	str chan map[T][]V
 }
 
 func validation() {
@@ -72,5 +76,6 @@ func validation() {
 			return AnotherStruct{}
 		}),
 		WithSQSQ[int, int]([]int{}),
+		WithSQSStr[int, int](make(chan map[int][]int)),
 	)
 }
