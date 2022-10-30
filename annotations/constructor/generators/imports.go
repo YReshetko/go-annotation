@@ -1,4 +1,4 @@
-package cgs
+package generators
 
 import (
 	"go/ast"
@@ -21,6 +21,12 @@ func (d distinctImports) append(i Import) {
 
 func (d distinctImports) merge(new distinctImports) {
 	for k, _ := range new {
+		d[k] = struct{}{}
+	}
+}
+
+func (d distinctImports) mergeSlice(new []Import) {
+	for _, k := range new {
 		d[k] = struct{}{}
 	}
 }

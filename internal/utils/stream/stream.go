@@ -107,6 +107,8 @@ func OfSlice[T any](v []T) Stream[T] {
 				s.ch <- t
 			}
 		}()
+	} else {
+		s.close()
 	}
 	return s
 }
@@ -120,6 +122,8 @@ func OfMap[K comparable, V any](m map[K]V) Stream[Pair[K, V]] {
 				s.ch <- Pair[K, V]{Val1: k, Val2: v}
 			}
 		}()
+	} else {
+		s.close()
 	}
 	return s
 }
