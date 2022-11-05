@@ -18,6 +18,11 @@ type Optional struct {
 }
 
 type Builder struct {
+	StructureName   string `annotation:"name=name,default={{.TypeName}}Builder"`
+	ConstructorName string `annotation:"name=constructor,default=New{{.TypeName}}Builder"`
+	BuildPattern    string `annotation:"name=build,default={{.FieldName}}"`
+	BuilderName     string `annotation:"name=terminator,default=Build"`
+	Type            string `annotation:"name=type,default=struct"` // defines return structType or pointerType
 }
 
 // Init is used for fields initialisation such as slice, map, chan

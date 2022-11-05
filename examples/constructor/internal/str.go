@@ -14,6 +14,7 @@ type queue[B any] []B
 // Annotations:
 // 		@Constructor(name="NewSome{{.TypeName}}ThisIsMyTemplate")
 // 		@Optional(constructor="NewSome{{ .TypeName }}ThisIsMyTemplateOptional")
+//		@Builder(name="My{{.TypeName}}Builder", build="Build{{.FieldName}}Field", type="pointer")
 type SomeStructure struct {
 	a          int                                     // @Exclude
 	b          float64                                 // @Exclude
@@ -61,9 +62,12 @@ type StackStruct[T stack[T]] struct {
 // Annotations:
 // 		@Constructor
 // 		@Optional(constructor="New{{ .TypeName }}Optional", type="pointer", with="WithSQS{{ .FieldName }}")
+//		@Builder(name="My{{.TypeName}}Builder", build="Build{{.FieldName}}Field", type="pointer")
 type StackQueueStruct[T comparable, V constraints.Integer] struct {
 	a    stack[T]
 	q    queue[V]
+	simp T
+	vimp V
 	fn   func(**SomeStructure) AnotherStruct
 	buff bytes.Buffer
 	str  chan map[T][]V // @Init
@@ -79,4 +83,18 @@ func validation() {
 		WithSQSQ[int, int]([]int{}),
 		WithSQSStr[int, int](make(chan map[int][]int)),
 	)
+
+	nsb := NewStackQueueStructBuilder[bool, int]()
+	_ = nsb.BuildSimpField(false).BuildAField(stack[bool]{}).Build()
+
+	fp := false
+	c := complex128(10)
+	cp := &c
+	b := NewSomeStructureBuilder()
+	_ = b.BuildCField(&fp).
+		BuildChanalsField(nil).
+		BuildChanalsCapField(nil).
+		BuildMapsField(nil).
+		BuildDField(&cp).Build()
+
 }

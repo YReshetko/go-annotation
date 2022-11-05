@@ -49,12 +49,45 @@ func {{ .WithFunctionName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}
 }
 `
 
+const builderTypeTemplate = `
+type {{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]{{ end }} struct {
+	value {{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}
+}
+`
+
+const builderConstructorTemplate = `
+func {{ .ConstructorName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]{{ end }}() *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}  {
+	return &{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}{}
+}
+`
+
+const builderMethodTemplate = `
+func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}){{ .BuilderMethodName }}(v {{ .ArgumentType }}) *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
+	b.value.{{ .FieldName }} = v
+	return b
+}
+`
+
+const builderBuildMethodTemplate = `
+func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}) {{ .BuildMethodName }}() {{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}{
+	{{ range .Fields }}if b.value.{{ .Name }} == nil {
+		b.value.{{ .Name }} = {{ .Value }}
+	}
+	{{ end }}
+	return {{ if .IsPointer }}&{{ end }}b.value
+}
+`
+
 const (
 	fileTpl                = "fileTemplate"
 	constructorTpl         = "constructorTemplate"
 	optionalTypeTpl        = "optionalTypeTemplate"
 	optionalConstructorTpl = "optionalConstructorTemplate"
 	optionalWithTpl        = "optionalWithTemplate"
+	builderTypeTpl         = "builderTypeTemplate"
+	builderConstructorTpl  = "builderConstructorTemplate"
+	builderMethodTpl       = "builderMethodTemplate"
+	builderBuildMethodTpl  = "builderBuildMethodTemplate"
 	functionNameTpl        = "functionName"
 	typeNameTpl            = "typeName"
 )
@@ -67,6 +100,10 @@ func init() {
 	dataTemplate = must(dataTemplate.New(optionalTypeTpl).Parse(optionalTypeTemplate))
 	dataTemplate = must(dataTemplate.New(optionalConstructorTpl).Parse(optionalConstructorTemplate))
 	dataTemplate = must(dataTemplate.New(optionalWithTpl).Parse(optionalWithTemplate))
+	dataTemplate = must(dataTemplate.New(builderTypeTpl).Parse(builderTypeTemplate))
+	dataTemplate = must(dataTemplate.New(builderConstructorTpl).Parse(builderConstructorTemplate))
+	dataTemplate = must(dataTemplate.New(builderMethodTpl).Parse(builderMethodTemplate))
+	dataTemplate = must(dataTemplate.New(builderBuildMethodTpl).Parse(builderBuildMethodTemplate))
 
 }
 

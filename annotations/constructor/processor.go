@@ -14,6 +14,7 @@ func init() {
 	p := &Processor{gen: make(map[fileKey][]generator)}
 	annotation.Register[annotations.Constructor](p)
 	annotation.Register[annotations.Optional](p)
+	annotation.Register[annotations.Builder](p)
 	annotation.RegisterNoop[annotations.Exclude]()
 	annotation.RegisterNoop[annotations.Init]()
 }
@@ -58,6 +59,15 @@ func (p *Processor) Process(node annotation.Node) error {
 
 	if ok {
 		p.gen[key] = append(p.gen[key], generators.NewOptionalGenerator(ts, o, node))
+	}
+
+	b, ts, ok, err := findAnnotation[annotations.Builder](node)
+	if err != nil {
+		return err
+	}
+
+	if ok {
+		p.gen[key] = append(p.gen[key], generators.NewBuilderGenerator(ts, b, node))
 	}
 
 	return nil
