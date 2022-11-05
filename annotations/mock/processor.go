@@ -74,7 +74,7 @@ func (p *Processor) Process(node annotation.Node) error {
 	}
 
 	if mod == generator.Package {
-		data, err = ingestMockAnnotation(data)
+		data, err = enrichMockAnnotation(data)
 		if err != nil {
 			return fmt.Errorf("unable to ingest generated code for %s: %w", mockName, err)
 		}
