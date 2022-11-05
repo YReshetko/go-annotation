@@ -1,0 +1,30 @@
+
+type SomeStructureBuilder struct {
+	value SomeStructure
+}
+
+func (s *SomeStructureBuilder)C(v *bool) *SomeStructureBuilder {
+	s.value.c = v
+	return s
+}
+
+//...
+func (s *SomeStructureBuilder)build() SomeStructure {
+	if s.value.chanals == nil {
+		s.value.chanals = make(chan []struct{ A http.Request })
+	}
+	if s.value.chanalsCap == nil {
+		s.value.chanalsCap = make(chan []struct{ A http.Request }, 5)
+	}
+	//...
+/*
+	s.value = SomeStructure{
+		chanalsCap: make(chan []struct{ A http.Request }, 5),
+		slice:      make([]map[chan int]string, 5, 10),
+		slice2:     []map[chan int]string{},
+		maps:       make(map[chan []int]struct{ A http.Request }, 5),
+		chanals:    make(chan []struct{ A http.Request }),
+	}
+*/
+	return s.value
+}

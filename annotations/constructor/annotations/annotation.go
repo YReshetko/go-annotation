@@ -17,6 +17,9 @@ type Optional struct {
 	Type            string `annotation:"name=type,default=struct"` // defines return structType or pointerType
 }
 
+type Builder struct {
+}
+
 // Init is used for fields initialisation such as slice, map, chan
 // If Init.Len and Init.Cap then the values are set by default (chan is non-buffered)
 type Init struct {

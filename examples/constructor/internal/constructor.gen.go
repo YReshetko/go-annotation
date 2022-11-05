@@ -15,7 +15,7 @@ func NewSomeSomeStructureThisIsMyTemplate(c *bool, d **complex128) SomeStructure
 	return SomeStructure{
 		c:          c,
 		d:          d,
-		slice:      make([]map[chan int]string, 5, 10),
+		slice:      make([]map[chan int]string, 5, 15),
 		slice2:     []map[chan int]string{},
 		maps:       make(map[chan []int]struct{ A http.Request }, 5),
 		chanals:    make(chan []struct{ A http.Request }),
@@ -27,16 +27,28 @@ type SomeStructureOption func(*SomeStructure)
 
 func NewSomeSomeStructureThisIsMyTemplateOptional(opts ...SomeStructureOption) SomeStructure {
 	rt := &SomeStructure{
-		chanalsCap: make(chan []struct{ A http.Request }, 5),
-		slice:      make([]map[chan int]string, 5, 10),
-		slice2:     []map[chan int]string{},
 		maps:       make(map[chan []int]struct{ A http.Request }, 5),
 		chanals:    make(chan []struct{ A http.Request }),
+		chanalsCap: make(chan []struct{ A http.Request }, 5),
+		slice:      make([]map[chan int]string, 5, 15),
+		slice2:     []map[chan int]string{},
 	}
 	for _, o := range opts {
 		o(rt)
 	}
 	return *rt
+}
+
+func WithSlice(v []map[chan int]string) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.slice = v
+	}
+}
+
+func WithSlice2(v []map[chan int]string) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.slice2 = v
+	}
 }
 
 func WithMaps(v map[chan []int]struct{ A http.Request }) SomeStructureOption {
@@ -66,18 +78,6 @@ func WithC(v *bool) SomeStructureOption {
 func WithD(v **complex128) SomeStructureOption {
 	return func(rt *SomeStructure) {
 		rt.d = v
-	}
-}
-
-func WithSlice(v []map[chan int]string) SomeStructureOption {
-	return func(rt *SomeStructure) {
-		rt.slice = v
-	}
-}
-
-func WithSlice2(v []map[chan int]string) SomeStructureOption {
-	return func(rt *SomeStructure) {
-		rt.slice2 = v
 	}
 }
 
@@ -124,21 +124,21 @@ func WithBuff(v bytes.Buffer) AnotherStructOption {
 	}
 }
 
-func NewTheThirdStruct(a SomeStructure, b *SomeStructure, c int, d int, fn func(**SomeStructure) AnotherStruct) TheThirdStruct {
+func NewTheThirdStruct(fn func(**SomeStructure) AnotherStruct, a SomeStructure, b *SomeStructure, c int, d int) TheThirdStruct {
 	return TheThirdStruct{
+		fn: fn,
 		a:  a,
 		b:  b,
 		c:  c,
 		d:  d,
-		fn: fn,
 	}
 }
 
-func NewStackStruct[T stack[T]](q queue[stack[T]], fn func(**SomeStructure) AnotherStruct, a stack[T]) StackStruct[T] {
+func NewStackStruct[T stack[T]](a stack[T], q queue[stack[T]], fn func(**SomeStructure) AnotherStruct) StackStruct[T] {
 	return StackStruct[T]{
+		a:  a,
 		q:  q,
 		fn: fn,
-		a:  a,
 	}
 }
 
