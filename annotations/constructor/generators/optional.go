@@ -43,14 +43,18 @@ func NewOptionalGenerator(node *ast.TypeSpec, annotation annotations.Optional, a
 	}
 }
 
-func (g *OptionalGenerator) Generate(pcvs map[string][]PostConstructValues) ([]byte, []Import, error) {
+func (g *OptionalGenerator) Name() string {
+	return "OptionalGenerator"
+}
+
+func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Import, error) {
 	di := newDistinctImports()
 	tplData := OptionalValues{
 		OptionalTypeName: g.optionalTypeName(),
 		FunctionName:     g.optionalFunctionName(),
 		ReturnType:       g.node.Name.Name,
 		IsPointer:        g.annotation.Type == "pointer",
-		PostConstructs:   postConstructMethods(pcvs[g.node.Name.Name]),
+		PostConstructs:   postConstructMethods(pcvs),
 	}
 	c, p, pdi, ok := params(g.node, g.annotatedNode.FindImportByAlias)
 	if ok {
