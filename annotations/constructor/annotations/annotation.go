@@ -25,6 +25,10 @@ type Builder struct {
 	Type            string `annotation:"name=type,default=struct"` // defines return structType or pointerType
 }
 
+type PostConstruct struct {
+	Priority int `annotation:"name=priority,default=1"`
+}
+
 // Init is used for fields initialisation such as slice, map, chan
 // If Init.Len and Init.Cap then the values are set by default (chan is non-buffered)
 type Init struct {

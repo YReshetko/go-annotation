@@ -19,9 +19,12 @@ package {{ .PackageName }}
 
 const constructorTemplate = `
 func {{ .FunctionName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]{{ end }}({{ range .Arguments }} {{.}}, {{ end }}) {{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
-	return {{ if .IsPointer }}&{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
+	returnValue := {{ if .IsPointer }}&{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
 		{{ range .Fields }} {{ .Name }}: {{ .Value }},
-		{{ end }}}
+	{{ end }}}
+	{{ range .PostConstructs }}returnValue.{{ . }}()
+	{{ end }}
+	return returnValue
 }
 `
 
@@ -37,6 +40,8 @@ func {{ .FunctionName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]{{ 
 	for _, o := range opts{
 		o(rt)
 	}
+	{{ range .PostConstructs }}rt.{{ . }}()
+	{{ end }}
 	return {{ if not .IsPointer }}*{{ end }}rt
 }
 `
@@ -73,6 +78,7 @@ func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end
 	{{ range .Fields }}if b.value.{{ .Name }} == nil {
 		b.value.{{ .Name }} = {{ .Value }}
 	}
+	{{ end }}{{ range .PostConstructs }}b.value.{{ . }}()
 	{{ end }}
 	return {{ if .IsPointer }}&{{ end }}b.value
 }

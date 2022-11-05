@@ -21,6 +21,7 @@ type BuilderValues struct {
 		Name  string
 		Value string
 	}
+	PostConstructs []string
 }
 
 type BuildValues struct {
@@ -44,7 +45,7 @@ func NewBuilderGenerator(node *ast.TypeSpec, annotation annotations.Builder, an 
 	}
 }
 
-func (g *BuilderGenerator) Generate() ([]byte, []Import, error) {
+func (g *BuilderGenerator) Generate(pcvs map[string][]PostConstructValues) ([]byte, []Import, error) {
 	di := newDistinctImports()
 	tplData := BuilderValues{
 		BuilderTypeName: g.builderTypeName(),
@@ -52,6 +53,7 @@ func (g *BuilderGenerator) Generate() ([]byte, []Import, error) {
 		BuildMethodName: g.annotation.BuilderName,
 		ReturnType:      g.node.Name.Name,
 		IsPointer:       g.annotation.Type == "pointer",
+		PostConstructs:  postConstructMethods(pcvs[g.node.Name.Name]),
 	}
 
 	c, p, pdi, ok := params(g.node, g.annotatedNode.FindImportByAlias)

@@ -11,31 +11,32 @@ import (
 )
 
 func init() {
-	p := &Processor{gen: make(map[fileKey][]generator)}
+	p := &Processor{
+		gen:            make(map[fileKey][]generator),
+		postConstructs: make(map[fileKey]map[string][]generators.PostConstructValues),
+	}
 	annotation.Register[annotations.Constructor](p)
 	annotation.Register[annotations.Optional](p)
 	annotation.Register[annotations.Builder](p)
+	annotation.Register[annotations.PostConstruct](p)
 	annotation.RegisterNoop[annotations.Exclude]()
 	annotation.RegisterNoop[annotations.Init]()
 }
 
 var _ annotation.AnnotationProcessor = (*Processor)(nil)
 
-type Processor struct {
-	gen map[fileKey][]generator
-}
-
-type generator interface {
-	Generate() ([]byte, []generators.Import, error)
-}
-
 type fileKey struct {
 	dir string
 	pkg string
 }
-type toGenerate struct {
-	packageName string
-	generators  []generator
+
+type Processor struct {
+	gen            map[fileKey][]generator
+	postConstructs map[fileKey]map[string][]generators.PostConstructValues
+}
+
+type generator interface {
+	Generate(map[string][]generators.PostConstructValues) ([]byte, []generators.Import, error)
 }
 
 func (p *Processor) Process(node annotation.Node) error {
@@ -70,6 +71,22 @@ func (p *Processor) Process(node annotation.Node) error {
 		p.gen[key] = append(p.gen[key], generators.NewBuilderGenerator(ts, b, node))
 	}
 
+	typeName, pcv, err := generators.PostConstructReceiverName(node)
+	if err != nil {
+		return fmt.Errorf("unable to build PostConstruct: %w", err)
+	}
+
+	if len(typeName) > 0 {
+		pcs, ok := p.postConstructs[key]
+		if !ok {
+			pcs = map[string][]generators.PostConstructValues{}
+			p.postConstructs[key] = pcs
+		}
+		pcvs := append(pcs[typeName], pcv)
+		pcs[typeName] = pcvs
+		fmt.Println(p.postConstructs)
+	}
+
 	return nil
 }
 
@@ -99,7 +116,7 @@ func (p *Processor) Output() map[string][]byte {
 		}
 		data := make([]generators.Data, len(gs))
 		for i, g := range gs {
-			d, im, _ := g.Generate()
+			d, im, _ := g.Generate(p.postConstructs[k])
 			data[i] = generators.Data{
 				Data:    d,
 				Imports: im,

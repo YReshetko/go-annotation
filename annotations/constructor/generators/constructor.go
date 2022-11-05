@@ -14,17 +14,18 @@ import (
 )
 
 type ConstructorValues struct {
-	FunctionName   string
-	Arguments      []string
-	ReturnType     string
-	IsPointer      bool
-	IsParametrized bool
-	Fields         []struct {
+	FunctionName         string
+	Arguments            []string
+	ReturnType           string
+	IsPointer            bool
+	IsParametrized       bool
+	ParameterConstraints string
+	Parameters           string
+	Fields               []struct {
 		Name  string
 		Value string
 	}
-	ParameterConstraints string
-	Parameters           string
+	PostConstructs []string
 }
 
 type arguments struct {
@@ -46,20 +47,21 @@ func NewConstructorGenerator(node *ast.TypeSpec, annotation annotations.Construc
 	}
 }
 
-func (g *ConstructorGenerator) Generate() ([]byte, []Import, error) {
-	data, imports := g.generateConstructor()
+func (g *ConstructorGenerator) Generate(pcvs map[string][]PostConstructValues) ([]byte, []Import, error) {
+	data, imports := g.generateConstructor(pcvs)
 	return data, imports.toSlice(), nil
 }
 
-func (g *ConstructorGenerator) generateConstructor() ([]byte, distinctImports) {
+func (g *ConstructorGenerator) generateConstructor(pcvs map[string][]PostConstructValues) ([]byte, distinctImports) {
 	tpl := must(template.New(functionNameTpl).Parse(g.annotation.Name))
 	data := map[string]string{"TypeName": g.node.Name.Name}
 	di := newDistinctImports()
 
 	tv := ConstructorValues{
-		FunctionName: string(must(executeTpl(tpl, data))),
-		IsPointer:    g.annotation.Type == "pointer",
-		ReturnType:   g.node.Name.Name,
+		FunctionName:   string(must(executeTpl(tpl, data))),
+		IsPointer:      g.annotation.Type == "pointer",
+		ReturnType:     g.node.Name.Name,
+		PostConstructs: postConstructMethods(pcvs[g.node.Name.Name]),
 	}
 
 	a, adi := args(g.node, g.annotatedNode.FindImportByAlias, g.annotatedNode)
