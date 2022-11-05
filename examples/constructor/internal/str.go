@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 
 	"golang.org/x/exp/constraints"
@@ -73,7 +74,22 @@ type StackQueueStruct[T comparable, V constraints.Integer] struct {
 	str  chan map[T][]V // @Init
 }
 
-func validation() {
+// @PostConstruct(priority="7")
+func (s StackQueueStruct[T, V]) postConstruct3() {
+	fmt.Println(s, "-3")
+}
+
+// @PostConstruct(priority="5")
+func (s StackQueueStruct[T, V]) postConstruct1() {
+	fmt.Println(s, "-1")
+}
+
+// @PostConstruct(priority="6")
+func (s StackQueueStruct[T, V]) postConstruct2() {
+	fmt.Println(s, "-2")
+}
+
+func Validation() {
 	_ = NewStackQueueStructOptional[int, int](
 		WithSQSA[int, int]([]int{}),
 		WithSQSBuff[int, int](bytes.Buffer{}),
