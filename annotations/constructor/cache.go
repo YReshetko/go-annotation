@@ -2,6 +2,7 @@ package constructor
 
 import (
 	"fmt"
+
 	"github.com/YReshetko/go-annotation/annotations/constructor/generators"
 )
 

@@ -43,10 +43,6 @@ func NewOptionalGenerator(node *ast.TypeSpec, annotation annotations.Optional, a
 	}
 }
 
-func (g *OptionalGenerator) Name() string {
-	return "OptionalGenerator"
-}
-
 func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Import, error) {
 	di := newDistinctImports()
 	tplData := OptionalValues{
@@ -56,15 +52,15 @@ func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impo
 		IsPointer:        g.annotation.Type == "pointer",
 		PostConstructs:   postConstructMethods(pcvs),
 	}
-	c, p, pdi, ok := params(g.node, g.annotatedNode.FindImportByAlias)
-	if ok {
+	p, pdi := extractParameters(g.node, g.annotatedNode.FindImportByAlias)
+	if p.isParametrised {
 		tplData.IsParametrized = true
-		tplData.ParameterConstraints = c
-		tplData.Parameters = p
+		tplData.ParameterConstraints = p.constraints
+		tplData.Parameters = p.parameters
 		di.merge(pdi)
 	}
 
-	argsToProcess, adi := args(g.node, g.annotatedNode.FindImportByAlias, g.annotatedNode)
+	argsToProcess, adi := extractArguments(g.node, g.annotatedNode.FindImportByAlias, g.annotatedNode)
 	di.merge(adi)
 
 	for name, value := range argsToProcess.toInit {
@@ -81,7 +77,6 @@ func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impo
 		data = append(data, g.withFunction(fieldName, fieldValue, tplData)...)
 	}
 
-	//fmt.Println("Optional generated:", string(data))
 	return data, di.toSlice(), nil
 }
 
@@ -128,4 +123,8 @@ func toPascalCase(name string) string {
 	}
 
 	return name
+}
+
+func (g *OptionalGenerator) Name() string {
+	return "OptionalGenerator"
 }

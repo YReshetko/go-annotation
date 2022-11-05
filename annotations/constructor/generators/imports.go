@@ -4,6 +4,8 @@ import (
 	"go/ast"
 )
 
+type importLookup func(alias string) (importPath string, found bool)
+
 type Import struct {
 	Alias   string
 	Package string
@@ -48,7 +50,7 @@ func (d distinctImports) toSlice() []Import {
 	return i
 }
 
-func getImports(e ast.Expr, fn func(string) (string, bool)) distinctImports {
+func getImports(e ast.Expr, lookup importLookup) distinctImports {
 	out := newDistinctImports()
 	ast.Inspect(e, func(node ast.Node) bool {
 
@@ -57,7 +59,7 @@ func getImports(e ast.Expr, fn func(string) (string, bool)) distinctImports {
 			switch i := n.X.(type) {
 			case *ast.Ident:
 				alias := i.String()
-				pkg, ok := fn(alias)
+				pkg, ok := lookup(alias)
 				if !ok {
 					return true
 				}

@@ -45,9 +45,6 @@ func NewBuilderGenerator(node *ast.TypeSpec, annotation annotations.Builder, an 
 	}
 }
 
-func (g *BuilderGenerator) Name() string {
-	return "BuilderGenerator"
-}
 func (g *BuilderGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Import, error) {
 	di := newDistinctImports()
 	tplData := BuilderValues{
@@ -59,15 +56,15 @@ func (g *BuilderGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impor
 		PostConstructs:  postConstructMethods(pcvs),
 	}
 
-	c, p, pdi, ok := params(g.node, g.annotatedNode.FindImportByAlias)
-	if ok {
+	p, pdi := extractParameters(g.node, g.annotatedNode.FindImportByAlias)
+	if p.isParametrised {
 		tplData.IsParametrized = true
-		tplData.ParameterConstraints = c
-		tplData.Parameters = p
+		tplData.ParameterConstraints = p.constraints
+		tplData.Parameters = p.parameters
 		di.merge(pdi)
 	}
 
-	argsToProcess, adi := args(g.node, g.annotatedNode.FindImportByAlias, g.annotatedNode)
+	argsToProcess, adi := extractArguments(g.node, g.annotatedNode.FindImportByAlias, g.annotatedNode)
 	di.merge(adi)
 
 	for name, value := range argsToProcess.toInit {
@@ -117,4 +114,8 @@ func (g *BuilderGenerator) builderMethodName(fieldName string) string {
 	methodNameData := map[string]string{"FieldName": toPascalCase(fieldName)}
 
 	return string(must(executeTpl(tpl, methodNameData)))
+}
+
+func (g *BuilderGenerator) Name() string {
+	return "BuilderGenerator"
 }

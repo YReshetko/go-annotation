@@ -2,13 +2,14 @@ package constructor
 
 import (
 	"fmt"
-	"github.com/YReshetko/go-annotation/annotations/constructor/annotations"
-	"github.com/YReshetko/go-annotation/annotations/constructor/generators"
 	"go/ast"
 	"path/filepath"
 
-	annotation "github.com/YReshetko/go-annotation/pkg"
 	"github.com/hashicorp/go-multierror"
+
+	"github.com/YReshetko/go-annotation/annotations/constructor/annotations"
+	"github.com/YReshetko/go-annotation/annotations/constructor/generators"
+	annotation "github.com/YReshetko/go-annotation/pkg"
 )
 
 func init() {
