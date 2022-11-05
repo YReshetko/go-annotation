@@ -10,39 +10,38 @@ import (
 type stack[T any] []T
 type queue[B any] []B
 
-// @Constructor(name="NewSome{{.TypeName}}ThisIsMyTemplate")
-// @Optional(constructor="NewSome{{ .TypeName }}ThisIsMyTemplateOptional")
+// SomeStructure for testing base constructor options
+// Annotations:
+// 		@Constructor(name="NewSome{{.TypeName}}ThisIsMyTemplate")
+// 		@Optional(constructor="NewSome{{ .TypeName }}ThisIsMyTemplateOptional")
+//		@Builder(name="My{{.TypeName}}Builder", build="Build{{.FieldName}}Field", type="pointer")
 type SomeStructure struct {
-	// @Exclude
-	a int
-	// @Exclude
-	b float64
-	// @Init(len="5", cap="10")
-	slice []map[chan int]string
-	// @Init
-	slice2 []map[chan int]string
-	// @Init(cap="5")
-	maps map[chan []int]struct{ A http.Request }
-	// @Init
-	chanals chan []struct{ A http.Request }
-	// @Init(cap="5")
-	chanalsCap chan []struct{ A http.Request }
+	a          int                                     // @Exclude
+	b          float64                                 // @Exclude
+	slice      []map[chan int]string                   // @Init(len="5", cap="15")
+	slice2     []map[chan int]string                   // @Init
+	maps       map[chan []int]struct{ A http.Request } // @Init(cap="5")
+	chanals    chan []struct{ A http.Request }         // @Init
+	chanalsCap chan []struct{ A http.Request }         // @Init(cap="5")
 	c          *bool
 	d          **complex128
 }
 
-// @Constructor(name="NewAnotherStructOverride", type="pointer")
-// @Optional(constructor="New{{ .TypeName }}Optional")
+// AnotherStruct for testing base constructor options
+// Annotations:
+// 		@Constructor(name="NewAnotherStructOverride", type="pointer")
+// 		@Optional(constructor="New{{ .TypeName }}Optional")
 type AnotherStruct struct {
-	a SomeStructure
-	b *SomeStructure
-	// @Exclude
-	c, d int
+	a    SomeStructure
+	b    *SomeStructure
+	c, d int // @Exclude
 	fn   func(**SomeStructure) AnotherStruct
 	buff bytes.Buffer
 }
 
-// @Constructor
+// TheThirdStruct for testing base constructor options
+// Annotations:
+// 		@Constructor
 type TheThirdStruct struct {
 	a    SomeStructure
 	b    *SomeStructure
@@ -50,22 +49,28 @@ type TheThirdStruct struct {
 	fn   func(**SomeStructure) AnotherStruct
 }
 
-// @Constructor
+// StackStruct for testing parametrized constructor options
+// Annotations:
+// 		@Constructor
 type StackStruct[T stack[T]] struct {
 	a  stack[T]
 	q  queue[stack[T]]
 	fn func(**SomeStructure) AnotherStruct
 }
 
-// @Constructor
-// @Optional(constructor="New{{ .TypeName }}Optional", type="pointer", with="WithSQS{{ .FieldName }}")
+// StackQueueStruct for testing parametrized constructor options
+// Annotations:
+// 		@Constructor
+// 		@Optional(constructor="New{{ .TypeName }}Optional", type="pointer", with="WithSQS{{ .FieldName }}")
+//		@Builder(name="My{{.TypeName}}Builder", build="Build{{.FieldName}}Field", type="pointer")
 type StackQueueStruct[T comparable, V constraints.Integer] struct {
 	a    stack[T]
 	q    queue[V]
+	simp T
+	vimp V
 	fn   func(**SomeStructure) AnotherStruct
 	buff bytes.Buffer
-	// @Init
-	str chan map[T][]V
+	str  chan map[T][]V // @Init
 }
 
 func validation() {
@@ -78,4 +83,18 @@ func validation() {
 		WithSQSQ[int, int]([]int{}),
 		WithSQSStr[int, int](make(chan map[int][]int)),
 	)
+
+	nsb := NewStackQueueStructBuilder[bool, int]()
+	_ = nsb.BuildSimpField(false).BuildAField(stack[bool]{}).Build()
+
+	fp := false
+	c := complex128(10)
+	cp := &c
+	b := NewSomeStructureBuilder()
+	_ = b.BuildCField(&fp).
+		BuildChanalsField(nil).
+		BuildChanalsCapField(nil).
+		BuildMapsField(nil).
+		BuildDField(&cp).Build()
+
 }
