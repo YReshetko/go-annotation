@@ -39,13 +39,20 @@ func PostConstructReceiverName(node annotation.Node) (string, PostConstructValue
 	receiverName := ""
 	switch rcv := fd.Recv.List[0].Type.(type) {
 	case *ast.StarExpr:
-		ile, ok := rcv.X.(*ast.IndexListExpr)
-		if !ok {
-			return "", PostConstructValues{}, fmt.Errorf("invalid method declaration for PostConstruct: %s", fd.Name.Name)
+		switch ile := rcv.X.(type) {
+		case *ast.IndexListExpr:
+			receiverName = ile.X.(*ast.Ident).Name
+		case *ast.Ident:
+			receiverName = ile.Name
+		default:
+			return "", PostConstructValues{}, fmt.Errorf("invalid method declaration for PostConstruct: %s, expected *ast.IndexListExpr, but got %T", fd.Name.Name, rcv.X)
 		}
-		receiverName = ile.X.(*ast.Ident).Name
 	case *ast.IndexListExpr:
 		receiverName = rcv.X.(*ast.Ident).Name
+	case *ast.Ident:
+		receiverName = rcv.Name
+	default:
+		return "", PostConstructValues{}, fmt.Errorf("unexpected node for PostConstruct %T", fd.Recv.List[0].Type)
 	}
 	return receiverName, PostConstructValues{
 		Annotation: ans[0],

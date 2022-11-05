@@ -61,7 +61,7 @@ type StackStruct[T stack[T]] struct {
 
 // StackQueueStruct for testing parametrized constructor options
 // Annotations:
-// 		@Constructor
+// 		@Constructor(type="pointer")
 // 		@Optional(constructor="New{{ .TypeName }}Optional", type="pointer", with="WithSQS{{ .FieldName }}")
 //		@Builder(name="My{{.TypeName}}Builder", build="Build{{.FieldName}}Field", type="pointer")
 type StackQueueStruct[T comparable, V constraints.Integer] struct {

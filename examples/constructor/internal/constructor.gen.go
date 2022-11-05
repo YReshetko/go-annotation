@@ -11,15 +11,144 @@ import (
 	http "net/http"
 )
 
+func NewStackQueueStruct[T comparable, V constraints.Integer](a stack[T], q queue[V], simp T, vimp V, fn func(**SomeStructure) AnotherStruct, buff bytes.Buffer) *StackQueueStruct[T, V] {
+	returnValue := &StackQueueStruct[T, V]{
+		a:    a,
+		q:    q,
+		simp: simp,
+		vimp: vimp,
+		fn:   fn,
+		buff: buff,
+		str:  make(chan map[T][]V),
+	}
+	returnValue.postConstruct1()
+	returnValue.postConstruct2()
+	returnValue.postConstruct3()
+
+	return returnValue
+}
+
+type StackQueueStructOption[T comparable, V constraints.Integer] func(*StackQueueStruct[T, V])
+
+func NewStackQueueStructOptional[T comparable, V constraints.Integer](opts ...StackQueueStructOption[T, V]) *StackQueueStruct[T, V] {
+	rt := &StackQueueStruct[T, V]{
+		str: make(chan map[T][]V),
+	}
+	for _, o := range opts {
+		o(rt)
+	}
+	rt.postConstruct1()
+	rt.postConstruct2()
+	rt.postConstruct3()
+
+	return rt
+}
+
+func WithSQSA[T comparable, V constraints.Integer](v stack[T]) StackQueueStructOption[T, V] {
+	return func(rt *StackQueueStruct[T, V]) {
+		rt.a = v
+	}
+}
+
+func WithSQSQ[T comparable, V constraints.Integer](v queue[V]) StackQueueStructOption[T, V] {
+	return func(rt *StackQueueStruct[T, V]) {
+		rt.q = v
+	}
+}
+
+func WithSQSSimp[T comparable, V constraints.Integer](v T) StackQueueStructOption[T, V] {
+	return func(rt *StackQueueStruct[T, V]) {
+		rt.simp = v
+	}
+}
+
+func WithSQSVimp[T comparable, V constraints.Integer](v V) StackQueueStructOption[T, V] {
+	return func(rt *StackQueueStruct[T, V]) {
+		rt.vimp = v
+	}
+}
+
+func WithSQSFn[T comparable, V constraints.Integer](v func(**SomeStructure) AnotherStruct) StackQueueStructOption[T, V] {
+	return func(rt *StackQueueStruct[T, V]) {
+		rt.fn = v
+	}
+}
+
+func WithSQSBuff[T comparable, V constraints.Integer](v bytes.Buffer) StackQueueStructOption[T, V] {
+	return func(rt *StackQueueStruct[T, V]) {
+		rt.buff = v
+	}
+}
+
+func WithSQSStr[T comparable, V constraints.Integer](v chan map[T][]V) StackQueueStructOption[T, V] {
+	return func(rt *StackQueueStruct[T, V]) {
+		rt.str = v
+	}
+}
+
+type MyStackQueueStructBuilder[T comparable, V constraints.Integer] struct {
+	value StackQueueStruct[T, V]
+}
+
+func NewStackQueueStructBuilder[T comparable, V constraints.Integer]() *MyStackQueueStructBuilder[T, V] {
+	return &MyStackQueueStructBuilder[T, V]{}
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildVimpField(v V) *MyStackQueueStructBuilder[T, V] {
+	b.value.vimp = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildFnField(v func(**SomeStructure) AnotherStruct) *MyStackQueueStructBuilder[T, V] {
+	b.value.fn = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildBuffField(v bytes.Buffer) *MyStackQueueStructBuilder[T, V] {
+	b.value.buff = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildStrField(v chan map[T][]V) *MyStackQueueStructBuilder[T, V] {
+	b.value.str = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildAField(v stack[T]) *MyStackQueueStructBuilder[T, V] {
+	b.value.a = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildQField(v queue[V]) *MyStackQueueStructBuilder[T, V] {
+	b.value.q = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildSimpField(v T) *MyStackQueueStructBuilder[T, V] {
+	b.value.simp = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) Build() *StackQueueStruct[T, V] {
+	if b.value.str == nil {
+		b.value.str = make(chan map[T][]V)
+	}
+	b.value.postConstruct1()
+	b.value.postConstruct2()
+	b.value.postConstruct3()
+
+	return &b.value
+}
+
 func NewSomeSomeStructureThisIsMyTemplate(c *bool, d **complex128) SomeStructure {
 	returnValue := SomeStructure{
 		c:          c,
 		d:          d,
-		chanals:    make(chan []struct{ A http.Request }),
-		chanalsCap: make(chan []struct{ A http.Request }, 5),
 		slice:      make([]map[chan int]string, 5, 15),
 		slice2:     []map[chan int]string{},
 		maps:       make(map[chan []int]struct{ A http.Request }, 5),
+		chanals:    make(chan []struct{ A http.Request }),
+		chanalsCap: make(chan []struct{ A http.Request }, 5),
 	}
 
 	return returnValue
@@ -40,6 +169,12 @@ func NewSomeSomeStructureThisIsMyTemplateOptional(opts ...SomeStructureOption) S
 	}
 
 	return *rt
+}
+
+func WithD(v **complex128) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.d = v
+	}
 }
 
 func WithSlice(v []map[chan int]string) SomeStructureOption {
@@ -78,23 +213,12 @@ func WithC(v *bool) SomeStructureOption {
 	}
 }
 
-func WithD(v **complex128) SomeStructureOption {
-	return func(rt *SomeStructure) {
-		rt.d = v
-	}
-}
-
 type MySomeStructureBuilder struct {
 	value SomeStructure
 }
 
 func NewSomeStructureBuilder() *MySomeStructureBuilder {
 	return &MySomeStructureBuilder{}
-}
-
-func (b *MySomeStructureBuilder) BuildSliceField(v []map[chan int]string) *MySomeStructureBuilder {
-	b.value.slice = v
-	return b
 }
 
 func (b *MySomeStructureBuilder) BuildSlice2Field(v []map[chan int]string) *MySomeStructureBuilder {
@@ -127,10 +251,12 @@ func (b *MySomeStructureBuilder) BuildDField(v **complex128) *MySomeStructureBui
 	return b
 }
 
+func (b *MySomeStructureBuilder) BuildSliceField(v []map[chan int]string) *MySomeStructureBuilder {
+	b.value.slice = v
+	return b
+}
+
 func (b *MySomeStructureBuilder) Build() *SomeStructure {
-	if b.value.slice == nil {
-		b.value.slice = make([]map[chan int]string, 5, 15)
-	}
 	if b.value.slice2 == nil {
 		b.value.slice2 = []map[chan int]string{}
 	}
@@ -143,16 +269,19 @@ func (b *MySomeStructureBuilder) Build() *SomeStructure {
 	if b.value.chanalsCap == nil {
 		b.value.chanalsCap = make(chan []struct{ A http.Request }, 5)
 	}
+	if b.value.slice == nil {
+		b.value.slice = make([]map[chan int]string, 5, 15)
+	}
 
 	return &b.value
 }
 
-func NewAnotherStructOverride(b *SomeStructure, fn func(**SomeStructure) AnotherStruct, buff bytes.Buffer, a SomeStructure) *AnotherStruct {
+func NewAnotherStructOverride(a SomeStructure, b *SomeStructure, fn func(**SomeStructure) AnotherStruct, buff bytes.Buffer) *AnotherStruct {
 	returnValue := &AnotherStruct{
+		a:    a,
 		b:    b,
 		fn:   fn,
 		buff: buff,
-		a:    a,
 	}
 
 	return returnValue
@@ -205,141 +334,12 @@ func NewTheThirdStruct(a SomeStructure, b *SomeStructure, c int, d int, fn func(
 	return returnValue
 }
 
-func NewStackStruct[T stack[T]](q queue[stack[T]], fn func(**SomeStructure) AnotherStruct, a stack[T]) StackStruct[T] {
+func NewStackStruct[T stack[T]](a stack[T], q queue[stack[T]], fn func(**SomeStructure) AnotherStruct) StackStruct[T] {
 	returnValue := StackStruct[T]{
+		a:  a,
 		q:  q,
 		fn: fn,
-		a:  a,
 	}
 
 	return returnValue
-}
-
-func NewStackQueueStruct[T comparable, V constraints.Integer](a stack[T], q queue[V], simp T, vimp V, fn func(**SomeStructure) AnotherStruct, buff bytes.Buffer) StackQueueStruct[T, V] {
-	returnValue := StackQueueStruct[T, V]{
-		a:    a,
-		q:    q,
-		simp: simp,
-		vimp: vimp,
-		fn:   fn,
-		buff: buff,
-		str:  make(chan map[T][]V),
-	}
-	returnValue.postConstruct1()
-	returnValue.postConstruct2()
-	returnValue.postConstruct3()
-
-	return returnValue
-}
-
-type StackQueueStructOption[T comparable, V constraints.Integer] func(*StackQueueStruct[T, V])
-
-func NewStackQueueStructOptional[T comparable, V constraints.Integer](opts ...StackQueueStructOption[T, V]) *StackQueueStruct[T, V] {
-	rt := &StackQueueStruct[T, V]{
-		str: make(chan map[T][]V),
-	}
-	for _, o := range opts {
-		o(rt)
-	}
-	rt.postConstruct1()
-	rt.postConstruct2()
-	rt.postConstruct3()
-
-	return rt
-}
-
-func WithSQSFn[T comparable, V constraints.Integer](v func(**SomeStructure) AnotherStruct) StackQueueStructOption[T, V] {
-	return func(rt *StackQueueStruct[T, V]) {
-		rt.fn = v
-	}
-}
-
-func WithSQSBuff[T comparable, V constraints.Integer](v bytes.Buffer) StackQueueStructOption[T, V] {
-	return func(rt *StackQueueStruct[T, V]) {
-		rt.buff = v
-	}
-}
-
-func WithSQSStr[T comparable, V constraints.Integer](v chan map[T][]V) StackQueueStructOption[T, V] {
-	return func(rt *StackQueueStruct[T, V]) {
-		rt.str = v
-	}
-}
-
-func WithSQSA[T comparable, V constraints.Integer](v stack[T]) StackQueueStructOption[T, V] {
-	return func(rt *StackQueueStruct[T, V]) {
-		rt.a = v
-	}
-}
-
-func WithSQSQ[T comparable, V constraints.Integer](v queue[V]) StackQueueStructOption[T, V] {
-	return func(rt *StackQueueStruct[T, V]) {
-		rt.q = v
-	}
-}
-
-func WithSQSSimp[T comparable, V constraints.Integer](v T) StackQueueStructOption[T, V] {
-	return func(rt *StackQueueStruct[T, V]) {
-		rt.simp = v
-	}
-}
-
-func WithSQSVimp[T comparable, V constraints.Integer](v V) StackQueueStructOption[T, V] {
-	return func(rt *StackQueueStruct[T, V]) {
-		rt.vimp = v
-	}
-}
-
-type MyStackQueueStructBuilder[T comparable, V constraints.Integer] struct {
-	value StackQueueStruct[T, V]
-}
-
-func NewStackQueueStructBuilder[T comparable, V constraints.Integer]() *MyStackQueueStructBuilder[T, V] {
-	return &MyStackQueueStructBuilder[T, V]{}
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) BuildFnField(v func(**SomeStructure) AnotherStruct) *MyStackQueueStructBuilder[T, V] {
-	b.value.fn = v
-	return b
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) BuildBuffField(v bytes.Buffer) *MyStackQueueStructBuilder[T, V] {
-	b.value.buff = v
-	return b
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) BuildStrField(v chan map[T][]V) *MyStackQueueStructBuilder[T, V] {
-	b.value.str = v
-	return b
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) BuildAField(v stack[T]) *MyStackQueueStructBuilder[T, V] {
-	b.value.a = v
-	return b
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) BuildQField(v queue[V]) *MyStackQueueStructBuilder[T, V] {
-	b.value.q = v
-	return b
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) BuildSimpField(v T) *MyStackQueueStructBuilder[T, V] {
-	b.value.simp = v
-	return b
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) BuildVimpField(v V) *MyStackQueueStructBuilder[T, V] {
-	b.value.vimp = v
-	return b
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) Build() *StackQueueStruct[T, V] {
-	if b.value.str == nil {
-		b.value.str = make(chan map[T][]V)
-	}
-	b.value.postConstruct1()
-	b.value.postConstruct2()
-	b.value.postConstruct3()
-
-	return &b.value
 }

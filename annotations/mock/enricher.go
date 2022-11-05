@@ -33,12 +33,12 @@ func enrichMockAnnotation(data []byte) ([]byte, error) {
 
 		if gd.Doc != nil {
 			gd.Doc.List = append(gd.Doc.List, &ast.Comment{
-				Text: "// Ingested annotations: @Mock(sub=\"mocksfakes\")",
+				Text: "// Injected annotations: @Mock(sub=\"mocksfakes\")",
 			})
 		} else {
 			gd.Doc = &ast.CommentGroup{
 				List: []*ast.Comment{{
-					Text: "Ingested annotations: @Mock(sub=\"mocksfakes\")",
+					Text: "Injected annotations: @Mock(sub=\"mocksfakes\")",
 				}},
 			}
 		}
