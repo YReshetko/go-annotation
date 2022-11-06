@@ -50,3 +50,15 @@ func ExtractVal2[A, B any]() func(Pair[A, B]) B {
 		return p.Val2
 	}
 }
+
+type emtyable interface {
+	string | []any | map[any]any
+}
+
+func IsEmpty[T emtyable](t T) bool {
+	return len(t) == 0
+}
+
+func IsNotEmpty[T emtyable](t T) bool {
+	return len(t) != 0
+}

@@ -2,13 +2,14 @@ package fixtures
 
 import (
 	"fmt"
-	"github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package"
 	mlog "log"
 
 	. "github.com/davecgh/go-spew/spew"
 	_ "github.com/davecgh/go-spew/spew"
 
 	"github.com/davecgh/go-spew/spew"
+	
+	"github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package"
 )
 
 func SomeTestFunction() {

@@ -30,7 +30,7 @@ func (p *Processor) Process(node annotation.Node) error {
 		return fmt.Errorf("expected 1 rest annotation, but got: %d", len(annotations))
 	}
 
-	n := node.Node()
+	n := node.ASTNode()
 	switch nt := n.(type) {
 	case *ast.TypeSpec:
 		return p.processStructure(annotations[0], node, nt)

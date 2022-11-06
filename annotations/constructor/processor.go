@@ -79,7 +79,7 @@ func findAnnotatedTypeSpec[T any](node annotation.Node) (T, *ast.TypeSpec, bool,
 
 	ts, ok := annotation.CastNode[*ast.TypeSpec](node)
 	if !ok {
-		return a, nil, false, fmt.Errorf("unable to create constructor for %t: should be ast.TypeSpec", node.Node())
+		return a, nil, false, fmt.Errorf("unable to create constructor for %t: should be ast.TypeSpec", node.ASTNode())
 	}
 	return ans[0], ts, true, nil
 }

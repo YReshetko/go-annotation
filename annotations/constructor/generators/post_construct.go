@@ -25,7 +25,7 @@ func PostConstructReceiverName(node annotation.Node) (string, PostConstructValue
 
 	fd, ok := annotation.CastNode[*ast.FuncDecl](node)
 	if !ok {
-		return "", PostConstructValues{}, fmt.Errorf("expected ast.FuncDecl for PostConstruct annotation, but got %t", node.Node())
+		return "", PostConstructValues{}, fmt.Errorf("expected ast.FuncDecl for PostConstruct annotation, but got %t", node.ASTNode())
 	}
 
 	if fd.Recv == nil {

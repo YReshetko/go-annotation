@@ -11,7 +11,7 @@ type Node interface {
 	// Base API
 
 	Annotations() []Annotation
-	Node() ast.Node
+	ASTNode() ast.Node
 	AnnotatedNode(ast.Node) Node
 
 	// Metadata API
@@ -25,6 +25,7 @@ type Node interface {
 	// Lookup API
 
 	FindImportByAlias(alias string) (string, bool)
+	FindNodeByAlias(alias, nodeName string) (Node, error)
 }
 
 type AnnotationProcessor interface {
