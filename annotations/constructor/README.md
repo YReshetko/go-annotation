@@ -295,7 +295,7 @@ type Some struct {
     field []string //@Exclude
 }
 ```
-
+The next code will be generated:
 ```go
 func NewSome() Some {
     returnValue := Some{}
