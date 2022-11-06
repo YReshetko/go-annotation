@@ -40,7 +40,7 @@ func (m *module) find(importPath string) (*module, error) {
 		if m.hasImportPath(importPath) {
 			return m, nil
 		}
-		// TODO Try to lookup module in GO_HOME/GO_ROOT
+		// TODO Try to lookup module in GO_HOME/GO_ROOT/vendor
 		return nil, nil
 	}
 
