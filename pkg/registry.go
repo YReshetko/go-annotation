@@ -10,17 +10,25 @@ type Annotation any
 type Node interface {
 	// Base API
 
+	// Annotations returns all annotations declared for ast.Node
 	Annotations() []Annotation
+	// ASTNode returns ast.Node that currently is in processing
 	ASTNode() ast.Node
+	// AnnotatedNode returns annotation.Node by ast.Node that declared as a sub ast.Node for ASTNode()
 	AnnotatedNode(ast.Node) Node
+	// Imports returns all file imports ([]*ast.ImportSpec)
+	Imports() []*ast.ImportSpec
 
 	// Metadata API
 
+	// Root returns related module root (absolut path)
 	Root() string
+	// Dir returns absolut path to the file directory
 	Dir() string
+	// FileName returns file name with extension
 	FileName() string
+	// PackageName returns current package name
 	PackageName() string
-	Imports() []*ast.ImportSpec
 
 	// Lookup API
 
