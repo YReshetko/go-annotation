@@ -22,7 +22,7 @@ func toType[T any](a Annotation) T {
 }
 
 func CastNode[T ast.Node](n Node) (T, bool) {
-	v, ok := n.Node().(T)
+	v, ok := n.ASTNode().(T)
 	return v, ok
 }
 

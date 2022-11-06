@@ -49,7 +49,6 @@ func TestSubmodule_Success(t *testing.T) {
 
 	assert.Contains(t, m.Files(), "decode.go")
 	assert.Contains(t, m.Files(), "encode.go")
-
 }
 
 func TestSubmodule_Fail_NonDependency(t *testing.T) {
@@ -73,4 +72,50 @@ func TestSubmodule_Fail_NonDependency(t *testing.T) {
 	assert.Contains(t, m.Files(), "decode.go")
 	assert.Contains(t, m.Files(), "encode.go")
 
+}
+
+func TestFilesInPackage(t *testing.T) {
+	m, err := module.Load(root)
+	require.NoError(t, err)
+
+	files := module.FilesInPackage(m, "github.com/YReshetko/go-annotation/internal/module")
+	require.Len(t, files, 5)
+
+	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/files.go")
+	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/interface.go")
+	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/interface_test.go")
+	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/lookup.go")
+	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/module.go")
+}
+
+func TestAbsolutePath(t *testing.T) {
+	m, err := module.Load(root)
+	require.NoError(t, err)
+
+	s, ok := module.AbsolutePath(m, "github.com/YReshetko/go-annotation/internal/module/module.go")
+	require.True(t, ok)
+
+	assert.Contains(t, s, "/src/github.com/YReshetko/go-annotation/internal/module/module.go")
+}
+
+func TestAbsolutePath_NotFound(t *testing.T) {
+	m, err := module.Load(root)
+	require.NoError(t, err)
+
+	s, ok := module.AbsolutePath(m, "github.com/YReshetko/go-annotation/internal/module/unexpected.go")
+	require.False(t, ok)
+	assert.Empty(t, s)
+}
+
+func TestFilesInDir(t *testing.T) {
+	m, err := module.Load(root)
+	require.NoError(t, err)
+
+	s := module.FilesInDir(m, "internal/lookup")
+	require.Len(t, s, 4)
+
+	assert.Contains(t, s, "internal/lookup/imports.go")
+	assert.Contains(t, s, "internal/lookup/imports_test.go")
+	assert.Contains(t, s, "internal/lookup/types.go")
+	assert.Contains(t, s, "internal/lookup/types_test.go")
 }

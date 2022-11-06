@@ -113,7 +113,7 @@ func (p *Processor) Clear() {
 func extractTypeName(node annotation.Node) (string, generator.FakeMode, error) {
 	var nameIdent *ast.Ident
 	mod := generator.InterfaceOrFunction
-	switch n := node.Node().(type) {
+	switch n := node.ASTNode().(type) {
 	case *ast.TypeSpec:
 		nameIdent = n.Name
 		switch n.Type.(type) {
@@ -128,7 +128,7 @@ func extractTypeName(node annotation.Node) (string, generator.FakeMode, error) {
 		nameIdent = n.Name
 		mod = generator.Package
 	default:
-		return "", mod, fmt.Errorf("expected mocked type one of [ast.TypeSpec, *ast.FuncDecl, *ast.File], but got %T", node.Node())
+		return "", mod, fmt.Errorf("expected mocked type one of [ast.TypeSpec, *ast.FuncDecl, *ast.File], but got %T", node.ASTNode())
 	}
 	if nameIdent.String() == "" {
 		return "", mod, fmt.Errorf("unable to prepare mock for interface in %s", node.Dir())
