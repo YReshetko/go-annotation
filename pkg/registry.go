@@ -40,9 +40,9 @@ type Node interface {
 	// FindImportByAlias("tag") returns "github.com/YReshetko/go-annotation/internal/tag", true
 	FindImportByAlias(alias string) (string, bool)
 
-	// FindNodeByAlias returns related Node by alias and a type/function name from related module
+	// FindNodeByAlias returns related Node by alias, related import if any and a type/function name from related module
 	// if alias is empty, then the search will go in current directory of ast.File
-	FindNodeByAlias(alias, nodeName string) (Node, error)
+	FindNodeByAlias(alias, nodeName string) (Node, string, error)
 }
 
 type AnnotationProcessor interface {

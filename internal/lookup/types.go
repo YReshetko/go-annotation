@@ -30,7 +30,7 @@ func FindTypeInDir(m module.Module, dir, typeName string) (ast2.Node, *ast2.File
 		ToSlice()
 
 	if len(filePaths) == 0 {
-		return nil, nil, "", fmt.Errorf("files for dir %s not found", dir)
+		return nil, nil, "", fmt.Errorf("files not found")
 	}
 
 	return findType(filePaths, typeName)

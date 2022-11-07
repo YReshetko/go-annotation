@@ -1,5 +1,11 @@
 # Constructor annotations
 
+# TODO:
+- [ ] Support type embedding.
+- [ ] Builder should not mutate internal structure and prepare new one on method build().
+- [ ] At the moment constructor arguments changes arguments order. Must be fixed.
+- [ ] Introduce a parameter that forces printing `TypeName`/`FieldName` in lower or upper case for templates.
+
 ## Usage
 
 To start using the annotations developer needs to add corresponding annotation processor to the gen tool:
