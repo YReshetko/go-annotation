@@ -60,6 +60,10 @@ func (n *node) PackageName() string {
 	return ""
 }
 
+func (n *node) IsSamePackage(v Node) bool {
+	return n.Root() == v.Root() && n.Dir() == v.Dir() && n.PackageName() == v.PackageName()
+}
+
 func (n *node) Imports() []*ast2.ImportSpec {
 	return n.f.Imports
 }
