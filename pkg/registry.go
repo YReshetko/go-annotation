@@ -29,6 +29,8 @@ type Node interface {
 	FileName() string
 	// PackageName returns current package name
 	PackageName() string
+	// IsSamePackage compares nodes by module root, file location and package name
+	IsSamePackage(v Node) bool
 
 	// Lookup API
 
