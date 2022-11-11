@@ -51,7 +51,7 @@ func (mg *methodGenerator) buildInput() {
 
 func (mg *methodGenerator) generate(receiverName string, imports map[Import]struct{}) ([]byte, error) {
 	var args []string
-	c := newCache[string, string]().
+	c := newCache().
 		setNode(utils.NewNode[string, string]()).
 		setVarPrefix("_var_").
 		setImports(imports).

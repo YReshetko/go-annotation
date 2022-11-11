@@ -11,31 +11,31 @@ type Import struct {
 }
 
 // @Builder(constructor="newCache", build="set{{.FieldName}}", terminator="build", type="pointer")
-type cache[K comparable, V any] struct {
+type cache struct {
 	varPrefix string
 	imports   map[Import]struct{}
-	node      *utils.Node[K, V]
+	node      *utils.Node[string, string]
 	index     int //@Exclude
 }
 
-func (c *cache[K, V]) addImport(i Import) {
+func (c *cache) addImport(i Import) {
 	c.imports[i] = struct{}{}
 }
 
-func (c *cache[K, V]) nextVar() string {
+func (c *cache) nextVar() string {
 	v := fmt.Sprintf("%s%d", c.varPrefix, c.index)
 	c.index++
 	return v
 }
 
-func (c *cache[K, V]) addIfClause(checks []K, line V) {
+func (c *cache) addIfClause(checks []string, line string) {
 	c.node.Add(checks, line)
 }
 
-func (c *cache[K, V]) addCodeLine(line V) {
+func (c *cache) addCodeLine(line string) {
 	c.node.Add(nil, line)
 }
 
-func (c *cache[K, V]) getNode() *utils.Node[K, V] {
+func (c *cache) getNode() *utils.Node[string, string] {
 	return c.node
 }

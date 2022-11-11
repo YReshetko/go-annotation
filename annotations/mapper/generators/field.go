@@ -88,7 +88,7 @@ func (fg *fieldGenerator) buildNonPrimitiveType(node annotation.Node, astNode as
 	}
 }
 
-func (fg *fieldGenerator) argumentNameAndType(c *cache[string, string]) ([]byte, error) {
+func (fg *fieldGenerator) argumentNameAndType(c *cache) ([]byte, error) {
 	fg.appendImport(c)
 	return templates.Execute(templates.ArgumentNameAndTypeTemplate, map[string]interface{}{
 		"Name":      fg.name,
@@ -97,7 +97,7 @@ func (fg *fieldGenerator) argumentNameAndType(c *cache[string, string]) ([]byte,
 	})
 }
 
-func (fg *fieldGenerator) appendImport(c *cache[string, string]) {
+func (fg *fieldGenerator) appendImport(c *cache) {
 	if len(fg.alias) != 0 {
 		c.addImport(Import{
 			Alias:  fg.alias,
@@ -137,7 +137,7 @@ func (fg *fieldGenerator) buildReturnValue() string {
 	return tpy
 }
 
-func (fg *fieldGenerator) generate(name string, in []*fieldGenerator, c *cache[string, string], o *overloading) error {
+func (fg *fieldGenerator) generate(name string, in []*fieldGenerator, c *cache, o *overloading) error {
 	switch {
 	case fg.primitiveGen != nil:
 		// TODO generate mapping for primitives
@@ -147,7 +147,7 @@ func (fg *fieldGenerator) generate(name string, in []*fieldGenerator, c *cache[s
 	return nil
 }
 
-func (fg *fieldGenerator) generateStructMapping(name string, in []*fieldGenerator, c *cache[string, string], o *overloading) error {
+func (fg *fieldGenerator) generateStructMapping(name string, in []*fieldGenerator, c *cache, o *overloading) error {
 	varDeclaration, err := templates.Execute(templates.NewVariableTemplate, map[string]interface{}{
 		"VariableName": name,
 		"IsPointer":    fg.isPointer,
@@ -228,7 +228,7 @@ func (fg *fieldGenerator) generateStructMapping(name string, in []*fieldGenerato
 	return nil
 }
 
-func (fg *fieldGenerator) generateOverloadedSource(toName, fromLine string, in []*fieldGenerator, to *fieldGenerator, c *cache[string, string]) error {
+func (fg *fieldGenerator) generateOverloadedSource(toName, fromLine string, in []*fieldGenerator, to *fieldGenerator, c *cache) error {
 	names := strings.Split(fromLine, ".")
 	buff, isFromPointer, err := fg.findPointersInPath("", names, in, []string{})
 	if err != nil {
@@ -252,7 +252,7 @@ func (fg *fieldGenerator) generateOverloadedSource(toName, fromLine string, in [
 	return nil
 }
 
-func (fg *fieldGenerator) generateOverloadedFunction(toName, mappingLine string, in []*fieldGenerator, c *cache[string, string]) error {
+func (fg *fieldGenerator) generateOverloadedFunction(toName, mappingLine string, in []*fieldGenerator, c *cache) error {
 	if strings.Index(mappingLine, ")") < strings.Index(mappingLine, ")") {
 		return fmt.Errorf("invalid function call %s", mappingLine)
 	}

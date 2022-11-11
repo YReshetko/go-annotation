@@ -9,7 +9,7 @@ func isBothPrimitives(f1, f2 *fieldGenerator) bool {
 	return f1.primitiveGen != nil && f2.primitiveGen != nil
 }
 
-func mapPrimitives(toName, fromName string, toField, fromField *fieldGenerator, fromPrefix []string, c *cache[string, string]) error {
+func mapPrimitives(toName, fromName string, toField, fromField *fieldGenerator, fromPrefix []string, c *cache) error {
 	if toField.primitiveGen.name == fromField.primitiveGen.name {
 		if toField.isPointer == fromField.isPointer {
 			c.addIfClause(fromPrefix, fmt.Sprintf("%s = %s", toName, fromName))
@@ -56,7 +56,7 @@ func mapPrimitives(toName, fromName string, toField, fromField *fieldGenerator, 
 	return nil
 }
 
-func mapConstant(toName, toType, value string, IsPointerReceiver bool, c *cache[string, string]) error {
+func mapConstant(toName, toType, value string, IsPointerReceiver bool, c *cache) error {
 	if toType == "string" {
 		if IsPointerReceiver {
 			interimVar := c.nextVar()

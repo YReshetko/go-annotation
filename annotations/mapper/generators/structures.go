@@ -8,7 +8,7 @@ func isBothStructures(f1, f2 *fieldGenerator) bool {
 	return f1.structGen != nil && f2.structGen != nil
 }
 
-func mapStructures(toName, fromName string, toField, fromField *fieldGenerator, fromPrefix []string, c *cache[string, string]) error {
+func mapStructures(toName, fromName string, toField, fromField *fieldGenerator, fromPrefix []string, c *cache) error {
 	toNode, _, err := toField.node.FindNodeByAlias(toField.alias, toField.structGen.name)
 	if err != nil {
 		return fmt.Errorf("unable to preload node for %s: %w", toName, err)
