@@ -3,6 +3,7 @@ package internal
 import (
 	"bytes"
 	"fmt"
+	"github.com/YReshetko/go-annotation/examples/constructor/internal/common"
 	"net/http"
 
 	"golang.org/x/exp/constraints"
@@ -87,6 +88,28 @@ func (s StackQueueStruct[T, V]) postConstruct1() {
 // @PostConstruct(priority="6")
 func (s StackQueueStruct[T, V]) postConstruct2() {
 	fmt.Println(s, "-2")
+}
+
+type privateEmbedded struct {
+	value string
+}
+
+type embeddedPrivateInterface interface {
+	get() string
+}
+
+// @Constructor(name="NewEmbeddingConstructorExample")
+// @Builder
+// @Optional
+type StructEmbedding[T comparable, V constraints.Integer] struct {
+	*StackQueueStruct[T, V] // @Exclude
+	SomeStructure
+	*AnotherStruct // @Exclude
+	*common.SomeStruct
+	privateEmbedded
+	embeddedPrivateInterface
+	common.ExternalEmbeddedInterface
+	Value int // @Exclude
 }
 
 func Validation() {

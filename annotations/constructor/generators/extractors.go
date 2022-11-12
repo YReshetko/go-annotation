@@ -51,6 +51,16 @@ func extractArguments(n *ast.TypeSpec, lookup importLookup, node annotation.Node
 		}
 		initAnnotations := annotation.FindAnnotations[annotations.Init](toCheck.Annotations())
 		if len(initAnnotations) == 0 {
+			if len(field.Names) == 0 {
+				unwraped := unwrapEmbedded(field.Type)
+				switch ut := unwraped.(type) {
+				case *ast.Ident:
+					out.incoming[ut.String()] = buff.String()
+				default:
+					fmt.Println("Unsupported embedding")
+					ast.Print(token.NewFileSet(), field)
+				}
+			}
 			for _, ident := range field.Names {
 				out.incoming[ident.Name] = buff.String()
 			}
@@ -144,4 +154,32 @@ func extractParameters(n *ast.TypeSpec, lookup importLookup) (parameters, distin
 		parameters:     strings.Join(p, ","),
 		isParametrised: true,
 	}, imps
+}
+
+func unwrapEmbedded(n ast.Node) ast.Node {
+	return unwrapIndexListExpression(unwrapSelectorExpression(unwrapStarExpression(n)))
+}
+
+func unwrapStarExpression(e ast.Node) ast.Node {
+	o, ok := e.(*ast.StarExpr)
+	if ok {
+		return o.X
+	}
+	return e
+}
+
+func unwrapSelectorExpression(e ast.Node) ast.Node {
+	o, ok := e.(*ast.SelectorExpr)
+	if ok {
+		return o.Sel
+	}
+	return e
+}
+
+func unwrapIndexListExpression(e ast.Node) ast.Node {
+	o, ok := e.(*ast.IndexListExpr)
+	if ok {
+		return o.X
+	}
+	return e
 }
