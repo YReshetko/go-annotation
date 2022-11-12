@@ -3,6 +3,7 @@ package internal
 import (
 	"bytes"
 	"fmt"
+	"github.com/YReshetko/go-annotation/examples/constructor/internal/common"
 	"net/http"
 
 	"golang.org/x/exp/constraints"
@@ -24,8 +25,12 @@ type SomeStructure struct {
 	maps       map[chan []int]struct{ A http.Request } // @Init(cap="5")
 	chanals    chan []struct{ A http.Request }         // @Init
 	chanalsCap chan []struct{ A http.Request }         // @Init(cap="5")
-	c          *bool
-	d          **complex128
+	anonimus   struct {
+		a int
+		b float64
+	}
+	c *bool
+	d **complex128
 }
 
 // AnotherStruct for testing base constructor options
@@ -87,6 +92,28 @@ func (s StackQueueStruct[T, V]) postConstruct1() {
 // @PostConstruct(priority="6")
 func (s StackQueueStruct[T, V]) postConstruct2() {
 	fmt.Println(s, "-2")
+}
+
+type privateEmbedded struct {
+	value string
+}
+
+type embeddedPrivateInterface interface {
+	get() string
+}
+
+// @Constructor(name="NewEmbeddingConstructorExample")
+// @Builder
+// @Optional
+type StructEmbedding[T comparable, V constraints.Integer] struct {
+	*StackQueueStruct[T, V] // @Exclude
+	SomeStructure
+	*AnotherStruct // @Exclude
+	*common.SomeStruct
+	privateEmbedded
+	embeddedPrivateInterface
+	common.ExternalEmbeddedInterface
+	Value int // @Exclude
 }
 
 func Validation() {

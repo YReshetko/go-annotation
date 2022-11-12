@@ -2,10 +2,11 @@ package generators
 
 import (
 	"github.com/YReshetko/go-annotation/annotations/constructor/annotations"
-	"go/ast"
-	"text/template"
-
+	"github.com/YReshetko/go-annotation/annotations/constructor/templates"
 	annotation "github.com/YReshetko/go-annotation/pkg"
+	"go/ast"
+	"sort"
+	"strings"
 )
 
 type ConstructorValues struct {
@@ -43,12 +44,9 @@ func (g *ConstructorGenerator) Generate(pcvs []PostConstructValues) ([]byte, []I
 }
 
 func (g *ConstructorGenerator) generateConstructor(pcvs []PostConstructValues) ([]byte, distinctImports) {
-	tpl := must(template.New(functionNameTpl).Parse(g.annotation.Name))
-	data := map[string]string{"TypeName": g.node.Name.Name}
 	di := newDistinctImports()
-
 	tv := ConstructorValues{
-		FunctionName:   string(must(executeTpl(tpl, data))),
+		FunctionName:   g.annotation.BuildName(g.node.Name.String()),
 		IsPointer:      g.annotation.Type == "pointer",
 		ReturnType:     g.node.Name.Name,
 		PostConstructs: postConstructMethods(pcvs),
@@ -72,6 +70,18 @@ func (g *ConstructorGenerator) generateConstructor(pcvs []PostConstructValues) (
 		}{Name: name, Value: tpy})
 	}
 
+	sort.Slice(tv.Arguments, func(i, j int) bool {
+		is := tv.Arguments[i]
+		js := tv.Arguments[j]
+		in := is[:strings.Index(is, " ")]
+		jn := js[:strings.Index(js, " ")]
+		return in < jn
+	})
+
+	sort.Slice(tv.Fields, func(i, j int) bool {
+		return tv.Fields[i].Name < tv.Fields[j].Name
+	})
+
 	di.merge(adi)
 
 	p, pdi := extractParameters(g.node, g.annotatedNode.FindImportByAlias)
@@ -82,7 +92,7 @@ func (g *ConstructorGenerator) generateConstructor(pcvs []PostConstructValues) (
 		di.merge(pdi)
 	}
 
-	return must(execute(constructorTpl, tv)), di
+	return templates.Must(templates.Execute(templates.ConstructorTpl, tv)), di
 }
 
 func (g *ConstructorGenerator) Name() string {

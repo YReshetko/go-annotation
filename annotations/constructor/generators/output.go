@@ -1,5 +1,7 @@
 package generators
 
+import "github.com/YReshetko/go-annotation/annotations/constructor/templates"
+
 type FileValues struct {
 	PackageName string
 	HasImports  bool
@@ -27,5 +29,5 @@ func Generate(pkgName string, data []Data) []byte {
 		Data:        string(out),
 	}
 
-	return must(execute(fileTpl, fv))
+	return templates.Must(templates.Execute(templates.FileTpl, fv))
 }

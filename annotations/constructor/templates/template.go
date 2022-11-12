@@ -1,4 +1,4 @@
-package generators
+package templates
 
 import (
 	"bytes"
@@ -56,7 +56,8 @@ func {{ .WithFunctionName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}
 
 const builderTypeTemplate = `
 type {{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]{{ end }} struct {
-	value {{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}
+	{{ range .Arguments }} {{ .FakeName }} {{ .Type }} 
+	{{ end }}
 }
 `
 
@@ -68,68 +69,76 @@ func {{ .ConstructorName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]
 
 const builderMethodTemplate = `
 func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}){{ .BuilderMethodName }}(v {{ .ArgumentType }}) *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
-	b.value.{{ .FieldName }} = v
+	b.{{ .FakeName }} = v
 	return b
 }
 `
 
 const builderBuildMethodTemplate = `
 func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}) {{ .BuildMethodName }}() {{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}{
-	{{ range .Fields }}if b.value.{{ .Name }} == nil {
-		b.value.{{ .Name }} = {{ .Value }}
+	out := {{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}{}
+	{{ range .Fields }}if b.{{ .FakeName }} == nil {
+		b.{{ .FakeName }} = {{ .Value }}
 	}
-	{{ end }}{{ range .PostConstructs }}b.value.{{ . }}()
 	{{ end }}
-	return {{ if .IsPointer }}&{{ end }}b.value
+	{{ range .Arguments }}out.{{ .Name }} = b.{{ .FakeName }}
+	{{ end }}
+	{{ range .PostConstructs }}out.{{ . }}()
+	{{ end }}
+	return {{ if .IsPointer }}&{{ end }}out
 }
 `
 
 const (
-	fileTpl                = "fileTemplate"
-	constructorTpl         = "constructorTemplate"
-	optionalTypeTpl        = "optionalTypeTemplate"
-	optionalConstructorTpl = "optionalConstructorTemplate"
-	optionalWithTpl        = "optionalWithTemplate"
-	builderTypeTpl         = "builderTypeTemplate"
-	builderConstructorTpl  = "builderConstructorTemplate"
-	builderMethodTpl       = "builderMethodTemplate"
-	builderBuildMethodTpl  = "builderBuildMethodTemplate"
-	functionNameTpl        = "functionName"
-	typeNameTpl            = "typeName"
+	FileTpl                = "fileTemplate"
+	ConstructorTpl         = "constructorTemplate"
+	OptionalTypeTpl        = "optionalTypeTemplate"
+	OptionalConstructorTpl = "optionalConstructorTemplate"
+	OptionalWithTpl        = "optionalWithTemplate"
+	BuilderTypeTpl         = "builderTypeTemplate"
+	BuilderConstructorTpl  = "builderConstructorTemplate"
+	BuilderMethodTpl       = "builderMethodTemplate"
+	BuilderBuildMethodTpl  = "builderBuildMethodTemplate"
+	TemporaryTpl           = "temporaryTemplate"
 )
 
 var dataTemplate *template.Template
 
 func init() {
-	dataTemplate = must(template.New(fileTpl).Parse(fileTemplate))
-	dataTemplate = must(dataTemplate.New(constructorTpl).Parse(constructorTemplate))
-	dataTemplate = must(dataTemplate.New(optionalTypeTpl).Parse(optionalTypeTemplate))
-	dataTemplate = must(dataTemplate.New(optionalConstructorTpl).Parse(optionalConstructorTemplate))
-	dataTemplate = must(dataTemplate.New(optionalWithTpl).Parse(optionalWithTemplate))
-	dataTemplate = must(dataTemplate.New(builderTypeTpl).Parse(builderTypeTemplate))
-	dataTemplate = must(dataTemplate.New(builderConstructorTpl).Parse(builderConstructorTemplate))
-	dataTemplate = must(dataTemplate.New(builderMethodTpl).Parse(builderMethodTemplate))
-	dataTemplate = must(dataTemplate.New(builderBuildMethodTpl).Parse(builderBuildMethodTemplate))
+	dataTemplate = Must(template.New(FileTpl).Parse(fileTemplate))
+	dataTemplate = Must(dataTemplate.New(ConstructorTpl).Parse(constructorTemplate))
+	dataTemplate = Must(dataTemplate.New(OptionalTypeTpl).Parse(optionalTypeTemplate))
+	dataTemplate = Must(dataTemplate.New(OptionalConstructorTpl).Parse(optionalConstructorTemplate))
+	dataTemplate = Must(dataTemplate.New(OptionalWithTpl).Parse(optionalWithTemplate))
+	dataTemplate = Must(dataTemplate.New(BuilderTypeTpl).Parse(builderTypeTemplate))
+	dataTemplate = Must(dataTemplate.New(BuilderConstructorTpl).Parse(builderConstructorTemplate))
+	dataTemplate = Must(dataTemplate.New(BuilderMethodTpl).Parse(builderMethodTemplate))
+	dataTemplate = Must(dataTemplate.New(BuilderBuildMethodTpl).Parse(builderBuildMethodTemplate))
 
 }
 
-func must[T any](t T, e error) T {
+func Must[T any](t T, e error) T {
 	if e != nil {
 		panic(e)
 	}
 	return t
 }
 
-func execute(templateName string, data any) ([]byte, error) {
+func ExecuteTempTemplate(tpl string, data any) string {
+	//typeNameData := map[string]string{"TypeName": g.node.Name.Name}
+	return string(Must(ExecuteTemplate(Must(template.New(TemporaryTpl).Parse(tpl)), data)))
+}
+
+func Execute(templateName string, data any) ([]byte, error) {
 	tpl := dataTemplate.Lookup(templateName)
 	if tpl == nil {
 		return nil, fmt.Errorf("template %s not found", templateName)
 	}
 
-	return executeTpl(tpl, data)
+	return ExecuteTemplate(tpl, data)
 }
 
-func executeTpl(tpl *template.Template, data any) ([]byte, error) {
+func ExecuteTemplate(tpl *template.Template, data any) ([]byte, error) {
 	b := bytes.NewBufferString("")
 	err := tpl.Execute(b, data)
 	if err != nil {

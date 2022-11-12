@@ -2,6 +2,7 @@ package constructor
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/YReshetko/go-annotation/annotations/constructor/generators"
 )
@@ -33,10 +34,25 @@ func (c *cache) generate() (map[key][]generators.Data, error) {
 	out := make(map[key][]generators.Data)
 	for k, m := range c.data {
 		var data []generators.Data
+		var sortedTG []struct {
+			tn string
+			tc *typeCache
+		}
 		for tn, tc := range m {
-			gd, err := tc.generate()
+			sortedTG = append(sortedTG, struct {
+				tn string
+				tc *typeCache
+			}{tn: tn, tc: tc})
+		}
+
+		sort.Slice(sortedTG, func(i, j int) bool {
+			return sortedTG[i].tn < sortedTG[j].tn
+		})
+
+		for _, tntc := range sortedTG {
+			gd, err := tntc.tc.generate()
 			if err != nil {
-				return nil, fmt.Errorf("unable to generate data for type %s", tn)
+				return nil, fmt.Errorf("unable to generate data for type %s", tntc.tn)
 			}
 			data = append(data, gd...)
 		}
