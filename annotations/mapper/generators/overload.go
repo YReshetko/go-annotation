@@ -13,6 +13,7 @@ const (
 	function
 	constant
 	slice
+	dictionary
 )
 
 type mapping struct {
@@ -66,6 +67,20 @@ func (o *overloading) AddSlice(target, source, this, function string) error {
 		this:        this,
 		function:    function,
 		mappingType: slice,
+	}
+	return nil
+}
+
+func (o *overloading) AddMap(target, source, this, function string) error {
+	if len(this) > 0 && len(function) > 0 {
+		return fmt.Errorf("invalid Mapping annotation for %s, expected exactly one of [this, func] non empty, but got %d", target, 2)
+	}
+
+	o.mappings[target] = mapping{
+		source:      source,
+		this:        this,
+		function:    function,
+		mappingType: dictionary,
 	}
 	return nil
 }

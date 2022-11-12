@@ -86,6 +86,15 @@ type SliceMapping interface {
 	genMapper2(in common.Common) common.Common2
 }
 
+// @Mapper
+type MapMapping interface {
+	// @MapMapping(target="Map", source="in.Map", this="genMapper")
+	Function1(in input.MapStruct) output.MapStruct
+	genMapper(k common.MapKey, v common.Common2) (common.MapKey, common.Common2)
+
+	Function2(mapStruct input.MapStruct2) output.MapStruct2
+}
+
 func sliceInOut(s *[]input.Local2) []output.StructuresMapping2 {
 	return nil
 }

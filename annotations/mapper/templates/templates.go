@@ -58,6 +58,16 @@ const sliceMappingTemplate = `
 	{{ .ReceiverName }} = {{ if .IsPointerReceiver }}&{{ end }}{{ .VariableName }}
 `
 
+const mapMappingTemplate = `
+	{{ .VariableInterimMap }} := {{ if .IsSourcePointer }}*{{end}}{{ .SourceName }}
+	{{ .VariableName }} := make({{ .ReceiverType }}, len({{ .VariableInterimMap }}))
+	for {{ .VariableKey }}, {{ .VariableValue }} := range {{ .VariableInterimMap }} {
+		{{ .VariableNewKey }}, {{ .VariableNewValue }} := {{ .FunctionName }}({{ .VariableKey }}, {{ .VariableValue }})
+		{{ .VariableName }}[{{ .VariableNewKey }}] = {{ .VariableNewValue }}
+	}
+	{{ .ReceiverName }} = {{ if .IsPointerReceiver }}&{{ end }}{{ .VariableName }}
+`
+
 const (
 	FileTemplate                   = "fileTemplate"
 	MapperStructureTemplate        = "mapperStructureTemplate"
@@ -68,6 +78,7 @@ const (
 	PrimitiveConverterFuncTemplate = "primitiveConverterFuncTemplate"
 	ArgumentNameAndTypeTemplate    = "argumentNameAndTypeTemplate"
 	SliceMappingTemplate           = "sliceMappingTemplate"
+	MapMappingTemplate             = "mapMappingTemplate"
 )
 
 var dataTemplate *template.Template
@@ -82,6 +93,7 @@ func init() {
 	dataTemplate = must(dataTemplate.New(PrimitiveConverterFuncTemplate).Parse(primitiveConverterFuncTemplate))
 	dataTemplate = must(dataTemplate.New(ArgumentNameAndTypeTemplate).Parse(argumentNameAndTypeTemplate))
 	dataTemplate = must(dataTemplate.New(SliceMappingTemplate).Parse(sliceMappingTemplate))
+	dataTemplate = must(dataTemplate.New(MapMappingTemplate).Parse(mapMappingTemplate))
 }
 
 func must[T any](t T, e error) T {

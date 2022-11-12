@@ -11,6 +11,78 @@ import (
 	ast "go/ast"
 )
 
+type primitiveTypeGeneratorBuilder struct {
+	value primitiveTypeGenerator
+}
+
+func newPrimitiveTypeGeneratorBuilder() *primitiveTypeGeneratorBuilder {
+	return &primitiveTypeGeneratorBuilder{}
+}
+
+func (b *primitiveTypeGeneratorBuilder) setName(v string) *primitiveTypeGeneratorBuilder {
+	b.value.name = v
+	return b
+}
+
+func (b *primitiveTypeGeneratorBuilder) build() *primitiveTypeGenerator {
+	b.value.postConstruct()
+
+	return &b.value
+}
+
+type mapTypeGeneratorBuilder struct {
+	value mapTypeGenerator
+}
+
+func newMapTypeGeneratorBuilder() *mapTypeGeneratorBuilder {
+	return &mapTypeGeneratorBuilder{}
+}
+
+func (b *mapTypeGeneratorBuilder) setNode(v annotation.Node) *mapTypeGeneratorBuilder {
+	b.value.node = v
+	return b
+}
+
+func (b *mapTypeGeneratorBuilder) setParentAlias(v string) *mapTypeGeneratorBuilder {
+	b.value.parentAlias = v
+	return b
+}
+
+func (b *mapTypeGeneratorBuilder) setKeyType(v ast.Node) *mapTypeGeneratorBuilder {
+	b.value.keyType = v
+	return b
+}
+
+func (b *mapTypeGeneratorBuilder) setValueType(v ast.Node) *mapTypeGeneratorBuilder {
+	b.value.valueType = v
+	return b
+}
+
+func (b *mapTypeGeneratorBuilder) setKey(v *fieldGenerator) *mapTypeGeneratorBuilder {
+	b.value.key = v
+	return b
+}
+
+func (b *mapTypeGeneratorBuilder) setValue(v *fieldGenerator) *mapTypeGeneratorBuilder {
+	b.value.value = v
+	return b
+}
+
+func (b *mapTypeGeneratorBuilder) build() *mapTypeGenerator {
+	b.value.buildFields()
+
+	return &b.value
+}
+
+func newOverloading(isIgnoreDefault bool) *overloading {
+	returnValue := &overloading{
+		isIgnoreDefault: isIgnoreDefault,
+		mappings:        make(map[string]mapping),
+	}
+
+	return returnValue
+}
+
 type structureTypeGeneratorBuilder struct {
 	value structureTypeGenerator
 }
@@ -61,6 +133,11 @@ func newSliceTypeGeneratorBuilder() *sliceTypeGeneratorBuilder {
 	return &sliceTypeGeneratorBuilder{}
 }
 
+func (b *sliceTypeGeneratorBuilder) setSliceType(v ast.Node) *sliceTypeGeneratorBuilder {
+	b.value.sliceType = v
+	return b
+}
+
 func (b *sliceTypeGeneratorBuilder) setNode(v annotation.Node) *sliceTypeGeneratorBuilder {
 	b.value.node = v
 	return b
@@ -68,11 +145,6 @@ func (b *sliceTypeGeneratorBuilder) setNode(v annotation.Node) *sliceTypeGenerat
 
 func (b *sliceTypeGeneratorBuilder) setParentAlias(v string) *sliceTypeGeneratorBuilder {
 	b.value.parentAlias = v
-	return b
-}
-
-func (b *sliceTypeGeneratorBuilder) setSliceType(v ast.Node) *sliceTypeGeneratorBuilder {
-	b.value.sliceType = v
 	return b
 }
 
@@ -90,11 +162,6 @@ func newCache() *cacheBuilder {
 	return &cacheBuilder{}
 }
 
-func (b *cacheBuilder) setVarPrefix(v string) *cacheBuilder {
-	b.value.varPrefix = v
-	return b
-}
-
 func (b *cacheBuilder) setImports(v map[Import]struct{}) *cacheBuilder {
 	b.value.imports = v
 	return b
@@ -102,6 +169,11 @@ func (b *cacheBuilder) setImports(v map[Import]struct{}) *cacheBuilder {
 
 func (b *cacheBuilder) setNode(v *utils.Node[string, string]) *cacheBuilder {
 	b.value.node = v
+	return b
+}
+
+func (b *cacheBuilder) setVarPrefix(v string) *cacheBuilder {
+	b.value.varPrefix = v
 	return b
 }
 
@@ -167,11 +239,6 @@ func NewMapperGeneratorBuilder() *MapperGeneratorBuilder {
 	return &MapperGeneratorBuilder{}
 }
 
-func (b *MapperGeneratorBuilder) IntName(v string) *MapperGeneratorBuilder {
-	b.value.intName = v
-	return b
-}
-
 func (b *MapperGeneratorBuilder) StructName(v string) *MapperGeneratorBuilder {
 	b.value.structName = v
 	return b
@@ -192,6 +259,11 @@ func (b *MapperGeneratorBuilder) IntType(v *ast.InterfaceType) *MapperGeneratorB
 	return b
 }
 
+func (b *MapperGeneratorBuilder) IntName(v string) *MapperGeneratorBuilder {
+	b.value.intName = v
+	return b
+}
+
 func (b *MapperGeneratorBuilder) Build() *MapperGenerator {
 	if b.value.mgs == nil {
 		b.value.mgs = []*methodGenerator{}
@@ -207,6 +279,11 @@ type methodGeneratorBuilder struct {
 
 func newMethodGeneratorBuilder() *methodGeneratorBuilder {
 	return &methodGeneratorBuilder{}
+}
+
+func (b *methodGeneratorBuilder) setOutputGenerator(v []*fieldGenerator) *methodGeneratorBuilder {
+	b.value.outputGenerator = v
+	return b
 }
 
 func (b *methodGeneratorBuilder) setNode(v annotation.Node) *methodGeneratorBuilder {
@@ -239,11 +316,6 @@ func (b *methodGeneratorBuilder) setInputGenerators(v []*fieldGenerator) *method
 	return b
 }
 
-func (b *methodGeneratorBuilder) setOutputGenerator(v []*fieldGenerator) *methodGeneratorBuilder {
-	b.value.outputGenerator = v
-	return b
-}
-
 func (b *methodGeneratorBuilder) build() *methodGenerator {
 	if b.value.inputGenerators == nil {
 		b.value.inputGenerators = []*fieldGenerator{}
@@ -253,34 +325,6 @@ func (b *methodGeneratorBuilder) build() *methodGenerator {
 	}
 	b.value.buildOutput()
 	b.value.buildInput()
-
-	return &b.value
-}
-
-func newOverloading(isIgnoreDefault bool) *overloading {
-	returnValue := &overloading{
-		isIgnoreDefault: isIgnoreDefault,
-		mappings:        make(map[string]mapping),
-	}
-
-	return returnValue
-}
-
-type primitiveTypeGeneratorBuilder struct {
-	value primitiveTypeGenerator
-}
-
-func newPrimitiveTypeGeneratorBuilder() *primitiveTypeGeneratorBuilder {
-	return &primitiveTypeGeneratorBuilder{}
-}
-
-func (b *primitiveTypeGeneratorBuilder) setName(v string) *primitiveTypeGeneratorBuilder {
-	b.value.name = v
-	return b
-}
-
-func (b *primitiveTypeGeneratorBuilder) build() *primitiveTypeGenerator {
-	b.value.postConstruct()
 
 	return &b.value
 }

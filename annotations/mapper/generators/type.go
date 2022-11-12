@@ -62,38 +62,42 @@ func (stg *sliceTypeGenerator) buildType() string {
 	if stg.fieldGen == nil {
 		return ""
 	}
-	prefix := ""
-	if stg.fieldGen.isPointer {
-		prefix = "*"
-	}
-	if len(stg.fieldGen.alias) == 0 && len(stg.fieldGen.parentAlias) != 0 {
-		prefix += stg.fieldGen.parentAlias + "."
-	}
-
-	return prefix + stg.fieldGen.buildArgType()
+	return buildType(stg.fieldGen)
 }
 
-func isPrimitive(t string) bool {
-	_, ok := map[string]struct{}{
-		"bool":       {},
-		"uint":       {},
-		"uint8":      {},
-		"uint16":     {},
-		"uint32":     {},
-		"uint64":     {},
-		"byte":       {},
-		"int":        {},
-		"int8":       {},
-		"int16":      {},
-		"int32":      {},
-		"int64":      {},
-		"float32":    {},
-		"float64":    {},
-		"complex64":  {},
-		"complex128": {},
-		"string":     {},
-		"uintptr":    {},
-		"rune":       {},
-	}[t]
-	return ok
+// @Builder(constructor="newMapTypeGeneratorBuilder", build="set{{ .FieldName }}", terminator="build", type="pointer")
+type mapTypeGenerator struct {
+	node        annotation.Node
+	parentAlias string
+	keyType     ast.Node
+	valueType   ast.Node
+
+	key   *fieldGenerator
+	value *fieldGenerator
+}
+
+// @PostConstruct
+func (mtg *mapTypeGenerator) buildFields() {
+	mtg.key = buildFiledGenerator(&ast.Field{Type: mtg.keyType.(ast.Expr)}, "", mtg.node, mtg.parentAlias)
+	mtg.value = buildFiledGenerator(&ast.Field{Type: mtg.valueType.(ast.Expr)}, "", mtg.node, mtg.parentAlias)
+}
+
+func (mtg *mapTypeGenerator) buildType() string {
+	if mtg.key == nil || mtg.value == nil {
+		return ""
+	}
+	key := buildType(mtg.key)
+	value := buildType(mtg.value)
+	return fmt.Sprintf("map[%s]%s", key, value)
+}
+
+func buildType(f *fieldGenerator) string {
+	prefix := ""
+	if f.isPointer {
+		prefix = "*"
+	}
+	if len(f.alias) == 0 && len(f.parentAlias) != 0 {
+		prefix += f.parentAlias + "."
+	}
+	return prefix + f.buildArgType()
 }

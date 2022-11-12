@@ -24,6 +24,13 @@ type SliceMapping struct {
 	Func   string `annotation:"name=func"`
 }
 
+type MapMapping struct {
+	Target string `annotation:"name=target,required"`
+	Source string `annotation:"name=source,required"`
+	This   string `annotation:"name=this"`
+	Func   string `annotation:"name=func"`
+}
+
 type IgnoreDefaultMapping struct{}
 
 func (m Mapper) BuildName(typeName string) (string, error) {

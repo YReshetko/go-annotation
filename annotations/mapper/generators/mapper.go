@@ -110,6 +110,12 @@ func getOverloading(node annotation.Node) (*overloading, error) {
 			return nil, fmt.Errorf("unable to prepare overloading config: %w", err)
 		}
 	}
+	for _, sm := range annotation.FindAnnotations[annotations.MapMapping](node.Annotations()) {
+		err := o.AddMap(sm.Target, sm.Source, sm.This, sm.Func)
+		if err != nil {
+			return nil, fmt.Errorf("unable to prepare overloading config: %w", err)
+		}
+	}
 
 	return o, nil
 }

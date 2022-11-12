@@ -87,11 +87,15 @@ func (mg *methodGenerator) generate(receiverName string, imports map[Import]stru
 	t := &tabs{}
 	n.Execute(preProcessing(buffer, t), postProcessing(buffer, t))
 
+	returnTypeLine := strings.Join(returnTypes, ", ")
+	if len(returnTypes) > 1 {
+		returnTypeLine = "(" + returnTypeLine + ")"
+	}
 	return templates.Execute(templates.MapperMethodTemplate, map[string]interface{}{
 		"TypeName":        receiverName,
 		"MethodName":      mg.name,
 		"Arguments":       strings.Join(args, ", "),
-		"ReturnTypes":     strings.Join(returnTypes, ", "),
+		"ReturnTypes":     returnTypeLine,
 		"Block":           buffer.String(),
 		"ReturnVariables": strings.Join(variables, ", "),
 	})
