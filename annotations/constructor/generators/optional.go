@@ -4,6 +4,7 @@ import (
 	"github.com/YReshetko/go-annotation/annotations/constructor/annotations"
 	annotation "github.com/YReshetko/go-annotation/pkg"
 	"go/ast"
+	"sort"
 	"text/template"
 )
 
@@ -70,11 +71,21 @@ func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impo
 		}{Name: name, Value: value})
 	}
 
+	sort.Slice(tplData.Fields, func(i, j int) bool {
+		return tplData.Fields[i].Name < tplData.Fields[j].Name
+	})
+	var incoming [][2]string
+	for fn, fv := range argsToProcess.incoming {
+		incoming = append(incoming, [2]string{fn, fv})
+	}
+	sort.Slice(incoming, func(i, j int) bool {
+		return incoming[i][0] < incoming[j][0]
+	})
+
 	data := must(execute(optionalTypeTpl, tplData))
 	data = append(data, must(execute(optionalConstructorTpl, tplData))...)
-
-	for fieldName, fieldValue := range argsToProcess.incoming {
-		data = append(data, g.withFunction(fieldName, fieldValue, tplData)...)
+	for _, i := range incoming {
+		data = append(data, g.withFunction(i[0], i[1], tplData)...)
 	}
 
 	return data, di.toSlice(), nil

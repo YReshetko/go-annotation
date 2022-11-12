@@ -3,6 +3,7 @@ package generators
 import (
 	"fmt"
 	"go/ast"
+	"sort"
 	"text/template"
 
 	"github.com/YReshetko/go-annotation/annotations/constructor/annotations"
@@ -77,7 +78,7 @@ func (g *BuilderGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impor
 	index := 0
 	for fName, fType := range argsToProcess.incoming {
 		index++
-		fakeName := fmt.Sprintf("_field_%d_", index)
+		fakeName := fmt.Sprintf("_%s_", fName)
 		tplData.Arguments = append(tplData.Arguments, struct {
 			FakeName string
 			Name     string
@@ -91,6 +92,13 @@ func (g *BuilderGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impor
 			}{FakeName: fakeName, Name: fName, Value: fValue})
 		}
 	}
+
+	sort.Slice(tplData.Arguments, func(i, j int) bool {
+		return tplData.Arguments[i].Name < tplData.Arguments[j].Name
+	})
+	sort.Slice(tplData.Fields, func(i, j int) bool {
+		return tplData.Fields[i].Name < tplData.Fields[j].Name
+	})
 
 	data := must(execute(builderTypeTpl, tplData))
 	data = append(data, must(execute(builderConstructorTpl, tplData))...)

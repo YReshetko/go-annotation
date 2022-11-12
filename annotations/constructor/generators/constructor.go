@@ -3,6 +3,8 @@ package generators
 import (
 	"github.com/YReshetko/go-annotation/annotations/constructor/annotations"
 	"go/ast"
+	"sort"
+	"strings"
 	"text/template"
 
 	annotation "github.com/YReshetko/go-annotation/pkg"
@@ -71,6 +73,18 @@ func (g *ConstructorGenerator) generateConstructor(pcvs []PostConstructValues) (
 			Value string
 		}{Name: name, Value: tpy})
 	}
+
+	sort.Slice(tv.Arguments, func(i, j int) bool {
+		is := tv.Arguments[i]
+		js := tv.Arguments[j]
+		in := is[:strings.Index(is, " ")]
+		jn := js[:strings.Index(js, " ")]
+		return in < jn
+	})
+
+	sort.Slice(tv.Fields, func(i, j int) bool {
+		return tv.Fields[i].Name < tv.Fields[j].Name
+	})
 
 	di.merge(adi)
 
