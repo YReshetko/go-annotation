@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"fmt"
 	"go/ast"
 	"text/template"
 
@@ -17,9 +18,15 @@ type BuilderValues struct {
 	IsPointer            bool
 	ParameterConstraints string
 	Parameters           string
-	Fields               []struct {
-		Name  string
-		Value string
+	Arguments            []struct {
+		FakeName string
+		Name     string
+		Type     string
+	}
+	Fields []struct {
+		FakeName string
+		Name     string
+		Value    string
 	}
 	PostConstructs []string
 }
@@ -28,7 +35,7 @@ type BuildValues struct {
 	BuilderValues
 	BuilderMethodName string
 	ArgumentType      string
-	FieldName         string
+	FakeName          string
 }
 
 type BuilderGenerator struct {
@@ -67,28 +74,39 @@ func (g *BuilderGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impor
 	argsToProcess, adi := extractArguments(g.node, g.annotatedNode.FindImportByAlias, g.annotatedNode)
 	di.merge(adi)
 
-	for name, value := range argsToProcess.toInit {
-		tplData.Fields = append(tplData.Fields, struct {
-			Name  string
-			Value string
-		}{Name: name, Value: value})
+	index := 0
+	for fName, fType := range argsToProcess.incoming {
+		index++
+		fakeName := fmt.Sprintf("_field_%d_", index)
+		tplData.Arguments = append(tplData.Arguments, struct {
+			FakeName string
+			Name     string
+			Type     string
+		}{FakeName: fakeName, Name: fName, Type: fType})
+		if fValue, ok := argsToProcess.toInit[fName]; ok {
+			tplData.Fields = append(tplData.Fields, struct {
+				FakeName string
+				Name     string
+				Value    string
+			}{FakeName: fakeName, Name: fName, Value: fValue})
+		}
 	}
 
 	data := must(execute(builderTypeTpl, tplData))
 	data = append(data, must(execute(builderConstructorTpl, tplData))...)
-	for fieldName, fieldValue := range argsToProcess.incoming {
-		data = append(data, g.buildMethod(fieldName, fieldValue, tplData)...)
+	for _, argument := range tplData.Arguments {
+		data = append(data, g.buildMethod(argument.FakeName, argument.Name, argument.Type, tplData)...)
 	}
 	data = append(data, must(execute(builderBuildMethodTpl, tplData))...)
 
 	return data, di.toSlice(), nil
 }
 
-func (g *BuilderGenerator) buildMethod(name string, value string, data BuilderValues) []byte {
+func (g *BuilderGenerator) buildMethod(fakeName, name, value string, data BuilderValues) []byte {
 	wv := BuildValues{
 		BuilderValues:     data,
 		ArgumentType:      value,
-		FieldName:         name,
+		FakeName:          fakeName,
 		BuilderMethodName: g.builderMethodName(name),
 	}
 

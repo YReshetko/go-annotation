@@ -34,6 +34,12 @@ func NewAnotherStructOptional(opts ...AnotherStructOption) AnotherStruct {
 	return *rt
 }
 
+func WithBuff(v bytes.Buffer) AnotherStructOption {
+	return func(rt *AnotherStruct) {
+		rt.buff = v
+	}
+}
+
 func WithA(v SomeStructure) AnotherStructOption {
 	return func(rt *AnotherStruct) {
 		rt.a = v
@@ -52,19 +58,13 @@ func WithFn(v func(**SomeStructure) AnotherStruct) AnotherStructOption {
 	}
 }
 
-func WithBuff(v bytes.Buffer) AnotherStructOption {
-	return func(rt *AnotherStruct) {
-		rt.buff = v
-	}
-}
-
-func NewTheThirdStruct(d int, fn func(**SomeStructure) AnotherStruct, a SomeStructure, b *SomeStructure, c int) TheThirdStruct {
+func NewTheThirdStruct(a SomeStructure, b *SomeStructure, c int, d int, fn func(**SomeStructure) AnotherStruct) TheThirdStruct {
 	returnValue := TheThirdStruct{
-		d:  d,
-		fn: fn,
 		a:  a,
 		b:  b,
 		c:  c,
+		d:  d,
+		fn: fn,
 	}
 
 	return returnValue
@@ -80,14 +80,14 @@ func NewStackStruct[T stack[T]](a stack[T], q queue[stack[T]], fn func(**SomeStr
 	return returnValue
 }
 
-func NewStackQueueStruct[T comparable, V constraints.Integer](a stack[T], q queue[V], simp T, vimp V, fn func(**SomeStructure) AnotherStruct, buff bytes.Buffer) *StackQueueStruct[T, V] {
+func NewStackQueueStruct[T comparable, V constraints.Integer](q queue[V], simp T, vimp V, fn func(**SomeStructure) AnotherStruct, buff bytes.Buffer, a stack[T]) *StackQueueStruct[T, V] {
 	returnValue := &StackQueueStruct[T, V]{
-		a:    a,
 		q:    q,
 		simp: simp,
 		vimp: vimp,
 		fn:   fn,
 		buff: buff,
+		a:    a,
 		str:  make(chan map[T][]V),
 	}
 	returnValue.postConstruct1()
@@ -111,6 +111,12 @@ func NewStackQueueStructOptional[T comparable, V constraints.Integer](opts ...St
 	rt.postConstruct3()
 
 	return rt
+}
+
+func WithSQSA[T comparable, V constraints.Integer](v stack[T]) StackQueueStructOption[T, V] {
+	return func(rt *StackQueueStruct[T, V]) {
+		rt.a = v
+	}
 }
 
 func WithSQSQ[T comparable, V constraints.Integer](v queue[V]) StackQueueStructOption[T, V] {
@@ -149,73 +155,83 @@ func WithSQSStr[T comparable, V constraints.Integer](v chan map[T][]V) StackQueu
 	}
 }
 
-func WithSQSA[T comparable, V constraints.Integer](v stack[T]) StackQueueStructOption[T, V] {
-	return func(rt *StackQueueStruct[T, V]) {
-		rt.a = v
-	}
-}
-
 type MyStackQueueStructBuilder[T comparable, V constraints.Integer] struct {
-	value StackQueueStruct[T, V]
+	_field_1_ func(**SomeStructure) AnotherStruct
+	_field_2_ bytes.Buffer
+	_field_3_ chan map[T][]V
+	_field_4_ stack[T]
+	_field_5_ queue[V]
+	_field_6_ T
+	_field_7_ V
 }
 
 func NewStackQueueStructBuilder[T comparable, V constraints.Integer]() *MyStackQueueStructBuilder[T, V] {
 	return &MyStackQueueStructBuilder[T, V]{}
 }
 
-func (b *MyStackQueueStructBuilder[T, V]) BuildQField(v queue[V]) *MyStackQueueStructBuilder[T, V] {
-	b.value.q = v
-	return b
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) BuildSimpField(v T) *MyStackQueueStructBuilder[T, V] {
-	b.value.simp = v
-	return b
-}
-
-func (b *MyStackQueueStructBuilder[T, V]) BuildVimpField(v V) *MyStackQueueStructBuilder[T, V] {
-	b.value.vimp = v
-	return b
-}
-
 func (b *MyStackQueueStructBuilder[T, V]) BuildFnField(v func(**SomeStructure) AnotherStruct) *MyStackQueueStructBuilder[T, V] {
-	b.value.fn = v
+	b._field_1_ = v
 	return b
 }
 
 func (b *MyStackQueueStructBuilder[T, V]) BuildBuffField(v bytes.Buffer) *MyStackQueueStructBuilder[T, V] {
-	b.value.buff = v
+	b._field_2_ = v
 	return b
 }
 
 func (b *MyStackQueueStructBuilder[T, V]) BuildStrField(v chan map[T][]V) *MyStackQueueStructBuilder[T, V] {
-	b.value.str = v
+	b._field_3_ = v
 	return b
 }
 
 func (b *MyStackQueueStructBuilder[T, V]) BuildAField(v stack[T]) *MyStackQueueStructBuilder[T, V] {
-	b.value.a = v
+	b._field_4_ = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildQField(v queue[V]) *MyStackQueueStructBuilder[T, V] {
+	b._field_5_ = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildSimpField(v T) *MyStackQueueStructBuilder[T, V] {
+	b._field_6_ = v
+	return b
+}
+
+func (b *MyStackQueueStructBuilder[T, V]) BuildVimpField(v V) *MyStackQueueStructBuilder[T, V] {
+	b._field_7_ = v
 	return b
 }
 
 func (b *MyStackQueueStructBuilder[T, V]) Build() *StackQueueStruct[T, V] {
-	if b.value.str == nil {
-		b.value.str = make(chan map[T][]V)
+	out := StackQueueStruct[T, V]{}
+	if b._field_3_ == nil {
+		b._field_3_ = make(chan map[T][]V)
 	}
-	b.value.postConstruct1()
-	b.value.postConstruct2()
-	b.value.postConstruct3()
 
-	return &b.value
+	out.fn = b._field_1_
+	out.buff = b._field_2_
+	out.str = b._field_3_
+	out.a = b._field_4_
+	out.q = b._field_5_
+	out.simp = b._field_6_
+	out.vimp = b._field_7_
+
+	out.postConstruct1()
+	out.postConstruct2()
+	out.postConstruct3()
+
+	return &out
 }
 
-func NewEmbeddingConstructorExample[T comparable, V constraints.Integer](embeddedPrivateInterface embeddedPrivateInterface, ExternalEmbeddedInterface common.ExternalEmbeddedInterface, SomeStructure SomeStructure, SomeStruct *common.SomeStruct, privateEmbedded privateEmbedded) StructEmbedding[T, V] {
+func NewEmbeddingConstructorExample[T comparable, V constraints.Integer](SomeStruct *common.SomeStruct, privateEmbedded privateEmbedded, embeddedPrivateInterface embeddedPrivateInterface, ExternalEmbeddedInterface common.ExternalEmbeddedInterface, SomeStructure SomeStructure) StructEmbedding[T, V] {
 	returnValue := StructEmbedding[T, V]{
+		SomeStruct:                SomeStruct,
+		privateEmbedded:           privateEmbedded,
 		embeddedPrivateInterface:  embeddedPrivateInterface,
 		ExternalEmbeddedInterface: ExternalEmbeddedInterface,
 		SomeStructure:             SomeStructure,
-		SomeStruct:                SomeStruct,
-		privateEmbedded:           privateEmbedded,
 	}
 
 	return returnValue
@@ -230,12 +246,6 @@ func NewStructEmbedding[T comparable, V constraints.Integer](opts ...StructEmbed
 	}
 
 	return *rt
-}
-
-func WithSomeStructure[T comparable, V constraints.Integer](v SomeStructure) StructEmbeddingOption[T, V] {
-	return func(rt *StructEmbedding[T, V]) {
-		rt.SomeStructure = v
-	}
 }
 
 func WithSomeStruct[T comparable, V constraints.Integer](v *common.SomeStruct) StructEmbeddingOption[T, V] {
@@ -262,46 +272,67 @@ func WithExternalEmbeddedInterface[T comparable, V constraints.Integer](v common
 	}
 }
 
+func WithSomeStructure[T comparable, V constraints.Integer](v SomeStructure) StructEmbeddingOption[T, V] {
+	return func(rt *StructEmbedding[T, V]) {
+		rt.SomeStructure = v
+	}
+}
+
 type StructEmbeddingBuilder[T comparable, V constraints.Integer] struct {
-	value StructEmbedding[T, V]
+	_field_1_ SomeStructure
+	_field_2_ *common.SomeStruct
+	_field_3_ privateEmbedded
+	_field_4_ embeddedPrivateInterface
+	_field_5_ common.ExternalEmbeddedInterface
 }
 
 func NewStructEmbeddingBuilder[T comparable, V constraints.Integer]() *StructEmbeddingBuilder[T, V] {
 	return &StructEmbeddingBuilder[T, V]{}
 }
 
-func (b *StructEmbeddingBuilder[T, V]) PrivateEmbedded(v privateEmbedded) *StructEmbeddingBuilder[T, V] {
-	b.value.privateEmbedded = v
-	return b
-}
-
-func (b *StructEmbeddingBuilder[T, V]) EmbeddedPrivateInterface(v embeddedPrivateInterface) *StructEmbeddingBuilder[T, V] {
-	b.value.embeddedPrivateInterface = v
-	return b
-}
-
-func (b *StructEmbeddingBuilder[T, V]) ExternalEmbeddedInterface(v common.ExternalEmbeddedInterface) *StructEmbeddingBuilder[T, V] {
-	b.value.ExternalEmbeddedInterface = v
-	return b
-}
-
 func (b *StructEmbeddingBuilder[T, V]) SomeStructure(v SomeStructure) *StructEmbeddingBuilder[T, V] {
-	b.value.SomeStructure = v
+	b._field_1_ = v
 	return b
 }
 
 func (b *StructEmbeddingBuilder[T, V]) SomeStruct(v *common.SomeStruct) *StructEmbeddingBuilder[T, V] {
-	b.value.SomeStruct = v
+	b._field_2_ = v
+	return b
+}
+
+func (b *StructEmbeddingBuilder[T, V]) PrivateEmbedded(v privateEmbedded) *StructEmbeddingBuilder[T, V] {
+	b._field_3_ = v
+	return b
+}
+
+func (b *StructEmbeddingBuilder[T, V]) EmbeddedPrivateInterface(v embeddedPrivateInterface) *StructEmbeddingBuilder[T, V] {
+	b._field_4_ = v
+	return b
+}
+
+func (b *StructEmbeddingBuilder[T, V]) ExternalEmbeddedInterface(v common.ExternalEmbeddedInterface) *StructEmbeddingBuilder[T, V] {
+	b._field_5_ = v
 	return b
 }
 
 func (b *StructEmbeddingBuilder[T, V]) Build() StructEmbedding[T, V] {
+	out := StructEmbedding[T, V]{}
 
-	return b.value
+	out.SomeStructure = b._field_1_
+	out.SomeStruct = b._field_2_
+	out.privateEmbedded = b._field_3_
+	out.embeddedPrivateInterface = b._field_4_
+	out.ExternalEmbeddedInterface = b._field_5_
+
+	return out
 }
 
-func NewSomeSomeStructureThisIsMyTemplate(c *bool, d **complex128) SomeStructure {
+func NewSomeSomeStructureThisIsMyTemplate(anonimus struct {
+	a int
+	b float64
+}, c *bool, d **complex128) SomeStructure {
 	returnValue := SomeStructure{
+		anonimus:   anonimus,
 		c:          c,
 		d:          d,
 		slice:      make([]map[chan int]string, 5, 15),
@@ -318,17 +349,44 @@ type SomeStructureOption func(*SomeStructure)
 
 func NewSomeSomeStructureThisIsMyTemplateOptional(opts ...SomeStructureOption) SomeStructure {
 	rt := &SomeStructure{
-		chanalsCap: make(chan []struct{ A http.Request }, 5),
-		slice:      make([]map[chan int]string, 5, 15),
 		slice2:     []map[chan int]string{},
 		maps:       make(map[chan []int]struct{ A http.Request }, 5),
 		chanals:    make(chan []struct{ A http.Request }),
+		chanalsCap: make(chan []struct{ A http.Request }, 5),
+		slice:      make([]map[chan int]string, 5, 15),
 	}
 	for _, o := range opts {
 		o(rt)
 	}
 
 	return *rt
+}
+
+func WithMaps(v map[chan []int]struct{ A http.Request }) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.maps = v
+	}
+}
+
+func WithChanals(v chan []struct{ A http.Request }) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.chanals = v
+	}
+}
+
+func WithChanalsCap(v chan []struct{ A http.Request }) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.chanalsCap = v
+	}
+}
+
+func WithAnonimus(v struct {
+	a int
+	b float64
+}) SomeStructureOption {
+	return func(rt *SomeStructure) {
+		rt.anonimus = v
+	}
 }
 
 func WithC(v *bool) SomeStructureOption {
@@ -355,83 +413,93 @@ func WithSlice2(v []map[chan int]string) SomeStructureOption {
 	}
 }
 
-func WithMaps(v map[chan []int]struct{ A http.Request }) SomeStructureOption {
-	return func(rt *SomeStructure) {
-		rt.maps = v
-	}
-}
-
-func WithChanals(v chan []struct{ A http.Request }) SomeStructureOption {
-	return func(rt *SomeStructure) {
-		rt.chanals = v
-	}
-}
-
-func WithChanalsCap(v chan []struct{ A http.Request }) SomeStructureOption {
-	return func(rt *SomeStructure) {
-		rt.chanalsCap = v
-	}
-}
-
 type MySomeStructureBuilder struct {
-	value SomeStructure
+	_field_1_ []map[chan int]string
+	_field_2_ []map[chan int]string
+	_field_3_ map[chan []int]struct{ A http.Request }
+	_field_4_ chan []struct{ A http.Request }
+	_field_5_ chan []struct{ A http.Request }
+	_field_6_ struct {
+		a int
+		b float64
+	}
+	_field_7_ *bool
+	_field_8_ **complex128
 }
 
 func NewSomeStructureBuilder() *MySomeStructureBuilder {
 	return &MySomeStructureBuilder{}
 }
 
-func (b *MySomeStructureBuilder) BuildChanalsCapField(v chan []struct{ A http.Request }) *MySomeStructureBuilder {
-	b.value.chanalsCap = v
-	return b
-}
-
-func (b *MySomeStructureBuilder) BuildCField(v *bool) *MySomeStructureBuilder {
-	b.value.c = v
-	return b
-}
-
-func (b *MySomeStructureBuilder) BuildDField(v **complex128) *MySomeStructureBuilder {
-	b.value.d = v
-	return b
-}
-
 func (b *MySomeStructureBuilder) BuildSliceField(v []map[chan int]string) *MySomeStructureBuilder {
-	b.value.slice = v
+	b._field_1_ = v
 	return b
 }
 
 func (b *MySomeStructureBuilder) BuildSlice2Field(v []map[chan int]string) *MySomeStructureBuilder {
-	b.value.slice2 = v
+	b._field_2_ = v
 	return b
 }
 
 func (b *MySomeStructureBuilder) BuildMapsField(v map[chan []int]struct{ A http.Request }) *MySomeStructureBuilder {
-	b.value.maps = v
+	b._field_3_ = v
 	return b
 }
 
 func (b *MySomeStructureBuilder) BuildChanalsField(v chan []struct{ A http.Request }) *MySomeStructureBuilder {
-	b.value.chanals = v
+	b._field_4_ = v
+	return b
+}
+
+func (b *MySomeStructureBuilder) BuildChanalsCapField(v chan []struct{ A http.Request }) *MySomeStructureBuilder {
+	b._field_5_ = v
+	return b
+}
+
+func (b *MySomeStructureBuilder) BuildAnonimusField(v struct {
+	a int
+	b float64
+}) *MySomeStructureBuilder {
+	b._field_6_ = v
+	return b
+}
+
+func (b *MySomeStructureBuilder) BuildCField(v *bool) *MySomeStructureBuilder {
+	b._field_7_ = v
+	return b
+}
+
+func (b *MySomeStructureBuilder) BuildDField(v **complex128) *MySomeStructureBuilder {
+	b._field_8_ = v
 	return b
 }
 
 func (b *MySomeStructureBuilder) Build() *SomeStructure {
-	if b.value.maps == nil {
-		b.value.maps = make(map[chan []int]struct{ A http.Request }, 5)
+	out := SomeStructure{}
+	if b._field_1_ == nil {
+		b._field_1_ = make([]map[chan int]string, 5, 15)
 	}
-	if b.value.chanals == nil {
-		b.value.chanals = make(chan []struct{ A http.Request })
+	if b._field_2_ == nil {
+		b._field_2_ = []map[chan int]string{}
 	}
-	if b.value.chanalsCap == nil {
-		b.value.chanalsCap = make(chan []struct{ A http.Request }, 5)
+	if b._field_3_ == nil {
+		b._field_3_ = make(map[chan []int]struct{ A http.Request }, 5)
 	}
-	if b.value.slice == nil {
-		b.value.slice = make([]map[chan int]string, 5, 15)
+	if b._field_4_ == nil {
+		b._field_4_ = make(chan []struct{ A http.Request })
 	}
-	if b.value.slice2 == nil {
-		b.value.slice2 = []map[chan int]string{}
+	if b._field_5_ == nil {
+		b._field_5_ = make(chan []struct{ A http.Request }, 5)
 	}
 
-	return &b.value
+	out.slice = b._field_1_
+	out.slice2 = b._field_2_
+	out.maps = b._field_3_
+	out.chanals = b._field_4_
+	out.chanalsCap = b._field_5_
+	out.anonimus = b._field_6_
+	out.c = b._field_7_
+	out.d = b._field_8_
+
+	return &out
 }

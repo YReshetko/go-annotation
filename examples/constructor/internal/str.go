@@ -25,8 +25,12 @@ type SomeStructure struct {
 	maps       map[chan []int]struct{ A http.Request } // @Init(cap="5")
 	chanals    chan []struct{ A http.Request }         // @Init
 	chanalsCap chan []struct{ A http.Request }         // @Init(cap="5")
-	c          *bool
-	d          **complex128
+	anonimus   struct {
+		a int
+		b float64
+	}
+	c *bool
+	d **complex128
 }
 
 // AnotherStruct for testing base constructor options

@@ -56,7 +56,8 @@ func {{ .WithFunctionName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}
 
 const builderTypeTemplate = `
 type {{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]{{ end }} struct {
-	value {{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}
+	{{ range .Arguments }} {{ .FakeName }} {{ .Type }} 
+	{{ end }}
 }
 `
 
@@ -68,19 +69,23 @@ func {{ .ConstructorName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]
 
 const builderMethodTemplate = `
 func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}){{ .BuilderMethodName }}(v {{ .ArgumentType }}) *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
-	b.value.{{ .FieldName }} = v
+	b.{{ .FakeName }} = v
 	return b
 }
 `
 
 const builderBuildMethodTemplate = `
 func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}) {{ .BuildMethodName }}() {{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}{
-	{{ range .Fields }}if b.value.{{ .Name }} == nil {
-		b.value.{{ .Name }} = {{ .Value }}
+	out := {{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}{}
+	{{ range .Fields }}if b.{{ .FakeName }} == nil {
+		b.{{ .FakeName }} = {{ .Value }}
 	}
-	{{ end }}{{ range .PostConstructs }}b.value.{{ . }}()
 	{{ end }}
-	return {{ if .IsPointer }}&{{ end }}b.value
+	{{ range .Arguments }}out.{{ .Name }} = b.{{ .FakeName }}
+	{{ end }}
+	{{ range .PostConstructs }}out.{{ . }}()
+	{{ end }}
+	return {{ if .IsPointer }}&{{ end }}out
 }
 `
 
