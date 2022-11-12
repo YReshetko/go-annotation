@@ -113,7 +113,7 @@ func (p *Processor) Output() map[string][]byte {
 }
 
 func (p *Processor) Version() string {
-	return "0.0.3"
+	return "1.0.0"
 }
 
 func (p *Processor) Name() string {

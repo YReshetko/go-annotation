@@ -1,10 +1,8 @@
-# Constructor annotations
+# Constructor annotations (*production ready*)
 
-# TODO:
-- [X] Support type embedding.
-- [X] Builder should not mutate internal structure and prepare new one on method build().
-- [X] At the moment constructor arguments changes arguments order. Must be fixed.
-- [X] Introduce a parameter that forces printing `TypeName`/`FieldName` in lower or upper case for templates.
+---
+GO 1.18+
+---
 
 ## Usage
 
@@ -145,7 +143,8 @@ The next code will be generated:
 ```go
 
 type SomeBuilder struct {
-    value Some
+    _fieldA_ int
+    _fieldB_ string
 }
 
 func NewSomeBuilder() *SomeBuilder {
@@ -153,17 +152,20 @@ func NewSomeBuilder() *SomeBuilder {
 }
 
 func (b *SomeBuilder) FieldA(v int) *SomeBuilder {
-    b.value.fieldA = v
+    b._fieldA_ = v
     return b
 }
 
 func (b *SomeBuilder) FieldB(v string) *SomeBuilder {
-    b.value.fieldB = v
+    b._fieldB_ = v
     return b
 }
 
 func (b *SomeBuilder) Build() Some {
-    return b.value
+    out := Some{}
+    out.fieldA = b._fieldA_
+    out.fieldB = b._fieldB_
+    return out
 }
 ```
 
@@ -338,3 +340,9 @@ func (b *SomeBuilder) Build() Some {
 ```
 
 As you can see there is no possibility to set `field`. This annotation doesn't have any parameters.
+
+# TODO:
+- [X] Support type embedding.
+- [X] Builder should not mutate internal structure and prepare new one on method build().
+- [X] At the moment constructor arguments changes arguments order. Must be fixed.
+- [X] Introduce a parameter that forces printing `TypeName`/`FieldName` in lower or upper case for templates.
