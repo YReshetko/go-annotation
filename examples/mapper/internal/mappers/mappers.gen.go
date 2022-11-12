@@ -123,6 +123,12 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod2(in0 Inner, in1 *ThisFileStruct
 			res := func() complex64 { o, _ := strconv.ParseComplex(v, 64); return complex64(o) }()
 			return &res
 		}(in1.PtrComplex64)
+		if in1.PtrFloat64 != nil {
+			_var_0.PtrFloat64 = func(v string) *float64 {
+				res := func() float64 { o, _ := strconv.ParseFloat(v, 64); return o }()
+				return &res
+			}(*in1.PtrFloat64)
+		}
 		if in1.PtrComplex128 != nil {
 			_var_0.PtrComplex128 = func(v string) *complex128 {
 				res := func() complex128 { o, _ := strconv.ParseComplex(v, 128); return o }()
@@ -137,12 +143,6 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod2(in0 Inner, in1 *ThisFileStruct
 				res := float32(v)
 				return res
 			}(*in1.Float32)
-		}
-		if in1.PtrFloat64 != nil {
-			_var_0.PtrFloat64 = func(v string) *float64 {
-				res := func() float64 { o, _ := strconv.ParseFloat(v, 64); return o }()
-				return &res
-			}(*in1.PtrFloat64)
 		}
 	}
 
@@ -193,11 +193,11 @@ func (_this_ BaseStructuresMapperImpl) Structures2(in *input.StructuresMapping2)
 	if in != nil {
 		_var_0.AnotherField2 = &in.Field2.Field1.Field1
 		_var_0.AnotherField4 = &in.Field2.Field1.Field1
-		if in.Field1.Field1.Field2 != nil {
-			_var_0.AnotherField1 = *in.Field1.Field1.Field2
-		}
 		if in.Field1.Field2 != nil && in.Field1.Field2.Field2 != nil {
 			_var_0.AnotherField3 = *in.Field1.Field2.Field2
+		}
+		if in.Field1.Field1.Field2 != nil {
+			_var_0.AnotherField1 = *in.Field1.Field1.Field2
 		}
 	}
 
@@ -218,12 +218,12 @@ func (_this_ BaseStructuresMapperImpl) Structures4(in1 string, in2 *complex128, 
 	_var_0 := output.Primitives{}
 	_var_0.String = in1
 	_var_0.PtrString = &in1
-	if in3 != nil {
-		_var_0.Uint64 = *in3
-	}
 	if in2 != nil {
 		_var_0.Complex128 = *in2
 		_var_0.PtrComplex128 = in2
+	}
+	if in3 != nil {
+		_var_0.Uint64 = *in3
 	}
 
 	return _var_0
@@ -264,6 +264,66 @@ func (_this_ FunctionMapperImpl) fieldToField(in0 common.Common, in1 *common.Com
 	_var_0.Field1 = in0.Field1
 	_var_0.Field2 = in0.Field2
 	_var_0.Field3 = in0.Field3
+
+	return _var_0
+}
+
+var _ SliceMapping = (*SliceMappingImpl)(nil)
+
+type SliceMappingImpl struct{}
+
+func (_this_ SliceMappingImpl) Function1(in *input.SliceStruct) output.SliceStruct {
+	_var_0 := output.SliceStruct{}
+	if in != nil && in.Slice != nil {
+		_var_0.Slice = sliceInOut(in.Slice)
+	}
+
+	return _var_0
+}
+
+func (_this_ SliceMappingImpl) Function2(in *input.SliceStruct) output.SliceStruct {
+	_var_0 := output.SliceStruct{}
+	if in != nil && in.Slice != nil {
+
+		_var_1 := *in.Slice
+		_var_2 := make([]output.StructuresMapping2, len(_var_1), len(_var_1))
+		for _var_3, _var_4 := range _var_1 {
+			_var_2[_var_3] = _this_.genMapper(_var_4)
+		}
+		_var_0.Slice = _var_2
+
+	}
+
+	return _var_0
+}
+
+func (_this_ SliceMappingImpl) genMapper(in input.Local2) output.StructuresMapping2 {
+	_var_0 := output.StructuresMapping2{}
+
+	return _var_0
+}
+
+func (_this_ SliceMappingImpl) Function3(in *input.SliceStruct2) output.SliceStruct2 {
+	_var_0 := output.SliceStruct2{}
+	if in != nil {
+
+		_var_1 := in.Slice
+		_var_2 := make([]common.Common2, len(_var_1), len(_var_1))
+		for _var_3, _var_4 := range _var_1 {
+			_var_2[_var_3] = _this_.genMapper2(_var_4)
+		}
+		_var_0.Slice = _var_2
+
+	}
+
+	return _var_0
+}
+
+func (_this_ SliceMappingImpl) genMapper2(in common.Common) common.Common2 {
+	_var_0 := common.Common2{}
+	_var_0.Field1 = in.Field1
+	_var_0.Field2 = in.Field2
+	_var_0.Field3 = in.Field3
 
 	return _var_0
 }

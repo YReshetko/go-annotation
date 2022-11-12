@@ -11,12 +11,88 @@ import (
 	ast "go/ast"
 )
 
+type structureTypeGeneratorBuilder struct {
+	value structureTypeGenerator
+}
+
+func newStructureTypeGeneratorBuilder() *structureTypeGeneratorBuilder {
+	return &structureTypeGeneratorBuilder{}
+}
+
+func (b *structureTypeGeneratorBuilder) setNode(v annotation.Node) *structureTypeGeneratorBuilder {
+	b.value.node = v
+	return b
+}
+
+func (b *structureTypeGeneratorBuilder) setName(v string) *structureTypeGeneratorBuilder {
+	b.value.name = v
+	return b
+}
+
+func (b *structureTypeGeneratorBuilder) setParentAlias(v string) *structureTypeGeneratorBuilder {
+	b.value.parentAlias = v
+	return b
+}
+
+func (b *structureTypeGeneratorBuilder) setFields(v []*ast.Field) *structureTypeGeneratorBuilder {
+	b.value.fields = v
+	return b
+}
+
+func (b *structureTypeGeneratorBuilder) setFieldGenerators(v []*fieldGenerator) *structureTypeGeneratorBuilder {
+	b.value.fieldGenerators = v
+	return b
+}
+
+func (b *structureTypeGeneratorBuilder) build() *structureTypeGenerator {
+	if b.value.fieldGenerators == nil {
+		b.value.fieldGenerators = []*fieldGenerator{}
+	}
+	b.value.buildFields()
+
+	return &b.value
+}
+
+type sliceTypeGeneratorBuilder struct {
+	value sliceTypeGenerator
+}
+
+func newSliceTypeGeneratorBuilder() *sliceTypeGeneratorBuilder {
+	return &sliceTypeGeneratorBuilder{}
+}
+
+func (b *sliceTypeGeneratorBuilder) setNode(v annotation.Node) *sliceTypeGeneratorBuilder {
+	b.value.node = v
+	return b
+}
+
+func (b *sliceTypeGeneratorBuilder) setParentAlias(v string) *sliceTypeGeneratorBuilder {
+	b.value.parentAlias = v
+	return b
+}
+
+func (b *sliceTypeGeneratorBuilder) setSliceType(v ast.Node) *sliceTypeGeneratorBuilder {
+	b.value.sliceType = v
+	return b
+}
+
+func (b *sliceTypeGeneratorBuilder) build() *sliceTypeGenerator {
+	b.value.buildFields()
+
+	return &b.value
+}
+
 type cacheBuilder struct {
 	value cache
 }
 
 func newCache() *cacheBuilder {
 	return &cacheBuilder{}
+}
+
+func (b *cacheBuilder) setVarPrefix(v string) *cacheBuilder {
+	b.value.varPrefix = v
+	return b
 }
 
 func (b *cacheBuilder) setImports(v map[Import]struct{}) *cacheBuilder {
@@ -26,11 +102,6 @@ func (b *cacheBuilder) setImports(v map[Import]struct{}) *cacheBuilder {
 
 func (b *cacheBuilder) setNode(v *utils.Node[string, string]) *cacheBuilder {
 	b.value.node = v
-	return b
-}
-
-func (b *cacheBuilder) setVarPrefix(v string) *cacheBuilder {
-	b.value.varPrefix = v
 	return b
 }
 
@@ -67,6 +138,11 @@ func (b *fieldGeneratorBuilder) setAlias(v string) *fieldGeneratorBuilder {
 	return b
 }
 
+func (b *fieldGeneratorBuilder) setParentAlias(v string) *fieldGeneratorBuilder {
+	b.value.parentAlias = v
+	return b
+}
+
 func (b *fieldGeneratorBuilder) setImportPkg(v string) *fieldGeneratorBuilder {
 	b.value.importPkg = v
 	return b
@@ -91,6 +167,16 @@ func NewMapperGeneratorBuilder() *MapperGeneratorBuilder {
 	return &MapperGeneratorBuilder{}
 }
 
+func (b *MapperGeneratorBuilder) IntName(v string) *MapperGeneratorBuilder {
+	b.value.intName = v
+	return b
+}
+
+func (b *MapperGeneratorBuilder) StructName(v string) *MapperGeneratorBuilder {
+	b.value.structName = v
+	return b
+}
+
 func (b *MapperGeneratorBuilder) Mgs(v []*methodGenerator) *MapperGeneratorBuilder {
 	b.value.mgs = v
 	return b
@@ -103,16 +189,6 @@ func (b *MapperGeneratorBuilder) Node(v annotation.Node) *MapperGeneratorBuilder
 
 func (b *MapperGeneratorBuilder) IntType(v *ast.InterfaceType) *MapperGeneratorBuilder {
 	b.value.intType = v
-	return b
-}
-
-func (b *MapperGeneratorBuilder) IntName(v string) *MapperGeneratorBuilder {
-	b.value.intName = v
-	return b
-}
-
-func (b *MapperGeneratorBuilder) StructName(v string) *MapperGeneratorBuilder {
-	b.value.structName = v
 	return b
 }
 
@@ -133,6 +209,21 @@ func newMethodGeneratorBuilder() *methodGeneratorBuilder {
 	return &methodGeneratorBuilder{}
 }
 
+func (b *methodGeneratorBuilder) setNode(v annotation.Node) *methodGeneratorBuilder {
+	b.value.node = v
+	return b
+}
+
+func (b *methodGeneratorBuilder) setName(v string) *methodGeneratorBuilder {
+	b.value.name = v
+	return b
+}
+
+func (b *methodGeneratorBuilder) setOverloading(v *overloading) *methodGeneratorBuilder {
+	b.value.overloading = v
+	return b
+}
+
 func (b *methodGeneratorBuilder) setInput(v []*ast.Field) *methodGeneratorBuilder {
 	b.value.input = v
 	return b
@@ -150,21 +241,6 @@ func (b *methodGeneratorBuilder) setInputGenerators(v []*fieldGenerator) *method
 
 func (b *methodGeneratorBuilder) setOutputGenerator(v []*fieldGenerator) *methodGeneratorBuilder {
 	b.value.outputGenerator = v
-	return b
-}
-
-func (b *methodGeneratorBuilder) setNode(v annotation.Node) *methodGeneratorBuilder {
-	b.value.node = v
-	return b
-}
-
-func (b *methodGeneratorBuilder) setName(v string) *methodGeneratorBuilder {
-	b.value.name = v
-	return b
-}
-
-func (b *methodGeneratorBuilder) setOverloading(v *overloading) *methodGeneratorBuilder {
-	b.value.overloading = v
 	return b
 }
 
@@ -205,43 +281,6 @@ func (b *primitiveTypeGeneratorBuilder) setName(v string) *primitiveTypeGenerato
 
 func (b *primitiveTypeGeneratorBuilder) build() *primitiveTypeGenerator {
 	b.value.postConstruct()
-
-	return &b.value
-}
-
-type structureTypeGeneratorBuilder struct {
-	value structureTypeGenerator
-}
-
-func newStructureTypeGeneratorBuilder() *structureTypeGeneratorBuilder {
-	return &structureTypeGeneratorBuilder{}
-}
-
-func (b *structureTypeGeneratorBuilder) setNode(v annotation.Node) *structureTypeGeneratorBuilder {
-	b.value.node = v
-	return b
-}
-
-func (b *structureTypeGeneratorBuilder) setName(v string) *structureTypeGeneratorBuilder {
-	b.value.name = v
-	return b
-}
-
-func (b *structureTypeGeneratorBuilder) setFields(v []*ast.Field) *structureTypeGeneratorBuilder {
-	b.value.fields = v
-	return b
-}
-
-func (b *structureTypeGeneratorBuilder) setFieldGenerators(v []*fieldGenerator) *structureTypeGeneratorBuilder {
-	b.value.fieldGenerators = v
-	return b
-}
-
-func (b *structureTypeGeneratorBuilder) build() *structureTypeGenerator {
-	if b.value.fieldGenerators == nil {
-		b.value.fieldGenerators = []*fieldGenerator{}
-	}
-	b.value.buildFields()
 
 	return &b.value
 }

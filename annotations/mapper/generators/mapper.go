@@ -57,7 +57,7 @@ func (mg *MapperGenerator) Generate() ([]byte, []Import, error) {
 	for _, generator := range mg.mgs {
 		m, err := generator.generate(mg.structName, imports)
 		if err != nil {
-			return nil, nil, fmt.Errorf("unable to generte method: %w", err)
+			return nil, nil, fmt.Errorf("unable to generte method %s: %w", generator.name, err)
 		}
 		methods = append(methods, string(m))
 	}
@@ -99,11 +99,17 @@ func getOverloading(node annotation.Node) (*overloading, error) {
 	idm := annotation.FindAnnotations[annotations.IgnoreDefaultMapping](node.Annotations())
 	o := newOverloading(len(idm) > 0)
 	for _, a := range annotation.FindAnnotations[annotations.Mapping](node.Annotations()) {
-		fmt.Println(a)
 		err := o.Add(a.Target, a.Source, a.This, a.Func, a.Constant)
 		if err != nil {
 			return nil, fmt.Errorf("unable to prepare overloading config: %w", err)
 		}
 	}
+	for _, sm := range annotation.FindAnnotations[annotations.SliceMapping](node.Annotations()) {
+		err := o.AddSlice(sm.Target, sm.Source, sm.This, sm.Func)
+		if err != nil {
+			return nil, fmt.Errorf("unable to prepare overloading config: %w", err)
+		}
+	}
+
 	return o, nil
 }
