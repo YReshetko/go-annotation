@@ -2,10 +2,10 @@ package generators
 
 import (
 	"github.com/YReshetko/go-annotation/annotations/constructor/annotations"
+	"github.com/YReshetko/go-annotation/annotations/constructor/templates"
 	annotation "github.com/YReshetko/go-annotation/pkg"
 	"go/ast"
 	"sort"
-	"text/template"
 )
 
 type OptionalValues struct {
@@ -47,8 +47,8 @@ func NewOptionalGenerator(node *ast.TypeSpec, annotation annotations.Optional, a
 func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Import, error) {
 	di := newDistinctImports()
 	tplData := OptionalValues{
-		OptionalTypeName: g.optionalTypeName(),
-		FunctionName:     g.optionalFunctionName(),
+		OptionalTypeName: g.annotation.BuildName(g.node.Name.String()),
+		FunctionName:     g.annotation.BuildConstructorName(g.node.Name.String()),
 		ReturnType:       g.node.Name.Name,
 		IsPointer:        g.annotation.Type == "pointer",
 		PostConstructs:   postConstructMethods(pcvs),
@@ -82,8 +82,8 @@ func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impo
 		return incoming[i][0] < incoming[j][0]
 	})
 
-	data := must(execute(optionalTypeTpl, tplData))
-	data = append(data, must(execute(optionalConstructorTpl, tplData))...)
+	data := templates.Must(templates.Execute(templates.OptionalTypeTpl, tplData))
+	data = append(data, templates.Must(templates.Execute(templates.OptionalConstructorTpl, tplData))...)
 	for _, i := range incoming {
 		data = append(data, g.withFunction(i[0], i[1], tplData)...)
 	}
@@ -95,36 +95,15 @@ func (g *OptionalGenerator) generateConstructor() ([]byte, distinctImports) {
 	return nil, newDistinctImports()
 }
 
-func (g *OptionalGenerator) optionalTypeName() string {
-	tpl := must(template.New(typeNameTpl).Parse(g.annotation.Name))
-	typeNameData := map[string]string{"TypeName": g.node.Name.Name}
-
-	return string(must(executeTpl(tpl, typeNameData)))
-}
-
-func (g *OptionalGenerator) optionalFunctionName() string {
-	tpl := must(template.New(functionNameTpl).Parse(g.annotation.ConstructorName))
-	typeNameData := map[string]string{"TypeName": g.node.Name.Name}
-
-	return string(must(executeTpl(tpl, typeNameData)))
-}
-
-func (g *OptionalGenerator) withFunctionName(fieldName string) string {
-	tpl := must(template.New(functionNameTpl).Parse(g.annotation.WithPattern))
-	typeNameData := map[string]string{"FieldName": toPascalCase(fieldName)}
-
-	return string(must(executeTpl(tpl, typeNameData)))
-}
-
 func (g *OptionalGenerator) withFunction(name string, value string, data OptionalValues) []byte {
 	wv := WithValues{
 		OptionalValues:   data,
 		ArgumentType:     value,
 		FieldName:        name,
-		WithFunctionName: g.withFunctionName(name),
+		WithFunctionName: g.annotation.BuildWithName(name),
 	}
 
-	return must(execute(optionalWithTpl, wv))
+	return templates.Must(templates.Execute(templates.OptionalWithTpl, wv))
 }
 
 func toPascalCase(name string) string {

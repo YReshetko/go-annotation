@@ -4,7 +4,7 @@
 - [X] Support type embedding.
 - [X] Builder should not mutate internal structure and prepare new one on method build().
 - [X] At the moment constructor arguments changes arguments order. Must be fixed.
-- [ ] Introduce a parameter that forces printing `TypeName`/`FieldName` in lower or upper case for templates.
+- [X] Introduce a parameter that forces printing `TypeName`/`FieldName` in lower or upper case for templates.
 
 ## Usage
 
@@ -59,6 +59,8 @@ Developer can override function name and return type (pointer/structure) by anno
 **name** - overrides function name. Here can be added explicit name of function for example `SomeConstructor` or template with static argument `TypeName`: `{{ .TypeName }}Constructor`. In both cases the generated function name will be `SomeConstructor`.
 
 **type** - receives one of two constants: `pointer`, `struct`. By default (if developer doesn't write the parameter) the constructor will use `struct` value. If `pointer` is used the function is generated with pointer return type: `func NewSome (fieldA int, fieldB string) *Some...`
+
+**exported** - by default all generated types, methods and functions are exported, but when the value is set to `false` it make everything unexported 
 
 **Full annotation syntax:**
 ```go
@@ -115,6 +117,8 @@ Developer can override optional type name, `with...` function names, function na
 **with** - overrides with functions pattern name. **_Developer should not use explicit function name as it caused a panic._** `FieldName` must be used as template parameter. For example: `SomeWith{{.FieldName}}` then the next functions are generated for the above example: `func SomeWithFieldA(v int) SomeOption` and `func SomeWithFieldB(v string) SomeOption`
 
 **type** - receives one of two constants: `pointer`, `struct`. By default (if developer doesn't write the parameter) the constructor will use `struct` value. If `pointer` is used the function is generated with pointer return type: `func NewSome (fieldA int, fieldB string) *Some...`
+
+**exported** - by default all generated types, methods and functions are exported, but when the value is set to `false` it make everything unexported
 
 **Full annotation syntax:**
 ```go
@@ -174,6 +178,8 @@ Developer can override builder type name, setter method names, builder construct
 **terminator** - the `Build()` method name can be overridden by the parameter. Can not be used any templates here the method name must be specified explicitly.
 
 **type** - receives one of two constants: `pointer`, `struct`. By default (if developer doesn't write the parameter) the constructor will use `struct` value. If `pointer` is used the function is generated with pointer return type: `func NewSome (fieldA int, fieldB string) *Some...`
+
+**exported** - by default all generated types, methods and functions are exported, but when the value is set to `false` it make everything unexported
 
 **Full annotation syntax:**
 ```go
