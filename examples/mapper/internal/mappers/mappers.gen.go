@@ -193,11 +193,11 @@ func (_this_ BaseStructuresMapperImpl) Structures2(in *input.StructuresMapping2)
 	if in != nil {
 		_var_0.AnotherField2 = &in.Field2.Field1.Field1
 		_var_0.AnotherField4 = &in.Field2.Field1.Field1
-		if in.Field1.Field2 != nil && in.Field1.Field2.Field2 != nil {
-			_var_0.AnotherField3 = *in.Field1.Field2.Field2
-		}
 		if in.Field1.Field1.Field2 != nil {
 			_var_0.AnotherField1 = *in.Field1.Field1.Field2
+		}
+		if in.Field1.Field2 != nil && in.Field1.Field2.Field2 != nil {
+			_var_0.AnotherField3 = *in.Field1.Field2.Field2
 		}
 	}
 
@@ -218,12 +218,12 @@ func (_this_ BaseStructuresMapperImpl) Structures4(in1 string, in2 *complex128, 
 	_var_0 := output.Primitives{}
 	_var_0.String = in1
 	_var_0.PtrString = &in1
+	if in3 != nil {
+		_var_0.Uint64 = *in3
+	}
 	if in2 != nil {
 		_var_0.Complex128 = *in2
 		_var_0.PtrComplex128 = in2
-	}
-	if in3 != nil {
-		_var_0.Uint64 = *in3
 	}
 
 	return _var_0
@@ -264,6 +264,7 @@ func (_this_ FunctionMapperImpl) fieldToField(in0 common.Common, in1 *common.Com
 	_var_0.Field1 = in0.Field1
 	_var_0.Field2 = in0.Field2
 	_var_0.Field3 = in0.Field3
+	_var_0.Slice = in0.Slice
 
 	return _var_0
 }
@@ -324,6 +325,7 @@ func (_this_ SliceMappingImpl) genMapper2(in common.Common) common.Common2 {
 	_var_0.Field1 = in.Field1
 	_var_0.Field2 = in.Field2
 	_var_0.Field3 = in.Field3
+	_var_0.Slice = in.Slice
 
 	return _var_0
 }

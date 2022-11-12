@@ -235,7 +235,7 @@ func (fg *fieldGenerator) generateStructMapping(name string, in []*fieldGenerato
 		if isBothPrimitives(field, potentialFields[0].field) {
 			err := mapPrimitives(name+"."+field.name, potentialFields[0].name, field, potentialFields[0].field, fromPrefix, c)
 			if err != nil {
-				return fmt.Errorf("unable to build primitive mapping: %w", err)
+				return fmt.Errorf("unable to build default primitive mapping: %w", err)
 			}
 			continue
 		}
@@ -243,7 +243,14 @@ func (fg *fieldGenerator) generateStructMapping(name string, in []*fieldGenerato
 		if isBothStructures(field, potentialFields[0].field) {
 			err := mapStructures(name+"."+field.name, potentialFields[0].name, field, potentialFields[0].field, fromPrefix, c)
 			if err != nil {
-				return fmt.Errorf("unable to build structures mapping: %w", err)
+				return fmt.Errorf("unable to build default structures mapping: %w", err)
+			}
+			continue
+		}
+		if isEqualSlices(field, potentialFields[0].field) {
+			err := assignSlice(name+"."+field.name, potentialFields[0].name, field, potentialFields[0].field, fromPrefix, c)
+			if err != nil {
+				return fmt.Errorf("unable to build default slice mapping: %w", err)
 			}
 			continue
 		}

@@ -6,6 +6,24 @@ import (
 	"strings"
 )
 
+func isEqualSlices(f1, f2 *fieldGenerator) bool {
+	return f1.sliceGen != nil && f2.sliceGen != nil && f1.buildArgType() == f2.buildArgType()
+}
+
+func assignSlice(toName, fromName string, toField, fromField *fieldGenerator, fromPrefix []string, c *cache) error {
+	if toField.isPointer == fromField.isPointer {
+		c.addIfClause(fromPrefix, fmt.Sprintf("%s = %s", toName, fromName))
+		return nil
+	}
+	if toField.isPointer {
+		c.addIfClause(fromPrefix, fmt.Sprintf("%s = &%s", toName, fromName))
+		return nil
+	}
+
+	c.addIfClause(append(fromPrefix, fromName), fmt.Sprintf("%s = *%s", toName, fromName))
+	return nil
+}
+
 func mapSlices(toName, fromPath, funcName string, toField *fieldGenerator, in []*fieldGenerator, c *cache) error {
 	names := strings.Split(fromPath, ".")
 	buff, isSourcePointer, err := findPointersInPath("", names, in, []string{})
