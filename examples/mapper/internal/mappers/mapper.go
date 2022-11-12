@@ -72,6 +72,24 @@ type FunctionMapper interface {
 	fieldToField(common.Common, *common.Common, common.Common, *common.Common) common.Common
 }
 
+// @Mapper
+type SliceMapping interface {
+	// @Mapping(target="Slice", func="sliceInOut(in.Slice)")
+	Function1(in *input.SliceStruct) output.SliceStruct
+
+	// @SliceMapping(target="Slice", source="in.Slice", this="genMapper")
+	Function2(in *input.SliceStruct) output.SliceStruct
+	genMapper(in input.Local2) output.StructuresMapping2
+
+	// @SliceMapping(target="Slice", source="in.Slice", this="genMapper2")
+	Function3(in *input.SliceStruct2) output.SliceStruct2
+	genMapper2(in common.Common) common.Common2
+}
+
+func sliceInOut(s *[]input.Local2) []output.StructuresMapping2 {
+	return nil
+}
+
 func fieldToField(in1 common.Common, in2 *common.Common, in3 common.Common, in4 *common.Common) common.Common {
 	return common.Common{}
 }

@@ -10,11 +10,18 @@ type Mapper struct {
 }
 
 type Mapping struct {
-	Target   string `annotation:"name=target"`
+	Target   string `annotation:"name=target,required"`
 	Source   string `annotation:"name=source"`
 	This     string `annotation:"name=this"`
 	Func     string `annotation:"name=func"`
 	Constant string `annotation:"name=const"`
+}
+
+type SliceMapping struct {
+	Target string `annotation:"name=target,required"`
+	Source string `annotation:"name=source,required"`
+	This   string `annotation:"name=this"`
+	Func   string `annotation:"name=func"`
 }
 
 type IgnoreDefaultMapping struct{}

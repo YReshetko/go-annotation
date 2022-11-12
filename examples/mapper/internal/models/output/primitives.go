@@ -66,3 +66,11 @@ type StructuresMapping2 struct {
 	AnotherField3 common.Common
 	AnotherField4 *common.Common
 }
+
+type SliceStruct struct {
+	Slice []StructuresMapping2
+}
+
+type SliceStruct2 struct {
+	Slice []common.Common2
+}

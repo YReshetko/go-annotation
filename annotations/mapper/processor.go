@@ -14,6 +14,7 @@ func init() {
 	p := &Processor{cache: map[key][]mapperData{}}
 	annotation.Register[annotations.Mapper](p)
 	annotation.RegisterNoop[annotations.Mapping]()
+	annotation.RegisterNoop[annotations.SliceMapping]()
 	annotation.RegisterNoop[annotations.IgnoreDefaultMapping]()
 }
 

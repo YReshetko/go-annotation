@@ -22,9 +22,10 @@ func (ptg *primitiveTypeGenerator) postConstruct() {
 
 // @Builder(constructor="newStructureTypeGeneratorBuilder", build="set{{ .FieldName }}", terminator="build", type="pointer")
 type structureTypeGenerator struct {
-	node   annotation.Node
-	name   string
-	fields []*ast.Field
+	node        annotation.Node
+	name        string
+	parentAlias string
+	fields      []*ast.Field
 
 	fieldGenerators []*fieldGenerator // @Init
 }
@@ -34,13 +35,42 @@ func (stg *structureTypeGenerator) buildFields() {
 	//fmt.Println("created structure field:", stg.name)
 	for i, field := range stg.fields {
 		if len(field.Names) == 0 {
-			stg.fieldGenerators = append(stg.fieldGenerators, buildFiledGenerator(field, fmt.Sprintf("in%d", i), stg.node))
+			stg.fieldGenerators = append(stg.fieldGenerators, buildFiledGenerator(field, fmt.Sprintf("in%d", i), stg.node, stg.parentAlias))
 		} else {
 			for _, name := range field.Names {
-				stg.fieldGenerators = append(stg.fieldGenerators, buildFiledGenerator(field, name.String(), stg.node))
+				stg.fieldGenerators = append(stg.fieldGenerators, buildFiledGenerator(field, name.String(), stg.node, stg.parentAlias))
 			}
 		}
 	}
+}
+
+// @Builder(constructor="newSliceTypeGeneratorBuilder", build="set{{ .FieldName }}", terminator="build", type="pointer")
+type sliceTypeGenerator struct {
+	node        annotation.Node
+	parentAlias string
+	sliceType   ast.Node
+
+	fieldGen *fieldGenerator //@Exclude
+}
+
+// @PostConstruct
+func (stg *sliceTypeGenerator) buildFields() {
+	stg.fieldGen = buildFiledGenerator(&ast.Field{Type: stg.sliceType.(ast.Expr)}, "", stg.node, stg.parentAlias)
+}
+
+func (stg *sliceTypeGenerator) buildType() string {
+	if stg.fieldGen == nil {
+		return ""
+	}
+	prefix := ""
+	if stg.fieldGen.isPointer {
+		prefix = "*"
+	}
+	if len(stg.fieldGen.alias) == 0 && len(stg.fieldGen.parentAlias) != 0 {
+		prefix += stg.fieldGen.parentAlias + "."
+	}
+
+	return prefix + stg.fieldGen.buildArgType()
 }
 
 func isPrimitive(t string) bool {

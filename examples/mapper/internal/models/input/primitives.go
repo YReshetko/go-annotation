@@ -76,3 +76,11 @@ type Local2 struct {
 	Field1 common.Common
 	Field2 *common.Common
 }
+
+type SliceStruct struct {
+	Slice *[]Local2
+}
+
+type SliceStruct2 struct {
+	Slice []common.Common
+}

@@ -12,15 +12,17 @@ import (
 
 // @Builder(constructor="newFieldGeneratorBuilder", build="set{{ .FieldName }}", terminator="build", type="pointer")
 type fieldGenerator struct {
-	node      annotation.Node
-	ast       ast.Node
-	name      string
-	alias     string
-	importPkg string
-	isPointer bool
+	node        annotation.Node
+	ast         ast.Node
+	name        string
+	alias       string
+	parentAlias string
+	importPkg   string
+	isPointer   bool
 
 	structGen    *structureTypeGenerator // @Exclude
 	primitiveGen *primitiveTypeGenerator // @Exclude
+	sliceGen     *sliceTypeGenerator     // @Exclude
 }
 
 // @PostConstruct
@@ -34,6 +36,12 @@ func (fg *fieldGenerator) buildFields() {
 	switch astType := fg.ast.(type) {
 	case *ast.Ident:
 		fg.buildByIdentity(astType)
+	case *ast.ArrayType:
+		fg.sliceGen = newSliceTypeGeneratorBuilder().
+			setNode(fg.node).
+			setSliceType(astType.Elt).
+			setParentAlias(fg.parentAlias).
+			build()
 	default:
 		fmt.Println("UNSUPPORTED FIELD TYPE")
 		ast.Print(token.NewFileSet(), fg.ast)
@@ -76,7 +84,7 @@ func (fg *fieldGenerator) buildNonPrimitiveType(node annotation.Node, astNode as
 			if innt.Fields != nil {
 				fields = innt.Fields.List
 			}
-			fg.structGen = newStructureTypeGeneratorBuilder().setName(name).setNode(node).setFields(fields).build()
+			fg.structGen = newStructureTypeGeneratorBuilder().setName(name).setNode(node).setFields(fields).setParentAlias(fg.parentAlias).build()
 			return
 		default:
 			fmt.Printf("UNSUPPORTED INTERNAL LOADED TYPE %T\n", nnt.Type)
@@ -113,6 +121,8 @@ func (fg *fieldGenerator) buildArgType() string {
 		argType = fg.primitiveGen.name
 	case fg.structGen != nil:
 		argType = fg.structGen.name
+	case fg.sliceGen != nil:
+		return "[]" + fg.sliceGen.buildType()
 	}
 
 	if len(fg.alias) > 0 {
@@ -143,6 +153,8 @@ func (fg *fieldGenerator) generate(name string, in []*fieldGenerator, c *cache, 
 		// TODO generate mapping for primitives
 	case fg.structGen != nil:
 		return fg.generateStructMapping(name, in, c, o)
+	case fg.sliceGen != nil:
+		// TODO support slice output mapping
 	}
 	return nil
 }
@@ -163,27 +175,42 @@ func (fg *fieldGenerator) generateStructMapping(name string, in []*fieldGenerato
 		if !isExported(field) {
 			continue
 		}
-		mapperLine, mt := o.find(name + "." + field.name)
-		if mt != none {
-			switch mt {
+		mapping := o.find(name + "." + field.name)
+		if mapping != nil && mapping.mappingType != none {
+			switch mapping.mappingType {
 			case source:
-				err := fg.generateOverloadedSource(name+"."+field.name, mapperLine, in, field, c)
+				mapperLine := mapping.source
+				err := generateOverloadedSource(name+"."+field.name, mapperLine, in, field, c)
 				if err != nil {
 					return fmt.Errorf("unable to generate overloaded source %s: %w", mapperLine, err)
 				}
 			case function:
-				err := fg.generateOverloadedFunction(name+"."+field.name, mapperLine, in, c)
+				mapperLine := mapping.funcOrThisLine()
+				err := generateOverloadedFunction(name+"."+field.name, mapperLine, in, c)
 				if err != nil {
 					return fmt.Errorf("unable to generate overloaded function %s: %w", mapperLine, err)
 				}
 			case constant:
+				mapperLine := mapping.constant
 				if field.primitiveGen == nil {
-					return fmt.Errorf("unable to set constant for non-primitive %s | %s", name+"."+field.name, mapperLine)
+					return fmt.Errorf("unable to set constant for non-primitive %s = %s", name+"."+field.name, mapperLine)
 				}
 				err := mapConstant(name+"."+field.name, field.primitiveGen.name, mapperLine, field.isPointer, c)
 				if err != nil {
 					return fmt.Errorf("unable to build constant mapping %s: %w", name+"."+field.name, err)
 				}
+			case slice:
+				fromField := mapping.source
+				funcName := mapping.funcOrThisLine()
+				if field.sliceGen == nil {
+					return fmt.Errorf("unable to prepare mapping for non-slice field %s = %s(%s)", name+"."+field.name, funcName, fromField)
+				}
+				err := mapSlices(name+"."+field.name, fromField, funcName, field, in, c)
+				if err != nil {
+					return fmt.Errorf("unable to build slice mapping %s: %w", fg.name, err)
+				}
+				//case dictionary:
+				// TODO Implement overloaded slice mapping
 			}
 			continue
 		}
@@ -228,9 +255,9 @@ func (fg *fieldGenerator) generateStructMapping(name string, in []*fieldGenerato
 	return nil
 }
 
-func (fg *fieldGenerator) generateOverloadedSource(toName, fromLine string, in []*fieldGenerator, to *fieldGenerator, c *cache) error {
+func generateOverloadedSource(toName, fromLine string, in []*fieldGenerator, to *fieldGenerator, c *cache) error {
 	names := strings.Split(fromLine, ".")
-	buff, isFromPointer, err := fg.findPointersInPath("", names, in, []string{})
+	buff, isFromPointer, err := findPointersInPath("", names, in, []string{})
 	if err != nil {
 		return fmt.Errorf("unable to build mapping for %s: %w", toName, err)
 	}
@@ -252,8 +279,10 @@ func (fg *fieldGenerator) generateOverloadedSource(toName, fromLine string, in [
 	return nil
 }
 
-func (fg *fieldGenerator) generateOverloadedFunction(toName, mappingLine string, in []*fieldGenerator, c *cache) error {
-	if strings.Index(mappingLine, ")") < strings.Index(mappingLine, ")") {
+func generateOverloadedFunction(toName, mappingLine string, in []*fieldGenerator, c *cache) error {
+	cbIndex := strings.Index(mappingLine, ")")
+	obIndex := strings.Index(mappingLine, "(")
+	if cbIndex == -1 || obIndex == -1 || cbIndex < obIndex {
 		return fmt.Errorf("invalid function call %s", mappingLine)
 	}
 
@@ -264,7 +293,7 @@ func (fg *fieldGenerator) generateOverloadedFunction(toName, mappingLine string,
 	}
 	var nilableLines []string
 	for _, arg := range splitArgs {
-		buff, _, err := fg.findPointersInPath("", arg, in, []string{})
+		buff, _, err := findPointersInPath("", arg, in, []string{})
 		if err != nil {
 			return fmt.Errorf("unable to build mapping for %s=%s: %w", toName, mappingLine, err)
 		}
@@ -290,7 +319,7 @@ func (fg *fieldGenerator) generateOverloadedFunction(toName, mappingLine string,
 	return nil
 }
 
-func (fg *fieldGenerator) findPointersInPath(prefix string, rest []string, in []*fieldGenerator, buffer []string) ([]string, bool, error) {
+func findPointersInPath(prefix string, rest []string, in []*fieldGenerator, buffer []string) ([]string, bool, error) {
 	name := rest[0]
 	var fromFieldGen *fieldGenerator
 	for _, generator := range in {
@@ -322,7 +351,7 @@ func (fg *fieldGenerator) findPointersInPath(prefix string, rest []string, in []
 	if fromFieldGen.structGen != nil {
 		newIn = fromFieldGen.structGen.fieldGenerators
 	}
-	return fg.findPointersInPath(prefix, rest[1:], newIn, buffer)
+	return findPointersInPath(prefix, rest[1:], newIn, buffer)
 }
 
 type nameFieldPair struct {
@@ -358,14 +387,22 @@ func findFieldsByName(name string, in []*fieldGenerator) []nameFieldPair {
 	return out
 }
 
-func buildFiledGenerator(f *ast.Field, name string, n annotation.Node) *fieldGenerator {
+func buildRootFieldGenerator(f *ast.Field, name string, n annotation.Node) *fieldGenerator {
+	return buildFiledGenerator(f, name, n, "")
+}
+
+func buildFiledGenerator(f *ast.Field, name string, n annotation.Node, parentAlias string) *fieldGenerator {
 	field, isPointer := unwrapStarExpression(f.Type)
 	internalType, alias := unwrapSelectorExpression(field)
 
+	if len(alias) != 0 {
+		parentAlias = alias
+	}
 	return newFieldGeneratorBuilder().
 		setName(name).
 		setNode(n).
 		setAlias(alias).
+		setParentAlias(parentAlias).
 		setAst(internalType).
 		setIsPointer(isPointer).
 		build()

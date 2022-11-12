@@ -12,27 +12,22 @@ const (
 	source
 	function
 	constant
+	slice
 )
 
 type mapping struct {
-	source   string
-	this     string
-	function string
-	constant string
+	source      string
+	this        string
+	function    string
+	constant    string
+	mappingType mappingType
 }
 
-func (m mapping) getMapping() (string, mappingType) {
-	switch {
-	case len(m.source) != 0:
-		return m.source, source
-	case len(m.this) != 0:
-		return "_this_." + m.this, function
-	case len(m.function) != 0:
-		return m.function, function
-	case len(m.constant) != 0:
-		return m.constant, constant
+func (m mapping) funcOrThisLine() string {
+	if len(m.this) != 0 {
+		return "_this_." + m.this
 	}
-	return "", none
+	return m.function
 }
 
 // @Constructor(name="newOverloading", type="pointer")
@@ -52,26 +47,53 @@ func (o *overloading) Add(target, source, this, function, constant string) error
 		return fmt.Errorf("invalid Mapping annotation for %s, expected exactly one of [source, this, func, const] non empty, but got %d", target, nonEmpty)
 	}
 	o.mappings[target] = mapping{
-		source:   source,
-		this:     this,
-		function: function,
-		constant: constant,
+		source:      source,
+		this:        this,
+		function:    function,
+		constant:    constant,
+		mappingType: o.defineMappingType(source, this, function, constant),
 	}
 	return nil
 }
 
-func (o *overloading) find(field string) (string, mappingType) {
+func (o *overloading) AddSlice(target, source, this, function string) error {
+	if len(this) > 0 && len(function) > 0 {
+		return fmt.Errorf("invalid Mapping annotation for %s, expected exactly one of [this, func] non empty, but got %d", target, 2)
+	}
+
+	o.mappings[target] = mapping{
+		source:      source,
+		this:        this,
+		function:    function,
+		mappingType: slice,
+	}
+	return nil
+}
+
+func (o *overloading) defineMappingType(s, t, f, c string) mappingType {
+	switch {
+	case len(s) != 0:
+		return source
+	case len(t) != 0 || len(f) != 0:
+		return function
+	case len(c) != 0:
+		return constant
+	}
+	return none
+}
+
+func (o *overloading) find(field string) *mapping {
 	v, ok := o.mappings[field]
 	if ok {
-		return v.getMapping()
+		return &v
 	}
 	if !strings.Contains(field, ".") {
-		return "", none
+		return nil
 	}
 
 	v, ok = o.mappings[field[strings.Index(field, ".")+1:]]
 	if ok {
-		return v.getMapping()
+		return &v
 	}
-	return "", none
+	return nil
 }

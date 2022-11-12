@@ -27,10 +27,10 @@ type methodGenerator struct {
 func (mg *methodGenerator) buildOutput() {
 	for _, field := range mg.output {
 		if len(field.Names) == 0 {
-			mg.outputGenerator = append(mg.outputGenerator, buildFiledGenerator(field, "", mg.node))
+			mg.outputGenerator = append(mg.outputGenerator, buildRootFieldGenerator(field, "", mg.node))
 		} else {
 			for _, name := range field.Names {
-				mg.outputGenerator = append(mg.outputGenerator, buildFiledGenerator(field, name.String(), mg.node))
+				mg.outputGenerator = append(mg.outputGenerator, buildRootFieldGenerator(field, name.String(), mg.node))
 			}
 		}
 	}
@@ -40,10 +40,10 @@ func (mg *methodGenerator) buildOutput() {
 func (mg *methodGenerator) buildInput() {
 	for i, field := range mg.input {
 		if len(field.Names) == 0 {
-			mg.inputGenerators = append(mg.inputGenerators, buildFiledGenerator(field, fmt.Sprintf("in%d", i), mg.node))
+			mg.inputGenerators = append(mg.inputGenerators, buildRootFieldGenerator(field, fmt.Sprintf("in%d", i), mg.node))
 		} else {
 			for _, name := range field.Names {
-				mg.inputGenerators = append(mg.inputGenerators, buildFiledGenerator(field, name.String(), mg.node))
+				mg.inputGenerators = append(mg.inputGenerators, buildRootFieldGenerator(field, name.String(), mg.node))
 			}
 		}
 	}
