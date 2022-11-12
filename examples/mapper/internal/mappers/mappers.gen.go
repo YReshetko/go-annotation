@@ -77,18 +77,6 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod(in0 *Inner, in1 ThisFileStruct)
 		res := func() complex64 { o, _ := strconv.ParseComplex(v, 64); return complex64(o) }()
 		return &res
 	}(in1.PtrComplex64)
-	if in1.Int != nil {
-		_var_0.Int = *in1.Int
-	}
-	if in1.Float32 != nil {
-		_var_0.Float32 = func(v int) float32 {
-			res := float32(v)
-			return res
-		}(*in1.Float32)
-	}
-	if in0 != nil {
-		_var_0.PtrBool = in0.PtrBool
-	}
 	if in1.PtrFloat64 != nil {
 		_var_0.PtrFloat64 = func(v string) *float64 {
 			res := func() float64 { o, _ := strconv.ParseFloat(v, 64); return o }()
@@ -100,6 +88,18 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod(in0 *Inner, in1 ThisFileStruct)
 			res := func() complex128 { o, _ := strconv.ParseComplex(v, 128); return o }()
 			return &res
 		}(*in1.PtrComplex128)
+	}
+	if in1.Int != nil {
+		_var_0.Int = *in1.Int
+	}
+	if in1.Float32 != nil {
+		_var_0.Float32 = func(v int) float32 {
+			res := float32(v)
+			return res
+		}(*in1.Float32)
+	}
+	if in0 != nil {
+		_var_0.PtrBool = in0.PtrBool
 	}
 
 	return _var_0
@@ -123,6 +123,15 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod2(in0 Inner, in1 *ThisFileStruct
 			res := func() complex64 { o, _ := strconv.ParseComplex(v, 64); return complex64(o) }()
 			return &res
 		}(in1.PtrComplex64)
+		if in1.Int != nil {
+			_var_0.Int = *in1.Int
+		}
+		if in1.Float32 != nil {
+			_var_0.Float32 = func(v int) float32 {
+				res := float32(v)
+				return res
+			}(*in1.Float32)
+		}
 		if in1.PtrFloat64 != nil {
 			_var_0.PtrFloat64 = func(v string) *float64 {
 				res := func() float64 { o, _ := strconv.ParseFloat(v, 64); return o }()
@@ -134,15 +143,6 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod2(in0 Inner, in1 *ThisFileStruct
 				res := func() complex128 { o, _ := strconv.ParseComplex(v, 128); return o }()
 				return &res
 			}(*in1.PtrComplex128)
-		}
-		if in1.Int != nil {
-			_var_0.Int = *in1.Int
-		}
-		if in1.Float32 != nil {
-			_var_0.Float32 = func(v int) float32 {
-				res := float32(v)
-				return res
-			}(*in1.Float32)
 		}
 	}
 
@@ -326,6 +326,45 @@ func (_this_ SliceMappingImpl) genMapper2(in common.Common) common.Common2 {
 	_var_0.Field2 = in.Field2
 	_var_0.Field3 = in.Field3
 	_var_0.Slice = in.Slice
+
+	return _var_0
+}
+
+var _ MapMapping = (*MapMappingImpl)(nil)
+
+type MapMappingImpl struct{}
+
+func (_this_ MapMappingImpl) Function1(in input.MapStruct) output.MapStruct {
+	_var_0 := output.MapStruct{}
+
+	_var_1 := in.Map
+	_var_2 := make(map[common.MapKey]common.Common2, len(_var_1))
+	for _var_3, _var_4 := range _var_1 {
+		_var_5, _var_6 := _this_.genMapper(_var_3, _var_4)
+		_var_2[_var_5] = _var_6
+	}
+	_var_0.Map = _var_2
+
+	return _var_0
+}
+
+func (_this_ MapMappingImpl) genMapper(k common.MapKey, v common.Common2) (common.MapKey, common.Common2) {
+	_var_0 := common.MapKey{}
+	_var_0.Field1 = k.Field1
+	_var_0.Field2 = k.Field2
+	_var_0.Field3 = k.Field3
+	_var_1 := common.Common2{}
+	_var_1.Field1 = k.Field1
+	_var_1.Field2 = k.Field2
+	_var_1.Field3 = k.Field3
+	_var_1.Slice = v.Slice
+
+	return _var_0, _var_1
+}
+
+func (_this_ MapMappingImpl) Function2(mapStruct input.MapStruct2) output.MapStruct2 {
+	_var_0 := output.MapStruct2{}
+	_var_0.Map = mapStruct.Map
 
 	return _var_0
 }

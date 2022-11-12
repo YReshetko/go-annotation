@@ -1,6 +1,8 @@
 package output
 
-import "github.com/YReshetko/go-annotation/examples/mapper/internal/models/common"
+import (
+	"github.com/YReshetko/go-annotation/examples/mapper/internal/models/common"
+)
 
 type Primitives struct {
 	Bool          bool
@@ -42,6 +44,7 @@ type Primitives struct {
 	PtrUintptr    *uintptr
 	PtrRune       *rune
 	MAP           rune
+	//CreateAt      *time.Time// TODO: nil pointer as modules does not support loading default Go libs
 }
 
 type PkgSpecific struct {

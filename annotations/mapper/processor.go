@@ -15,6 +15,7 @@ func init() {
 	annotation.Register[annotations.Mapper](p)
 	annotation.RegisterNoop[annotations.Mapping]()
 	annotation.RegisterNoop[annotations.SliceMapping]()
+	annotation.RegisterNoop[annotations.MapMapping]()
 	annotation.RegisterNoop[annotations.IgnoreDefaultMapping]()
 }
 

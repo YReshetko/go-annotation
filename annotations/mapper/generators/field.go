@@ -23,6 +23,7 @@ type fieldGenerator struct {
 	structGen    *structureTypeGenerator // @Exclude
 	primitiveGen *primitiveTypeGenerator // @Exclude
 	sliceGen     *sliceTypeGenerator     // @Exclude
+	mapGen       *mapTypeGenerator       // @Exclude
 }
 
 // @PostConstruct
@@ -40,6 +41,13 @@ func (fg *fieldGenerator) buildFields() {
 		fg.sliceGen = newSliceTypeGeneratorBuilder().
 			setNode(fg.node).
 			setSliceType(astType.Elt).
+			setParentAlias(fg.parentAlias).
+			build()
+	case *ast.MapType:
+		fg.mapGen = newMapTypeGeneratorBuilder().
+			setNode(fg.node).
+			setKeyType(astType.Key).
+			setValueType(astType.Value).
 			setParentAlias(fg.parentAlias).
 			build()
 	default:
@@ -123,6 +131,8 @@ func (fg *fieldGenerator) buildArgType() string {
 		argType = fg.structGen.name
 	case fg.sliceGen != nil:
 		return "[]" + fg.sliceGen.buildType()
+	case fg.mapGen != nil:
+		return fg.mapGen.buildType()
 	}
 
 	if len(fg.alias) > 0 {
@@ -155,6 +165,8 @@ func (fg *fieldGenerator) generate(name string, in []*fieldGenerator, c *cache, 
 		return fg.generateStructMapping(name, in, c, o)
 	case fg.sliceGen != nil:
 		// TODO support slice output mapping
+	case fg.mapGen != nil:
+		// TODO support map output mapping
 	}
 	return nil
 }
@@ -209,8 +221,16 @@ func (fg *fieldGenerator) generateStructMapping(name string, in []*fieldGenerato
 				if err != nil {
 					return fmt.Errorf("unable to build slice mapping %s: %w", fg.name, err)
 				}
-				//case dictionary:
-				// TODO Implement overloaded slice mapping
+			case dictionary:
+				fromField := mapping.source
+				funcName := mapping.funcOrThisLine()
+				if field.mapGen == nil {
+					return fmt.Errorf("unable to prepare mapping for non-map field %s = %s(%s)", name+"."+field.name, funcName, fromField)
+				}
+				err := mapMap(name+"."+field.name, fromField, funcName, field, in, c)
+				if err != nil {
+					return fmt.Errorf("unable to build map mapping %s: %w", fg.name, err)
+				}
 			}
 			continue
 		}
@@ -251,6 +271,13 @@ func (fg *fieldGenerator) generateStructMapping(name string, in []*fieldGenerato
 			err := assignSlice(name+"."+field.name, potentialFields[0].name, field, potentialFields[0].field, fromPrefix, c)
 			if err != nil {
 				return fmt.Errorf("unable to build default slice mapping: %w", err)
+			}
+			continue
+		}
+		if isEqualMaps(field, potentialFields[0].field) {
+			err := assignMap(name+"."+field.name, potentialFields[0].name, field, potentialFields[0].field, fromPrefix, c)
+			if err != nil {
+				return fmt.Errorf("unable to build default map mapping: %w", err)
 			}
 			continue
 		}

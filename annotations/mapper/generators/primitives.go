@@ -262,3 +262,28 @@ var converters = map[string][2]string{
 	"rune_complex128":      {"", ""},
 	"rune_string":          {"func() rune {o, _ := strconv.Atoi(v); return rune(o)}()", "strconv"},
 }
+
+func isPrimitive(t string) bool {
+	_, ok := map[string]struct{}{
+		"bool":       {},
+		"uint":       {},
+		"uint8":      {},
+		"uint16":     {},
+		"uint32":     {},
+		"uint64":     {},
+		"byte":       {},
+		"int":        {},
+		"int8":       {},
+		"int16":      {},
+		"int32":      {},
+		"int64":      {},
+		"float32":    {},
+		"float64":    {},
+		"complex64":  {},
+		"complex128": {},
+		"string":     {},
+		"uintptr":    {},
+		"rune":       {},
+	}[t]
+	return ok
+}
