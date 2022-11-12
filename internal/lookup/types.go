@@ -16,7 +16,7 @@ func FindTypeByImport(m module.Module, importPath, typeName string) (ast2.Node, 
 		ToSlice()
 
 	if len(filePaths) == 0 {
-		return nil, nil, "", fmt.Errorf("files for import %s not found", importPath)
+		return nil, nil, "", fmt.Errorf(`files for import "%s" not found`, importPath)
 	}
 
 	return findType(filePaths, typeName)

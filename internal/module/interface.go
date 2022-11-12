@@ -52,6 +52,9 @@ func Find(m Module, importPath string) (Module, error) {
 //		"github.com/YReshetko/go-annotation/internal/module/lookup.go"
 //		"github.com/YReshetko/go-annotation/internal/module/module.go"
 func FilesInPackage(m Module, importPath string) []string {
+	if m == nil {
+		return nil
+	}
 	return OfSlice(m.Files()).
 		Map(joinPath(m.Root())).
 		Filter(contains(importPath)).

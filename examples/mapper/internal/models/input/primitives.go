@@ -2,6 +2,7 @@ package input
 
 import (
 	"github.com/YReshetko/go-annotation/examples/mapper/internal/models/common"
+	"time"
 )
 
 type Primitives struct {
@@ -44,7 +45,7 @@ type Primitives struct {
 	PtrUintptr    *uintptr
 	PtrRune       *rune
 	MAP           *rune
-	// CreateAt      time.Time // TODO: nil pointer as modules does not support loading default Go libs
+	CreateAt      time.Time // TODO: nil pointer as modules does not support loading default Go libs
 }
 
 type PkgSpecific struct {

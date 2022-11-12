@@ -75,7 +75,8 @@ func (fg *fieldGenerator) buildByIdentity(ident *ast.Ident) {
 
 	newNode, importPath, err := fg.node.FindNodeByAlias(fg.alias, ident.String())
 	if err != nil {
-		panic(err)
+		fmt.Println("WARN:", err.Error())
+		return
 	}
 
 	fg.importPkg = importPath

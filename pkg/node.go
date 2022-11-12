@@ -84,7 +84,7 @@ func (n *node) findNodeInCurrent(nodeName string) (Node, error) {
 	moduleDir := filepath.Dir(strings.TrimPrefix(n.p, n.m.Root()))
 	astNode, astFile, filePath, err := lookup.FindTypeInDir(n.m, trimLeadingSlash(moduleDir), nodeName)
 	if err != nil {
-		return nil, fmt.Errorf("unable to find type %s in dir %s: %w", nodeName, moduleDir, err)
+		return nil, fmt.Errorf(`unable to find type "%s"" in dir %s: %w`, nodeName, moduleDir, err)
 	}
 	return annotatedNode(n.m, filePath, astFile, astNode), nil
 }
@@ -97,12 +97,12 @@ func (n *node) findNodeByAlias(alias, nodeName string) (Node, string, error) {
 
 	relatedModule, err := module.Find(n.m, importPath)
 	if err != nil {
-		return nil, "", fmt.Errorf("unable to find module for %s, %s: %w", importPath, nodeName, err)
+		return nil, "", fmt.Errorf(`unable to find module for "%s", %s: %w`, importPath, nodeName, err)
 	}
 
 	astNode, astFile, filePath, err := lookup.FindTypeByImport(relatedModule, importPath, nodeName)
 	if err != nil {
-		return nil, "", fmt.Errorf("unable to find type %s by import: %w", nodeName, err)
+		return nil, "", fmt.Errorf(`unable to find type "%s" by import: %w`, nodeName, err)
 	}
 
 	return annotatedNode(relatedModule, filePath, astFile, astNode), importPath, nil
