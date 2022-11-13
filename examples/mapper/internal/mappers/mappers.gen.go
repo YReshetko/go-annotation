@@ -125,15 +125,6 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod2(in0 Inner, in1 *ThisFileStruct
 			res := func() complex64 { o, _ := strconv.ParseComplex(v, 64); return complex64(o) }()
 			return &res
 		}(in1.PtrComplex64)
-		if in1.Int != nil {
-			_var_0.Int = *in1.Int
-		}
-		if in1.Float32 != nil {
-			_var_0.Float32 = func(v int) float32 {
-				res := float32(v)
-				return res
-			}(*in1.Float32)
-		}
 		if in1.PtrFloat64 != nil {
 			_var_0.PtrFloat64 = func(v string) *float64 {
 				res := func() float64 { o, _ := strconv.ParseFloat(v, 64); return o }()
@@ -145,6 +136,15 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod2(in0 Inner, in1 *ThisFileStruct
 				res := func() complex128 { o, _ := strconv.ParseComplex(v, 128); return o }()
 				return &res
 			}(*in1.PtrComplex128)
+		}
+		if in1.Int != nil {
+			_var_0.Int = *in1.Int
+		}
+		if in1.Float32 != nil {
+			_var_0.Float32 = func(v int) float32 {
+				res := float32(v)
+				return res
+			}(*in1.Float32)
 		}
 	}
 
@@ -195,11 +195,11 @@ func (_this_ BaseStructuresMapperImpl) Structures2(in *input.StructuresMapping2)
 	if in != nil {
 		_var_0.AnotherField2 = &in.Field2.Field1.Field1
 		_var_0.AnotherField4 = &in.Field2.Field1.Field1
-		if in.Field1.Field1.Field2 != nil {
-			_var_0.AnotherField1 = *in.Field1.Field1.Field2
-		}
 		if in.Field1.Field2 != nil && in.Field1.Field2.Field2 != nil {
 			_var_0.AnotherField3 = *in.Field1.Field2.Field2
+		}
+		if in.Field1.Field1.Field2 != nil {
+			_var_0.AnotherField1 = *in.Field1.Field1.Field2
 		}
 	}
 

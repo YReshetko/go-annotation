@@ -36,11 +36,16 @@ func getLocalPackageName(m module.Module, spec *ast.ImportSpec) string {
 	}
 
 	if m != nil {
-		return OfSlice(m.Files()).
+		// TODO review the assamption that the first file is a good for check
+		imp := OfSlice(m.Files()).
 			//Map(utils.Root).
 			Filter(hasPathSuffix(importPath)).
 			Map(fileToPackageName(m.Root())).
 			One()
+		if strings.HasSuffix(imp, "_test") {
+			imp = imp[:strings.Index(imp, "_test")]
+		}
+		return imp
 	}
 
 	return strings.ReplaceAll(utils.LastDir(importPath), "-", "_")
