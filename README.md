@@ -202,7 +202,7 @@ More examples you can find in [annotations](./annotations) and [examples](./exam
 - Annotations and code generation itself allows to save time on routine coding  
 
 # TODO
- - [ ] Extend API with get root of current node. That needs to support fields annotation without annotation on type declaration
+ - [X] Extend API with get root of current node. That needs to support fields annotation without annotation on type declaration
  - [ ] Implement preloading go standard module for lookup
  - [ ] Review node interface, split to Info, Lookup API. Revisit method names
  - [ ] Introduce logging API functionality
