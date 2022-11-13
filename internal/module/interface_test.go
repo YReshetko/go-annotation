@@ -71,7 +71,15 @@ func TestSubmodule_Fail_NonDependency(t *testing.T) {
 
 	assert.Contains(t, m.Files(), "decode.go")
 	assert.Contains(t, m.Files(), "encode.go")
+}
 
+func TestFindNativeLibs(t *testing.T) {
+	m, err := module.Load("./fixtures")
+	require.NoError(t, err)
+
+	m, err = module.Find(m, "time")
+	require.NoError(t, err)
+	require.NotNil(t, m)
 }
 
 func TestFilesInPackage(t *testing.T) {
@@ -79,7 +87,7 @@ func TestFilesInPackage(t *testing.T) {
 	require.NoError(t, err)
 
 	files := module.FilesInPackage(m, "github.com/YReshetko/go-annotation/internal/module")
-	require.Len(t, files, 5)
+	require.Len(t, files, 6)
 
 	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/files.go")
 	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/interface.go")

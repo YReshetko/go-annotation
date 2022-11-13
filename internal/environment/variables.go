@@ -11,6 +11,8 @@ const (
 	version       = "0.0.4-alpha"
 )
 
+var goRoot = ""
+
 func GoPath() string {
 	return os.Getenv("GOPATH")
 }
@@ -25,4 +27,12 @@ func ModPath() string {
 
 func ToolVersion() string {
 	return version
+}
+
+func GoRoot() string {
+	return goRoot
+}
+
+func GoLibs() string {
+	return filepath.Join(goRoot, goHomeSubPath)
 }

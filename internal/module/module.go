@@ -36,11 +36,31 @@ func (m *module) Root() string {
 }
 
 func (m *module) find(importPath string) (*module, error) {
+	nm, err := m.findModModule(importPath)
+	if err == nil && nm != nil && nm != (*module)(nil) {
+		return nm, nil
+	}
+
+	return m.findStdModule(importPath), err
+}
+func (m *module) findStdModule(importPath string) *module {
+	nm := loadStdModule()
+	if nm == nil {
+		return nil
+	}
+	for _, f := range nm.Files() {
+		if strings.HasPrefix(f, importPath) {
+			return nm
+		}
+	}
+	return nil
+}
+
+func (m *module) findModModule(importPath string) (*module, error) {
 	if m.mod == nil {
 		if m.hasImportPath(importPath) {
 			return m, nil
 		}
-		// TODO Try to lookup module in GO_HOME/GO_ROOT/vendor
 		return nil, nil
 	}
 

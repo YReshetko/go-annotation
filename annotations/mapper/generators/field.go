@@ -97,11 +97,11 @@ func (fg *fieldGenerator) buildNonPrimitiveType(node annotation.Node, astNode as
 			return
 		default:
 			fmt.Printf("UNSUPPORTED INTERNAL LOADED TYPE %T\n", nnt.Type)
-			ast.Print(token.NewFileSet(), astNode)
+			//ast.Print(token.NewFileSet(), astNode)
 		}
 	default:
 		fmt.Printf("UNSUPPORTED LOADED TYPE %T\n", astNode)
-		ast.Print(token.NewFileSet(), astNode)
+		//ast.Print(token.NewFileSet(), astNode)
 	}
 }
 

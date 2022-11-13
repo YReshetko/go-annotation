@@ -203,11 +203,12 @@ More examples you can find in [annotations](./annotations) and [examples](./exam
 
 # TODO
  - [X] Extend API with get root of current node. That needs to support fields annotation without annotation on type declaration
- - [ ] Implement preloading go standard module for lookup
+ - [X] Implement preloading go standard module for lookup
  - [ ] Review node interface, split to Info, Lookup API. Revisit method names
  - [ ] Introduce logging API functionality
  - [ ] Implement tool config export for IDE plugin(s)
  - [ ] Investigate how to implement cache for already loaded modules
+ - [ ] Review modules model, it's better to use tree + map for packages and files instead of slices
 
 # Inspiration
 
