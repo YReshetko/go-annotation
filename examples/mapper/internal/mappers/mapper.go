@@ -4,6 +4,7 @@ import (
 	"github.com/YReshetko/go-annotation/examples/mapper/internal/models/common"
 	"github.com/YReshetko/go-annotation/examples/mapper/internal/models/input"
 	"github.com/YReshetko/go-annotation/examples/mapper/internal/models/output"
+	"time"
 )
 
 type LinkToThisFileStruct ThisFileStruct
@@ -51,6 +52,8 @@ type BaseStructuresMapper interface {
 	// @Mapping(target="Uint64", source="in3")
 	// @Mapping(target="PtrUint64", source="in3")
 	Structures4(in1 string, in2 *complex128, in3 *uint64) output.Primitives
+
+	TimeMapping(t time.Time) time.Time
 }
 
 // @Mapper

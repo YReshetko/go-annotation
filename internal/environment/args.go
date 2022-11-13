@@ -1,6 +1,8 @@
 package environment
 
-import "os"
+import (
+	"os"
+)
 
 var (
 	projectPath = ""
@@ -14,6 +16,9 @@ func init() {
 	for i, v := range os.Args {
 		args[i] = v
 	}
+	/*	for _, env := range os.Environ() {
+		fmt.Println(env)
+	}*/
 
 	projectPath = args[1]
 }
