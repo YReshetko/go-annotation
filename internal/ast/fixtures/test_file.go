@@ -15,6 +15,43 @@ type SingleStruct struct {
 	SingleVar int
 }
 
+/*Adding some long comments
+  Adding some long comments
+  Adding some long comments
+  Adding some long comments
+  Adding some long comments
+  Adding some long comments
+*/
+type ExploreParentStructs struct {
+
+	/*Adding some long comments
+	  Adding some long comments
+	  Adding some long comments
+	  Adding some long comments
+	  Adding some long comments
+	  Adding some long comments
+	*/
+	F struct {
+		/*Adding some long comments
+		  Adding some long comments
+		  Adding some long comments
+		  Adding some long comments
+		  Adding some long comments
+		  Adding some long comments
+		*/
+		F struct {
+			/*Adding some long comments
+			  Adding some long comments
+			  Adding some long comments
+			  Adding some long comments
+			  Adding some long comments
+			  Adding some long comments
+			*/
+			LookingFor int
+		}
+	}
+}
+
 type (
 	// @SomeMeta() single line comment
 	GroupInterface1 interface {
@@ -106,4 +143,8 @@ func (GroupStruct2) SomeMethod(b int) error {
 	fmt.Println(GroupSeveralVars1)
 	fmt.Println(GroupSeveralVars2)
 	return nil
+}
+
+type ExploreParents interface {
+	InternalMethod()
 }

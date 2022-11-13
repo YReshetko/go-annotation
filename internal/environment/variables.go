@@ -8,7 +8,7 @@ import (
 const (
 	modSubPath    = "/pkg/mod"
 	goHomeSubPath = "/src"
-	version       = "0.0.3-alpha"
+	version       = "0.0.4-alpha"
 )
 
 func GoPath() string {

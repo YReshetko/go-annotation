@@ -26,6 +26,19 @@ func CastNode[T ast.Node](n Node) (T, bool) {
 	return v, ok
 }
 
+func ParentType[T ast.Node](n Node) (Node, bool) {
+	current := n
+	p, ok := current.ParentNode()
+	for ; ok; p, ok = current.ParentNode() {
+		_, cok := CastNode[T](p)
+		if cok {
+			return p, true
+		}
+		current = p
+	}
+	return nil, false
+}
+
 func BytesToAST(data []byte) (ast.Node, *token.FileSet, error) {
 	return astutils.BytesToAST(data)
 }

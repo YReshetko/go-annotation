@@ -4,11 +4,17 @@ import (
 	"go/ast"
 )
 
-func walk(file *ast.File, visitor func(node ast.Node) bool) {
+func walk(file *ast.File, visitor func(node ast.Node, parents []ast.Node) bool) {
+	pc := newParentCache()
 	ast.Inspect(file, func(node ast.Node) bool {
 		if node == nil {
 			return false
 		}
+		// Ignoring comment groups as it should be a part of another nodes
+		if _, ok := node.(*ast.CommentGroup); ok {
+			return false
+		}
+
 		switch n := node.(type) {
 		case *ast.GenDecl:
 			// TODO inspect the hacky replacement of the doc
@@ -22,6 +28,8 @@ func walk(file *ast.File, visitor func(node ast.Node) bool) {
 				return true
 			}
 		}
-		return visitor(node)
+		parents := pc.copy()
+		pc.add(node)
+		return visitor(node, parents)
 	})
 }

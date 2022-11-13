@@ -15,9 +15,10 @@ func TestFindType(t *testing.T) {
 	m, err := module.Load("./fixtures")
 	require.NoError(t, err)
 
-	node, _, filePath, err := lookup.FindTypeByImport(m, "github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package", "Exported2")
+	node, parents, _, filePath, err := lookup.FindTypeByImport(m, "github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package", "Exported2")
 	require.NoError(t, err)
 	assert.Contains(t, filePath, "src/github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package/example2.go")
+	assert.Len(t, parents, 3)
 
 	ts, ok := node.(*ast.TypeSpec)
 	require.True(t, ok)
@@ -31,18 +32,20 @@ func TestFindType_NotFound(t *testing.T) {
 	m, err := module.Load("./fixtures")
 	require.NoError(t, err)
 
-	node, _, _, err := lookup.FindTypeByImport(m, "github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package", "Exported3")
+	node, parents, _, _, err := lookup.FindTypeByImport(m, "github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package", "Exported3")
 	require.Error(t, err)
 	assert.Nil(t, node)
+	assert.Empty(t, parents)
 }
 
 func TestFindTypeInDir(t *testing.T) {
 	m, err := module.Load("./fixtures")
 	require.NoError(t, err)
 
-	node, _, filePath, err := lookup.FindTypeInDir(m, "dashed-package", "Exported2")
+	node, parents, _, filePath, err := lookup.FindTypeInDir(m, "dashed-package", "Exported2")
 	require.NoError(t, err)
 	assert.Contains(t, filePath, "src/github.com/YReshetko/go-annotation/internal/lookup/fixtures/dashed-package/example2.go")
+	assert.Len(t, parents, 3)
 
 	ts, ok := node.(*ast.TypeSpec)
 	require.True(t, ok)
@@ -56,7 +59,8 @@ func TestFindTypeInDir_NotFound(t *testing.T) {
 	m, err := module.Load("./fixtures")
 	require.NoError(t, err)
 
-	node, _, _, err := lookup.FindTypeInDir(m, "dashed-package", "Exported3")
+	node, parents, _, _, err := lookup.FindTypeInDir(m, "dashed-package", "Exported3")
 	require.Error(t, err)
 	assert.Nil(t, node)
+	assert.Empty(t, parents)
 }
