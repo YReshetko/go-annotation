@@ -63,7 +63,8 @@ func moduleNodeProcessor(m module.Module) func(Pair[string, *goAST.File]) error 
 		f := p.Val2
 		path := p.Val1
 		var err error
-		ast.Walk(f, func(n goAST.Node) bool {
+		// TODO set parents no framework node
+		ast.Walk(f, func(n goAST.Node, parents []goAST.Node) bool {
 			if err != nil {
 				return false
 			}
@@ -71,7 +72,7 @@ func moduleNodeProcessor(m module.Module) func(Pair[string, *goAST.File]) error 
 			if !ok {
 				return true
 			}
-			internalNode := newNode(m, path, f, n, filledAnnotations(a))
+			internalNode := newNode(m, path, f, n, parents, filledAnnotations(a))
 
 			err = Map(Map(OfSlice(a), toParsedAnnotationName).
 				Filter(Distinct[string]()), processorByAnnotationName).

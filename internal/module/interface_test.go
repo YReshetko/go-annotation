@@ -35,7 +35,7 @@ func TestSubmodule_Success(t *testing.T) {
 
 	m, err = module.Find(m, "github.com/stretchr/testify/assert")
 	require.NoError(t, err)
-	assert.Contains(t, m.Root(), "pkg/mod/github.com/stretchr/testify@v1.8.0")
+	assert.Contains(t, m.Root(), "pkg/mod/github.com/stretchr/testify@v1.8.1")
 
 	assert.Contains(t, m.Files(), "assert/assertion_compare.go")
 	assert.Contains(t, m.Files(), "assert/assertion_compare_can_convert.go")
@@ -57,7 +57,7 @@ func TestSubmodule_Fail_NonDependency(t *testing.T) {
 
 	m, err = module.Find(m, "github.com/stretchr/testify/assert")
 	require.NoError(t, err)
-	assert.Contains(t, m.Root(), "pkg/mod/github.com/stretchr/testify@v1.8.0")
+	assert.Contains(t, m.Root(), "pkg/mod/github.com/stretchr/testify@v1.8.1")
 
 	assert.Contains(t, m.Files(), "assert/assertion_compare.go")
 	assert.Contains(t, m.Files(), "assert/assertion_compare_can_convert.go")

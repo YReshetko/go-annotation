@@ -1,6 +1,7 @@
 package ast_test
 
 import (
+	"fmt"
 	ast2 "go/ast"
 	"reflect"
 	"strings"
@@ -55,9 +56,10 @@ func TestNodeSearch_NotFound(t *testing.T) {
 
 	for _, s := range toTest {
 		t.Run(s, func(t *testing.T) {
-			a, ok := ast.FindTopNodeByName(f, s)
+			a, parents, ok := ast.FindTopNodeByName(f, s)
 			require.False(t, ok)
 			assert.Nil(t, a)
+			assert.Empty(t, parents)
 		})
 	}
 }
@@ -69,85 +71,107 @@ func TestComment(t *testing.T) {
 	toTest := []struct {
 		name    string
 		comment string
+		parents []ast2.Node
 	}{
 		{
 			name:    "SingleInterface",
 			comment: "SingleInterface single line comment",
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.TypeSpec{}},
 		},
 		{
 			name: "SingleStruct",
 			comment: `multiline comment
 new line`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.TypeSpec{}},
 		},
 		{
 			name: "GroupStruct1",
 			comment: `Several single line comments
 Several single line comments`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.TypeSpec{}},
 		},
 		{
 			name:    "GroupInterface2",
 			comment: ``,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.TypeSpec{}},
 		},
 		{
 			name:    "GroupInterface2",
 			comment: ``,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.TypeSpec{}},
 		},
 		{
 			name:    "SingleConst",
 			comment: `Single line comment on constant`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.ValueSpec{}},
 		},
 		{
 			name: "SeveralVars1",
 			comment: `Multiline comment on
 Variables`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.ValueSpec{}},
 		},
 		{
 			name: "SeveralVars2",
 			comment: `Multiline comment on
 Variables`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.ValueSpec{}},
 		},
 		{
 			name: "GroupConst1",
 			comment: `		Multiline comment GroupConst1
 		Variables`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.ValueSpec{}},
 		},
 		{
 			name:    "GroupConst2",
 			comment: `Single line comment on GroupConst2`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.ValueSpec{}},
 		},
 		{
 			name:    "GroupVar1",
 			comment: `Single line comment on GroupVar1`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.ValueSpec{}},
 		},
 		{
 			name: "GroupSeveralVars1",
 			comment: `	   Multiline comment GroupSeveralVars1 and GroupSeveralVars2
 	   Variables`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.ValueSpec{}},
 		},
 		{
 			name: "GroupSeveralVars2",
 			comment: `	   Multiline comment GroupSeveralVars1 and GroupSeveralVars2
 	   Variables`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.GenDecl{}, &ast2.ValueSpec{}},
 		},
 		{
 			name:    "SomeFunction",
 			comment: `Single line comment on SomeFunction`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.FuncDecl{}},
 		},
+
 		{
 			name: "SomeMethod",
 			comment: `Multiline comment on SomeMethod
 Method`,
+			parents: []ast2.Node{&ast2.File{}, &ast2.FuncDecl{}},
 		},
 	}
 
 	for _, s := range toTest {
 		t.Run(s.name, func(t *testing.T) {
-			a, ok := ast.FindTopNodeByName(f, s.name)
+			a, parents, ok := ast.FindTopNodeByName(f, s.name)
 			require.True(t, ok)
 
 			comment, ok := ast.Comment(a)
 			require.True(t, ok)
 			assert.Equal(t, s.comment, comment)
+			require.Len(t, parents, len(s.parents))
+			for i, parent := range parents {
+				verifyNodeType(t, s.parents[i], parent)
+			}
+
 		})
 	}
 }
@@ -176,7 +200,7 @@ func TestNonTopLevelNodeComment(t *testing.T) {
 
 	for _, s := range toTest {
 		t.Run(s.originNodeName+"."+s.nodeName, func(t *testing.T) {
-			a, ok := ast.FindTopNodeByName(f, s.originNodeName)
+			a, _, ok := ast.FindTopNodeByName(f, s.originNodeName)
 			require.True(t, ok)
 
 			found := false
@@ -209,7 +233,9 @@ func TestWalk_FindInterfaceAndStructureFields(t *testing.T) {
 	foundStructureField := false
 	foundSingleInterface := false
 	foundSingleStructure := false
-	ast.Walk(f, func(node ast2.Node) bool {
+	rootsVerified := false
+	rootsStructuresVerified := false
+	ast.Walk(f, func(node ast2.Node, parents []ast2.Node) bool {
 		switch nt := node.(type) {
 		case *ast2.Field:
 			if len(nt.Names) != 1 {
@@ -224,6 +250,31 @@ func TestWalk_FindInterfaceAndStructureFields(t *testing.T) {
 				assert.Equal(t, `			Multiline comment on
 			GroupStruct2.GroupVar2`, strings.TrimRight(nt.Doc.Text(), "\n"))
 			}
+			if nt.Names[0].Name == "InternalMethod" {
+				assert.Len(t, parents, 5)
+				verifyNodeType(t, &ast2.FieldList{}, parents[4])
+				verifyNodeType(t, &ast2.InterfaceType{}, parents[3])
+				verifyNodeType(t, &ast2.TypeSpec{}, parents[2])
+				verifyNodeType(t, &ast2.GenDecl{}, parents[1])
+				verifyNodeType(t, &ast2.File{}, parents[0])
+				rootsVerified = true
+			}
+			if nt.Names[0].Name == "LookingFor" {
+				assert.Len(t, parents, 10)
+				verifyNodeType(t, &ast2.FieldList{}, parents[9])
+				verifyNodeType(t, &ast2.StructType{}, parents[8])
+				verifyNodeType(t, &ast2.Field{}, parents[7])
+				verifyNodeType(t, &ast2.FieldList{}, parents[6])
+				verifyNodeType(t, &ast2.StructType{}, parents[5])
+				verifyNodeType(t, &ast2.Field{}, parents[4])
+				verifyNodeType(t, &ast2.FieldList{}, parents[3])
+				verifyNodeType(t, &ast2.StructType{}, parents[2])
+				verifyNodeType(t, &ast2.TypeSpec{}, parents[1])
+				// verifyNodeType(t, &ast2.GenDecl{}, parents[1]) // missing ast2.GenDecl as comment splice has passed **Hacky**
+				verifyNodeType(t, &ast2.File{}, parents[0])
+				rootsStructuresVerified = true
+			}
+
 		case *ast2.TypeSpec:
 			if nt.Name == nil {
 				return true
@@ -245,10 +296,16 @@ func TestWalk_FindInterfaceAndStructureFields(t *testing.T) {
 	assert.True(t, foundStructureField)
 	assert.True(t, foundSingleInterface)
 	assert.True(t, foundSingleStructure)
+	assert.True(t, rootsVerified)
+	assert.True(t, rootsStructuresVerified)
+}
+
+func verifyNodeType(t *testing.T, expected, node ast2.Node) {
+	assert.Equal(t, reflect.TypeOf(expected), reflect.TypeOf(node), fmt.Sprintf("expected: %T, but got: %T ", expected, node))
 }
 
 func verifyType(t *testing.T, name string, f *ast2.File, n ast2.Node) {
-	a, ok := ast.FindTopNodeByName(f, name)
+	a, _, ok := ast.FindTopNodeByName(f, name)
 	require.True(t, ok)
 	assert.Equal(t, reflect.TypeOf(n), reflect.TypeOf(a))
 }

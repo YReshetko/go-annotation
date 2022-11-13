@@ -144,12 +144,20 @@ func main() {
 ```
 
 ### Library API
-At the moment the `annotation.Node` contain only one search method: `FindImportByAlias(alias string) (string, bool)` that helps to find related import to type/function.
+At the moment the `annotation.Node` contain several helper methods
+- `Annotations() []Annotation` - returns all annotations declared for `ast.Node`
+- `ASTNode() ast.Node` - returns ast.Node that currently is in processing
+- `AnnotatedNode(v ast2.Node) Node` - returns `annotation.Node` by `ast.Node` that declared as a sub `ast.Node` for `ASTNode()`
+- `ParentNode() (Node, bool)` - returns parent `annotation.Node` by current. false is returned if there is no parents for `ast.Node`
+- `Imports() []*ast.ImportSpec` - returns all file imports ([]*ast.ImportSpec) for the given `annotation.Node`
+- `FindImportByAlias(alias string) (string, bool)` - that helps to find related import to type/function.
+- `FindNodeByAlias(alias, nodeName string) (Node, string, error)` - returns related Node by alias, related import if any and a type/function name from related module if alias is empty, then the search will go in current directory of `ast.File`
+
 To make the library more efficient this API will be extended.
 
 Apart from that, there are some util functions that help to work with library (also will be extended in future):
 
-`FindAnnotations[T any](a []Annotation) []T` - helps to find exact annotations in list of all annotations:
+- `FindAnnotations[T any](a []Annotation) []T` - helps to find exact annotations in list of all annotations:
 ```go
 func (p *SomeAnnotationProcessor) Process(node annotation.Node) error {
 	annotations := annotation.FindAnnotations[SomeAnnotationStructure](node.Annotations())
@@ -160,7 +168,7 @@ func (p *SomeAnnotationProcessor) Process(node annotation.Node) error {
 }
 ```
 
-`CastNode[T ast.Node](n Node) (T, bool) ` - helps to cast incoming `annotation.Node` to particular `ast.Node`:
+- `CastNode[T ast.Node](n Node) (T, bool) ` - helps to cast incoming `annotation.Node` to particular `ast.Node`:
 ```go
 
 func (p *SomeAnnotationProcessor) Process(node annotation.Node) error {
@@ -171,7 +179,17 @@ func (p *SomeAnnotationProcessor) Process(node annotation.Node) error {
     }
 	...
 }
-
+```
+- `ParentType[T ast.Node](n Node) (Node, bool)` - helps to find a parent node with certain `ast.Node` type:
+```go
+func (p *SomeAnnotationProcessor) Process(node annotation.Node) error {
+    ...
+    n, ok := annotation.ParentType[*ast.TypeSpec](node)
+    if !ok {
+        return fmt.Errorf("parent node ast.TypeSpec not found")
+    }
+	...
+}
 ```
 
 More examples you can find in [annotations](./annotations) and [examples](./examples)

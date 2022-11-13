@@ -128,7 +128,7 @@ func extractTypeName(node annotation.Node) (string, generator.FakeMode, error) {
 		nameIdent = n.Name
 		mod = generator.Package
 	default:
-		return "", mod, fmt.Errorf("expected mocked type one of [ast.TypeSpec, *ast.FuncDecl, *ast.File], but got %T", node.ASTNode())
+		return "", mod, fmt.Errorf("expected mocked type one of [ast.TypeSpec, *ast.TypeDecl, *ast.File], but got %T", node.ASTNode())
 	}
 	if nameIdent.String() == "" {
 		return "", mod, fmt.Errorf("unable to prepare mock for interface in %s", node.Dir())

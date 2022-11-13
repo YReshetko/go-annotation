@@ -16,6 +16,8 @@ type Node interface {
 	ASTNode() ast.Node
 	// AnnotatedNode returns annotation.Node by ast.Node that declared as a sub ast.Node for ASTNode()
 	AnnotatedNode(ast.Node) Node
+	// ParentNode returns parent annotation.Node by current. false is returned if there is no parents for ast.Node
+	ParentNode() (Node, bool)
 	// Imports returns all file imports ([]*ast.ImportSpec)
 	Imports() []*ast.ImportSpec
 
