@@ -14,7 +14,7 @@ func loadModule(path string) (module, error) {
 	var modFile string
 	var goFiles []string
 	err = filepath.Walk(path, func(filePath string, info fs.FileInfo, err error) error {
-		if info.IsDir() {
+		if info == nil || info.IsDir() {
 			return nil
 		}
 		switch filepath.Ext(info.Name()) {
