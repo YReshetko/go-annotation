@@ -2,7 +2,9 @@ package output
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/YReshetko/go-annotation/internal/logger"
 	"go/ast"
 	gfmt "go/format"
 	"go/printer"
@@ -15,7 +17,8 @@ import (
 )
 
 const (
-	extGo = ".go"
+	extGo   = ".go"
+	extJSON = ".json"
 )
 
 func Store(path string, data []byte, meta map[string]string) error {
@@ -92,6 +95,19 @@ func format(ext string, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		return out, nil
+	case extJSON:
+		var m any
+		err := json.Unmarshal(data, &m)
+		if err != nil {
+			logger.Warnf("unable to unmarshal JSON for pretty-print: %s", err)
+			return data, nil
+		}
+		d, err := json.MarshalIndent(m, "", "\t")
+		if err != nil {
+			logger.Warnf("unable to marshal JSON for pretty-print: %w", err)
+			return data, nil
+		}
+		return d, nil
 	}
 	return data, nil
 }

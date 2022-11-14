@@ -1,1 +1,7 @@
-[{"message":"Refactor the structure\n","code_line":"Internal string\n","type_decl":"ExploringTodoComment"}]
+[
+	{
+		"code_line": "Internal string\n",
+		"message": "Refactor the structure\n",
+		"type_decl": "ExploringTodoComment"
+	}
+]
