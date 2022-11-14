@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	ast2 "github.com/YReshetko/go-annotation/internal/ast"
+	"github.com/YReshetko/go-annotation/internal/logger"
 	"github.com/YReshetko/go-annotation/internal/module"
 	"github.com/YReshetko/go-annotation/internal/utils"
 	. "github.com/YReshetko/go-annotation/internal/utils/stream"
@@ -32,7 +33,8 @@ func getLocalPackageName(m module.Module, spec *ast.ImportSpec) string {
 	importPath := utils.TrimQuotes(spec.Path.Value)
 	m, err := module.Find(m, importPath)
 	if err != nil {
-		panic(err)
+		logger.Warnf("unable to load module for import \"%s\", returning it as is: %w", importPath, err)
+		return importPath
 	}
 
 	if m != nil {
