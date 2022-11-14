@@ -12,9 +12,9 @@ func loadStdModule() *module {
 		return stdModule
 	}
 
-	m, err := Load(environment.GoLibs())
+	m, err := Load(environment.GoStdLibs())
 	if err != nil {
-		fmt.Println("Unable to load std libs: ", environment.GoLibs())
+		fmt.Println("Unable to load std libs: ", environment.GoStdLibs())
 	}
 	stdModule = m.(*module)
 	return stdModule

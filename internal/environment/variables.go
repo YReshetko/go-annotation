@@ -1,7 +1,6 @@
 package environment
 
 import (
-	"os"
 	"path/filepath"
 )
 
@@ -11,28 +10,32 @@ const (
 	version       = "0.0.4-alpha"
 )
 
-var goRoot = ""
+var enironment *env
 
 func GoPath() string {
-	return os.Getenv("GOPATH")
+	return enironment.GoPath
 }
 
 func GoHome() string {
-	return filepath.Join(GoPath(), goHomeSubPath)
+	return filepath.Join(enironment.GoPath, goHomeSubPath)
 }
 
 func ModPath() string {
-	return filepath.Join(GoPath(), modSubPath)
+	return enironment.GoModCache
 }
 
 func ToolVersion() string {
 	return version
 }
 
-func GoRoot() string {
-	return goRoot
+func GoVersion() string {
+	return enironment.GoVersion
 }
 
-func GoLibs() string {
-	return filepath.Join(goRoot, goHomeSubPath)
+func GoStdLibs() string {
+	return filepath.Join(enironment.GoRoot, goHomeSubPath)
+}
+
+func ProjectRoot() string {
+	return enironment.ProjectRoot
 }

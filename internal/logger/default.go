@@ -64,7 +64,7 @@ func (d *Default) print(lvl Level, args ...any) {
 		return
 	}
 	if lvl == FatalLvl {
-		log.Fatal(args)
+		log.Fatal(args...)
 		return
 	}
 	log.Println(args...)
