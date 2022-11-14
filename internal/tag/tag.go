@@ -68,6 +68,7 @@ type tag struct {
 	defaultValue string
 	required     bool
 	name         string // name of field in annotation
+	oneOf        map[string]struct{}
 }
 
 func parse(target any, params map[string]string) (any, error) {
@@ -117,6 +118,7 @@ const (
 	paramDefault  = "default"
 	paramRequired = "required"
 	paramName     = "name"
+	oneOf         = "oneOf"
 
 	equalSign  = "="
 	falseValue = "false"
@@ -133,10 +135,11 @@ func newTag(st reflect.StructTag) (tag, bool) {
 	}
 
 	fields := strings.Split(t, ",")
-	m := map[string]string{
+	m := map[string]any{
 		paramDefault:  "",
 		paramRequired: falseValue,
 		paramName:     "",
+		oneOf:         map[string]struct{}{},
 	}
 
 	for _, f := range fields {
@@ -148,9 +151,10 @@ func newTag(st reflect.StructTag) (tag, bool) {
 	}
 
 	return tag{
-		required:     m[paramRequired] == trueValue,
-		defaultValue: m[paramDefault],
-		name:         m[paramName],
+		required:     m[paramRequired].(string) == trueValue,
+		defaultValue: m[paramDefault].(string),
+		name:         m[paramName].(string),
+		oneOf:        m[oneOf].(map[string]struct{}),
 	}, true
 }
 
@@ -170,10 +174,28 @@ func (t tag) value(fieldName string, params map[string]string) (string, error) {
 	if len(fieldValue) == 0 && t.required {
 		return "", fmt.Errorf("parameter %s is required, but not set", fn)
 	}
+
+	if len(t.oneOf) == 0 {
+		return fieldValue, nil
+	}
+	if _, ok := t.oneOf[fieldValue]; !ok {
+		return "", fmt.Errorf(`field "%s" is restricted to [%v] values, but got "%s"`, fieldName, strings.Join(mapToSlice(t.oneOf), ", "), fieldValue)
+	}
+
 	return fieldValue, nil
 }
 
-func tagParamKeyValue(s string) (string, string) {
+func mapToSlice(m map[string]struct{}) []string {
+	o := make([]string, len(m), len(m))
+	i := 0
+	for k, _ := range m {
+		o[i] = k
+		i++
+	}
+	return o
+}
+
+func tagParamKeyValue(s string) (string, any) {
 	if !strings.Contains(s, equalSign) {
 		if s == paramRequired {
 			return paramRequired, trueValue
@@ -185,6 +207,14 @@ func tagParamKeyValue(s string) (string, string) {
 	fv := strings.Split(s, equalSign)
 	if len(fv) != 2 {
 		panic(errors.New("tag violates key=value format"))
+	}
+	if fv[0] == oneOf {
+		rv := strings.Split(fv[1], ";")
+		m := map[string]struct{}{}
+		for _, v := range rv {
+			m[v] = struct{}{}
+		}
+		return fv[0], m
 	}
 	return fv[0], fv[1]
 }

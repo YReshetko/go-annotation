@@ -42,6 +42,7 @@ As you can see the structure is defined along with `annotation` tag that have ne
 - **name** - defines a filed name in annotation
 - **default** - defines a default value if it's missing in annotation
 - **required** - boolean parameter that defines if annotation field must be defined by user. This parameter has no value: `annotation:"name=field,required"`.
+- **oneOf** - array of parameters splited by `;` that restrict allowed values for the field: `annotation:"oneOf=struct;pointer"`
 
 ### Register annotation processors
 `./pkg` package provides the library API that allows developers inject logic into annotation processing. There are defined next types:

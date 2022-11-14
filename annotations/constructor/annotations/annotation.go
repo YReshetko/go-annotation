@@ -12,7 +12,7 @@ const (
 
 type Constructor struct {
 	Name     string `annotation:"name=name,default=New{{.TypeName}}"`
-	Type     string `annotation:"name=type,default=struct"` // defines return structType or pointerType
+	Type     string `annotation:"name=type,default=struct,oneOf=struct;pointer"`
 	Exported bool   `annotation:"name=exported,default=true"`
 }
 
@@ -20,7 +20,7 @@ type Optional struct {
 	Name            string `annotation:"name=name,default={{.TypeName}}Option"`
 	ConstructorName string `annotation:"name=constructor,default=New{{.TypeName}}"`
 	WithPattern     string `annotation:"name=with,default=With{{.FieldName}}"`
-	Type            string `annotation:"name=type,default=struct"` // defines return structType or pointerType
+	Type            string `annotation:"name=type,default=struct,oneOf=struct;pointer"`
 	Exported        bool   `annotation:"name=exported,default=true"`
 }
 
@@ -29,7 +29,7 @@ type Builder struct {
 	ConstructorName string `annotation:"name=constructor,default=New{{.TypeName}}Builder"`
 	BuildPattern    string `annotation:"name=build,default={{.FieldName}}"`
 	BuilderName     string `annotation:"name=terminator,default=Build"`
-	Type            string `annotation:"name=type,default=struct"` // defines return structType or pointerType
+	Type            string `annotation:"name=type,default=struct,oneOf=struct;pointer"`
 	Exported        bool   `annotation:"name=exported,default=true"`
 }
 
