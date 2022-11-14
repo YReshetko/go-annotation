@@ -204,6 +204,7 @@ More examples you can find in [annotations](./annotations) and [examples](./exam
 # TODO
  - [X] Extend API with get root of current node. That needs to support fields annotation without annotation on type declaration
  - [X] Implement preloading go standard module for lookup
+ - [ ] Review annotation parser. There is a bug when parameter value is defined without quotes
  - [ ] Review node interface, split to Info, Lookup API. Revisit method names
  - [ ] Introduce logging API functionality
  - [ ] Implement tool config export for IDE plugin(s)
