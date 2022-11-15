@@ -22,7 +22,7 @@ func TestLoad_Success(t *testing.T) {
 
 	assert.Equal(t, absRoot, m.Root())
 
-	assert.Contains(t, m.Files(), "internal/module/files.go")
+	assert.Contains(t, m.Files(), "internal/module/load.go")
 	assert.Contains(t, m.Files(), "internal/module/interface.go")
 	assert.Contains(t, m.Files(), "internal/module/interface_test.go")
 	assert.Contains(t, m.Files(), "internal/module/lookup.go")
@@ -87,9 +87,9 @@ func TestFilesInPackage(t *testing.T) {
 	require.NoError(t, err)
 
 	files := module.FilesInPackage(m, "github.com/YReshetko/go-annotation/internal/module")
-	require.Len(t, files, 6)
+	require.Len(t, files, 5)
 
-	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/files.go")
+	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/load.go")
 	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/interface.go")
 	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/interface_test.go")
 	assert.Contains(t, files, "github.com/YReshetko/go-annotation/internal/module/lookup.go")

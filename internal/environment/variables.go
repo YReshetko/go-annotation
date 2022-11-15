@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	modSubPath    = "/pkg/mod"
-	goHomeSubPath = "/src"
-	version       = "0.0.4-alpha"
+	modSubPath = "/pkg/mod"
+	srcSubPath = "/src"
+	version    = "0.0.4-alpha"
 )
 
 var enironment *env
@@ -17,7 +17,7 @@ func GoPath() string {
 }
 
 func GoHome() string {
-	return filepath.Join(enironment.GoPath, goHomeSubPath)
+	return filepath.Join(enironment.GoPath, srcSubPath)
 }
 
 func ModPath() string {
@@ -33,7 +33,7 @@ func GoVersion() string {
 }
 
 func GoStdLibs() string {
-	return filepath.Join(enironment.GoRoot, goHomeSubPath)
+	return filepath.Join(enironment.GoRoot, srcSubPath)
 }
 
 func ProjectRoot() string {

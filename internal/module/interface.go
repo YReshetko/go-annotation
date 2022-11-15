@@ -28,7 +28,8 @@ func Find(m Module, importPath string) (Module, error) {
 		return nil, errors.New("can not cast module to required internal type")
 	}
 
-	out, err := mod.find(importPath)
+	out, err := lookup.find(mod, importPath)
+
 	if err != nil {
 		return nil, fmt.Errorf("unable to find module: %w", err)
 	}
@@ -46,7 +47,7 @@ func Find(m Module, importPath string) (Module, error) {
 // Module.Files - [internal/module/lookup.go...]
 // importPath - github.com/YReshetko/go-annotation/internal/module
 // Then the function returns all files in internal/module dir with package prefix:
-// 		"github.com/YReshetko/go-annotation/internal/module/files.go"
+// 		"github.com/YReshetko/go-annotation/internal/module/load.go"
 //		"github.com/YReshetko/go-annotation/internal/module/interface.go"
 //		"github.com/YReshetko/go-annotation/internal/module/interface_test.go"
 //		"github.com/YReshetko/go-annotation/internal/module/lookup.go"
