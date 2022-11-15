@@ -128,29 +128,24 @@ func TestParserFailure(t *testing.T) {
 			name: "No closed bracket", text: "@Invalid(",
 			errors: []string{
 				"expected token IDENT instead got EOF",
-				"expected token = instead got EOF",
-				"expected token STRING instead got EOF",
 			},
 		},
 		{
 			name: "invalid arguments syntax", text: "@Invalid(djksadfjkgsdkjfgdsj)",
 			errors: []string{
 				"expected token = instead got )",
-				"expected token STRING instead got )",
 			},
 		},
 		{
 			name: "invalid syntax with no closed bracket", text: "@Invalid(djksadfjkgsdkjfgdsj",
 			errors: []string{
 				"expected token = instead got EOF",
-				"expected token STRING instead got EOF",
 			},
 		},
 		{
 			name: "invalid non-closed quote", text: `@Invalid("name=val`,
 			errors: []string{
 				"expected token IDENT instead got STRING",
-				"expected token = instead got STRING",
 			},
 		},
 		{
@@ -168,13 +163,19 @@ func TestParserFailure(t *testing.T) {
 					) // Some text`,
 			errors: []string{
 				"expected token IDENT instead got STRING",
+			},
+		},
+		{name: "multi line with invalid format params ", text: `
+					Some test
+					@RestAnnotation(method="GET", endpoint="/api/v1/rest")
+					@RestAnnotation(method="GET",endpoint="/api/v1/rest)
+					@RestAnnotation(method="GET", endpoint="/api/v1/rest")
+					Surrounds the annotation`,
+			errors: []string{
 				"expected token = instead got STRING",
-				"expected token = instead got IDENT",
-				"expected token STRING instead got IDENT",
 			},
 		},
 	}
-
 	for _, s := range test {
 		t.Run(s.name, func(t *testing.T) {
 			annotations, err := parser.Parse(s.text)

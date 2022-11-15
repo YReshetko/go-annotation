@@ -78,15 +78,20 @@ func (p *parser) parseAnnotationParams() map[string]string {
 
 func (p *parser) parseParamPair() (string, string) {
 	k, v := "", ""
-	if p.expectPeekToken(IDENT) {
+	ok := p.expectPeekToken(IDENT)
+	if ok {
 		k = p.currToken.literal
 	}
-	p.expectPeekToken(ASSIGN)
-	if p.expectPeekToken(STRING) {
+	ok = ok && p.expectPeekToken(ASSIGN)
+	ok = ok && p.expectPeekToken(STRING)
+	if ok {
 		v = p.currToken.literal
 	}
 
 	if p.peekTokenIs(COMMA) {
+		p.nextToken()
+	}
+	if !ok {
 		p.nextToken()
 	}
 	return k, v
