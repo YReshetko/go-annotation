@@ -1,29 +1,28 @@
 package module
 
 import (
-	"fmt"
-	"path/filepath"
 	"strings"
 
 	"golang.org/x/mod/modfile"
 	module2 "golang.org/x/mod/module"
 
-	"github.com/YReshetko/go-annotation/internal/environment"
+	. "github.com/YReshetko/go-annotation/internal/utils/stream"
 )
 
 type module struct {
-	root       string
-	files      []string
-	mod        *modfile.File
-	subModules map[string]*module
+	root  string
+	files []string
+	mod   *modfile.File
+	// file path (absolute path) - module name
+	subModFiles map[string]string
 }
 
-func newModule(root string, mod *modfile.File, goFiles []string) module {
+func newModule(root string, mod *modfile.File, goFiles []string, subModFiles map[string]string) module {
 	return module{
-		root:       root,
-		files:      goFiles,
-		mod:        mod,
-		subModules: map[string]*module{},
+		root:        root,
+		files:       goFiles,
+		mod:         mod,
+		subModFiles: subModFiles,
 	}
 }
 
@@ -35,82 +34,50 @@ func (m *module) Root() string {
 	return m.root
 }
 
-func (m *module) find(importPath string) (*module, error) {
-	nm, err := m.findModModule(importPath)
-	if err == nil && nm != nil && nm != (*module)(nil) {
-		return nm, nil
-	}
-
-	return m.findStdModule(importPath), err
-}
-func (m *module) findStdModule(importPath string) *module {
-	nm := loadStdModule()
-	if nm == nil {
-		return nil
-	}
-	for _, f := range nm.Files() {
-		if strings.HasPrefix(f, importPath) {
-			return nm
-		}
-	}
-	return nil
+func (m *module) hasModFile() bool {
+	return m.mod != nil
 }
 
-func (m *module) findModModule(importPath string) (*module, error) {
-	if m.mod == nil {
-		if m.hasImportPath(importPath) {
-			return m, nil
+func (m *module) hasSubModules() bool {
+	return len(m.subModFiles) > 0
+}
+
+func (m *module) isSubModule(importPath string) bool {
+	for _, modName := range m.subModFiles {
+		if strings.Contains(importPath, modName) {
+			return true
 		}
-		return nil, nil
 	}
+	return false
+}
 
-	mn := m.findClosestModuleName(importPath)
-	if len(mn) == 0 {
-		return nil, fmt.Errorf("module not found for: %s", importPath)
+func (m *module) subModuleRoot(importPath string) string {
+	var modPath string
+	var modName string
+	for fp, mn := range m.subModFiles {
+		if strings.Contains(importPath, mn) && len(mn) > len(modName) {
+			modPath = fp
+			modName = mn
+		}
 	}
+	return modPath
+}
 
-	// Return self module
-	if mn == moduleName(m.mod) {
-		return m, nil
-	}
-
-	// Return already loaded module
-	if o, ok := m.subModules[mn]; ok {
-		return o, nil
-	}
-
-	// Preload and return module
-	path, ok := m.escapedPath(mn)
-	if !ok {
-		return nil, fmt.Errorf("unable to build submodule path for: %s", importPath)
-	}
-	modulePath := filepath.Join(environment.ModPath(), path)
-	subModule, err := loadModule(modulePath)
-	if err != nil {
-		return nil, fmt.Errorf("unable to preload submodule %s, due to: %w", importPath, err)
-	}
-
-	m.subModules[mn] = &subModule
-
-	return &subModule, nil
-
+// Usecase:
+// m.root: /home/yury/go/src/github.com/YReshetko/go-annotation/examples/constructor
+// m.files: /internal/common/common.go, ...
+// importPath: github.com/YReshetko/go-annotation/examples/constructor/internal/common
+// result - true as m.root + m.files[i] contains importPath
+func (m *module) hasImportPath(importPath string) bool {
+	path := OfSlice(m.files).
+		Map(joinPath(m.root)).
+		Filter(contains(importPath)).
+		One()
+	return len(path) > 0
 }
 
 func (m *module) findClosestModuleName(importPath string) string {
 	var out []string
-
-	fn := func(pmn string) {
-		if len(pmn) > 0 && strings.HasPrefix(importPath, pmn) {
-			out = append(out, pmn)
-		}
-	}
-
-	fn(moduleName(m.mod))
-
-	for mn, _ := range m.subModules {
-		fn(mn)
-	}
-
 	if m.mod != nil && len(m.mod.Require) > 0 {
 		for _, sm := range m.mod.Require {
 			if sm.Indirect || sm.Syntax == nil {
@@ -121,7 +88,9 @@ func (m *module) findClosestModuleName(importPath string) string {
 				if !ok {
 					continue
 				}
-				fn(mn)
+				if len(mn) > 0 && strings.HasPrefix(importPath, mn) {
+					out = append(out, mn)
+				}
 			}
 
 		}
@@ -141,17 +110,6 @@ func (m *module) findClosestModuleName(importPath string) string {
 	}
 
 	return out[ind]
-}
-
-func (m *module) hasImportPath(importPath string) bool {
-	modRoot := strings.TrimPrefix(m.root, environment.GoHome()+"/")
-	for _, file := range m.files {
-		file = filepath.Join(modRoot, file)
-		if strings.HasPrefix(file, importPath) {
-			return true
-		}
-	}
-	return false
 }
 
 func (m *module) escapedPath(moduleName string) (string, bool) {

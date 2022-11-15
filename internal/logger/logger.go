@@ -19,7 +19,7 @@ type Logger interface {
 	Fatalf(format string, args ...any)
 }
 
-var logLevel = InfoLvl
+var logLevel = ErrorLvl
 var defaultLogger Logger = &Default{lvl: logLevel}
 
 var logger = defaultLogger

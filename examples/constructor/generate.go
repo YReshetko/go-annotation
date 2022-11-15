@@ -1,2 +1,2 @@
-//go:generate go run cmd/main.go . -v
+//go:generate go run cmd/main.go .
 package main
