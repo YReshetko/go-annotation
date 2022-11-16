@@ -66,7 +66,7 @@ func (s subLookup) find(m *module, importPath string) (*module, error) {
 	}
 
 	// TODO Make it cacheable
-	mod, err := loadModule(filepath.Dir(modPath))
+	mod, err := moduleLoader.load(filepath.Dir(modPath))
 	if err != nil {
 		return nil, fmt.Errorf("unable to preload submodule by import %s: %w", importPath, err)
 	}
@@ -94,7 +94,7 @@ func (d dependencyLookup) find(m *module, importPath string) (*module, error) {
 	modulePath := filepath.Join(environment.ModPath(), path)
 
 	// TODO make it cacheable
-	subModule, err := loadModule(modulePath)
+	subModule, err := moduleLoader.load(modulePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to preload submodule %s, due to: %w", importPath, err)
 	}
@@ -105,13 +105,13 @@ func (d dependencyLookup) find(m *module, importPath string) (*module, error) {
 type stdLookup struct{}
 
 func (s stdLookup) find(_ *module, importPath string) (*module, error) {
-	nm := loadStdModule()
-	if nm == nil {
-		return nil, nil
+	nm, err := moduleLoader.load(stdLibKey)
+	if err != nil {
+		return nil, fmt.Errorf("unable to preload std lib")
 	}
 	for _, f := range nm.Files() {
 		if strings.HasPrefix(f, importPath) {
-			return nm, nil
+			return &nm, nil
 		}
 	}
 	return nil, nil

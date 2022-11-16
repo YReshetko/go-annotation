@@ -15,7 +15,7 @@ type Module interface {
 }
 
 func Load(path string) (Module, error) {
-	m, err := loadModule(path)
+	m, err := moduleLoader.load(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load module: %w", err)
 	}
