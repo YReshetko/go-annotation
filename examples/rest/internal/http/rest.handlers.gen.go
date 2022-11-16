@@ -11,9 +11,9 @@ import (
 
 func (s *Container) Handlers() map[string]http.HandlerFunc {
 	return map[string]http.HandlerFunc{
+		http.MethodGet:    s.getContainer,
 		http.MethodPatch:  s.patchContainer,
 		http.MethodDelete: s.deleteContainer,
-		http.MethodGet:    s.getContainer,
 	}
 }
 

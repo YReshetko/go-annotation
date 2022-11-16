@@ -14,7 +14,51 @@ import (
 	"github.com/YReshetko/go-annotation/internal/logger"
 )
 
+const stdLibKey = "__std__"
+
+type cacheableLoader[T any] struct {
+	cache  map[string]T
+	loader func(string) (T, error)
+}
+
+var moduleLoader cacheableLoader[module]
+var modFileLoader cacheableLoader[*modfile.File]
+
+func init() {
+	moduleCache := map[string]module{}
+	modFileCache := map[string]*modfile.File{}
+
+	moduleLoader = cacheableLoader[module]{
+		cache:  moduleCache,
+		loader: loadModule,
+	}
+
+	modFileLoader = cacheableLoader[*modfile.File]{
+		cache:  modFileCache,
+		loader: loadModSpec,
+	}
+}
+
+func (l cacheableLoader[T]) load(path string) (T, error) {
+	t, ok := l.cache[path]
+	if ok {
+		logger.Debugf("hit cache %s", path)
+		return t, nil
+	}
+
+	t, err := l.loader(path)
+	if err != nil {
+		return t, fmt.Errorf("loading failed: %w", err)
+	}
+	l.cache[path] = t
+	return t, nil
+}
+
 func loadModule(path string) (module, error) {
+	if path == stdLibKey {
+		return moduleLoader.load(environment.GoStdLibs())
+	}
+
 	path, err := filepath.Abs(path)
 	if err != nil {
 		return module{}, fmt.Errorf("unable to define absolut path %s: %w", path, err)
@@ -38,7 +82,7 @@ func loadModule(path string) (module, error) {
 				modFilePath = filePath
 				return nil
 			}
-			subModFile, err := loadModSpec(filePath)
+			subModFile, err := modFileLoader.load(filePath)
 			if err != nil {
 				logger.Errorf("unable to load submodule %s: %s", filePath, err)
 				return nil
@@ -57,7 +101,7 @@ func loadModule(path string) (module, error) {
 		return newModule(path, nil, goFiles, subModFiles), nil
 	}
 
-	modeFile, err := loadModSpec(modFilePath)
+	modeFile, err := modFileLoader.load(modFilePath)
 	if err != nil {
 		logger.Errorf("unable to preload base mod file %s: %s", modFilePath, err)
 		return newModule(path, nil, goFiles, subModFiles), nil
@@ -69,21 +113,6 @@ func loadModule(path string) (module, error) {
 func isInRoot(root, file string) bool {
 	rest := strings.TrimPrefix(file, root)
 	return strings.Contains(rest, string(filepath.Separator))
-}
-
-var stdModule *module
-
-func loadStdModule() *module {
-	if stdModule != nil {
-		return stdModule
-	}
-
-	m, err := Load(environment.GoStdLibs())
-	if err != nil {
-		fmt.Println("Unable to load std libs: ", environment.GoStdLibs())
-	}
-	stdModule = m.(*module)
-	return stdModule
 }
 
 func loadModSpec(path string) (*modfile.File, error) {
