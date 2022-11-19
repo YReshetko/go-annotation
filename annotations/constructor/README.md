@@ -346,3 +346,4 @@ As you can see there is no possibility to set `field`. This annotation doesn't h
 - [X] Builder should not mutate internal structure and prepare new one on method build().
 - [X] At the moment constructor arguments changes arguments order. Must be fixed.
 - [X] Introduce a parameter that forces printing `TypeName`/`FieldName` in lower or upper case for templates.
+- [ ] Add `Required` annotation with corresponding check for `Optional` and `Builder` annotations

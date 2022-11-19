@@ -28,6 +28,7 @@ TO:
    kx    p			  n	   mz
 */
 
+// Node base tree structure
 // @Constructor(type="pointer")
 type Node[K comparable, V any] struct {
 	key   []K               //@Init

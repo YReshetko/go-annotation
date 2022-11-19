@@ -5,21 +5,20 @@ import (
 	"github.com/YReshetko/go-annotation/annotations/mapper/utils"
 )
 
+type importCache interface {
+	AddImport(string)
+}
+
 type Import struct {
 	Alias  string
 	Import string
 }
 
-// @Builder(constructor="newCache", build="set{{.FieldName}}", terminator="build", type="pointer")
+// @Builder(constructor="newCache", build="set{{.FieldName}}", terminator="build", type="pointer", exported="false")
 type cache struct {
 	varPrefix string
-	imports   map[Import]struct{}
 	node      *utils.Node[string, string]
 	index     int //@Exclude
-}
-
-func (c *cache) addImport(i Import) {
-	c.imports[i] = struct{}{}
 }
 
 func (c *cache) nextVar() string {

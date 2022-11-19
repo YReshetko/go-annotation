@@ -211,6 +211,7 @@ More examples you can find in [annotations](./annotations) and [examples](./exam
  - [ ] Implement tool config export for IDE plugin(s)
  - [X] Investigate how to implement cache for already loaded modules
  - [ ] Review modules model, it's better to use tree + map for packages and files instead of slices
+ - [ ] Clean up previously generated files (.auto.gen file contains list of generated files) + flags to disable it 
 
 # Inspiration
 
