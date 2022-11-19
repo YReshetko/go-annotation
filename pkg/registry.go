@@ -7,22 +7,10 @@ import (
 
 type Annotation any
 
-type Node interface {
-	// Base API
-
-	// Annotations returns all annotations declared for ast.Node
-	Annotations() []Annotation
-	// ASTNode returns ast.Node that currently is in processing
-	ASTNode() ast.Node
-	// AnnotatedNode returns annotation.Node by ast.Node that declared as a sub ast.Node for ASTNode()
-	AnnotatedNode(ast.Node) Node
-	// ParentNode returns parent annotation.Node by current. false is returned if there is no parents for ast.Node
-	ParentNode() (Node, bool)
-	// Imports returns all file imports ([]*ast.ImportSpec)
-	Imports() []*ast.ImportSpec
-
-	// Metadata API
-
+// Meta contains node metadata.
+// At any point of processing the framework works with an AST node that is located in some file/package/module
+// The interface provides meta information about current node
+type Meta interface {
 	// Root returns related module root (absolut path)
 	Root() string
 	// Dir returns absolut path to the file directory
@@ -31,11 +19,10 @@ type Node interface {
 	FileName() string
 	// PackageName returns current package name
 	PackageName() string
-	// IsSamePackage compares nodes by module root, file location and package name
-	IsSamePackage(v Node) bool
+}
 
-	// Lookup API
-
+// Lookup provides API to retrieve related AST entities by dependency for a node at processing time
+type Lookup interface {
 	// FindImportByAlias returns related import for alias in current ast.File.
 	// For example:
 	// import "github.com/YReshetko/go-annotation/internal/tag"
@@ -47,6 +34,25 @@ type Node interface {
 	// FindNodeByAlias returns related Node by alias, related import if any and a type/function name from related module
 	// if alias is empty, then the search will go in current directory of ast.File
 	FindNodeByAlias(alias, nodeName string) (Node, string, error)
+}
+
+type Node interface {
+	// Annotations returns all annotations declared for ast.Node
+	Annotations() []Annotation
+	// ASTNode returns ast.Node that currently is in processing
+	ASTNode() ast.Node
+	// AnnotatedNode returns annotation.Node by ast.Node that declared as a sub ast.Node for ASTNode()
+	AnnotatedNode(ast.Node) Node
+	// ParentNode returns parent annotation.Node by current. false is returned if there is no parents for ast.Node
+	ParentNode() (Node, bool)
+	// Imports returns all file imports ([]*ast.ImportSpec)
+	Imports() []*ast.ImportSpec
+	// IsSamePackage compares nodes by module root, file location and package name
+	IsSamePackage(v Node) bool
+	// Lookup returns a lookup module
+	Lookup() Lookup
+	// Meta returns node metadata
+	Meta() Meta
 }
 
 type AnnotationProcessor interface {

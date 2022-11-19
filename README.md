@@ -146,13 +146,25 @@ func main() {
 
 ### Library API
 At the moment the `annotation.Node` contain several helper methods
+#### Node
 - `Annotations() []Annotation` - returns all annotations declared for `ast.Node`
 - `ASTNode() ast.Node` - returns ast.Node that currently is in processing
 - `AnnotatedNode(v ast2.Node) Node` - returns `annotation.Node` by `ast.Node` that declared as a sub `ast.Node` for `ASTNode()`
 - `ParentNode() (Node, bool)` - returns parent `annotation.Node` by current. false is returned if there is no parents for `ast.Node`
 - `Imports() []*ast.ImportSpec` - returns all file imports ([]*ast.ImportSpec) for the given `annotation.Node`
+- `IsSamePackage(v Node) bool` - compares nodes by module root, file location and package name
+- `Lookup() Lookup` - returns an interface that provides functionality to retrieve related entities according to current Node dependency 
+- `Meta() Meta` - returns an interface that provides node metadata: file/module info
+
+#### Lookup
 - `FindImportByAlias(alias string) (string, bool)` - that helps to find related import to type/function.
 - `FindNodeByAlias(alias, nodeName string) (Node, string, error)` - returns related Node by alias, related import if any and a type/function name from related module if alias is empty, then the search will go in current directory of `ast.File`
+
+#### Meta
+- `Root() string` - returns related module root (absolut path)
+- `Dir() string` - returns absolut path to the file directory
+- `FileName() string` - returns .go file name with extension for current Node
+- `PackageName() string` - returns current package name, that declared on .go file
 
 To make the library more efficient this API will be extended.
 
@@ -206,7 +218,7 @@ More examples you can find in [annotations](./annotations) and [examples](./exam
  - [X] Extend API with get root of current node. That needs to support fields annotation without annotation on type declaration
  - [X] Implement preloading go standard module for lookup
  - [X] Review annotation parser. There is a bug when parameter value is defined without quotes
- - [ ] Review node interface, split to Info, Lookup API. Revisit method names
+ - [X] Review node interface, split to Info, Lookup API. Revisit method names
  - [ ] Introduce logging API functionality
  - [ ] Implement tool config export for IDE plugin(s)
  - [X] Investigate how to implement cache for already loaded modules

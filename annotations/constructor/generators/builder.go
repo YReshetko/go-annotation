@@ -63,7 +63,8 @@ func (g *BuilderGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impor
 		PostConstructs:  postConstructMethods(pcvs),
 	}
 
-	p, pdi := extractParameters(g.node, g.annotatedNode.FindImportByAlias)
+	lookup := g.annotatedNode.Lookup().FindImportByAlias
+	p, pdi := extractParameters(g.node, lookup)
 	if p.isParametrised {
 		tplData.IsParametrized = true
 		tplData.ParameterConstraints = p.constraints
@@ -71,7 +72,7 @@ func (g *BuilderGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impor
 		di.merge(pdi)
 	}
 
-	argsToProcess, adi := extractArguments(g.node, g.annotatedNode.FindImportByAlias, g.annotatedNode)
+	argsToProcess, adi := extractArguments(g.node, lookup, g.annotatedNode)
 	di.merge(adi)
 
 	index := 0

@@ -52,7 +52,8 @@ func (g *ConstructorGenerator) generateConstructor(pcvs []PostConstructValues) (
 		PostConstructs: postConstructMethods(pcvs),
 	}
 
-	a, adi := extractArguments(g.node, g.annotatedNode.FindImportByAlias, g.annotatedNode)
+	lookup := g.annotatedNode.Lookup().FindImportByAlias
+	a, adi := extractArguments(g.node, lookup, g.annotatedNode)
 	for name, tpy := range a.incoming {
 		if _, ok := a.toInit[name]; ok {
 			continue
@@ -84,7 +85,7 @@ func (g *ConstructorGenerator) generateConstructor(pcvs []PostConstructValues) (
 
 	di.merge(adi)
 
-	p, pdi := extractParameters(g.node, g.annotatedNode.FindImportByAlias)
+	p, pdi := extractParameters(g.node, lookup)
 	if p.isParametrised {
 		tv.IsParametrized = true
 		tv.ParameterConstraints = p.constraints

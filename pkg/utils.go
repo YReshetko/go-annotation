@@ -8,6 +8,7 @@ import (
 	. "github.com/YReshetko/go-annotation/internal/utils/stream"
 )
 
+// FindAnnotations returns all annotation with particular type
 func FindAnnotations[T any](a []Annotation) []T {
 	return Map(OfSlice(a).Filter(ofType[T]), toType[T]).ToSlice()
 }
@@ -21,11 +22,13 @@ func toType[T any](a Annotation) T {
 	return a.(T)
 }
 
+// CastNode quick cast annotation.Node to ast.Node with type check
 func CastNode[T ast.Node](n Node) (T, bool) {
 	v, ok := n.ASTNode().(T)
 	return v, ok
 }
 
+// ParentType quick retrieve parent ast.Node by type
 func ParentType[T ast.Node](n Node) (Node, bool) {
 	current := n
 	p, ok := current.ParentNode()
@@ -39,6 +42,7 @@ func ParentType[T ast.Node](n Node) (Node, bool) {
 	return nil, false
 }
 
+// BytesToAST conversion some bytes to ast.Node
 func BytesToAST(data []byte) (ast.Node, *token.FileSet, error) {
 	return astutils.BytesToAST(data)
 }

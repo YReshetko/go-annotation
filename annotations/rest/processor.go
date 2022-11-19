@@ -64,10 +64,10 @@ type handlerMapping struct {
 func (p *Processor) processStructure(rest Rest, node annotation.Node, s *ast.TypeSpec) error {
 	fmt.Println("Structure processing: ", rest, node)
 	key := handlerMetadata{
-		pkg:        node.PackageName(),
+		pkg:        node.Meta().PackageName(),
 		structName: s.Name.Name,
-		dir:        node.Dir(),
-		fileName:   node.FileName(),
+		dir:        node.Meta().Dir(),
+		fileName:   node.Meta().FileName(),
 	}
 
 	_, ok := p.mapping[key]
@@ -93,10 +93,10 @@ func (p *Processor) processMethod(rest Rest, node annotation.Node, f *ast.FuncDe
 	}
 
 	key := handlerMetadata{
-		pkg:        node.PackageName(),
+		pkg:        node.Meta().PackageName(),
 		structName: recvName,
-		dir:        node.Dir(),
-		fileName:   node.FileName(),
+		dir:        node.Meta().Dir(),
+		fileName:   node.Meta().FileName(),
 	}
 
 	v, ok := p.mapping[key]

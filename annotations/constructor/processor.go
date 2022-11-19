@@ -48,8 +48,9 @@ func (p *Processor) addPostConstruct(node annotation.Node) error {
 		return fmt.Errorf("unable to build PostConstruct: %w", err)
 	}
 
+	meta := node.Meta()
 	if len(typeName) > 0 {
-		p.cache.addPostConstruct(node.Dir(), node.PackageName(), typeName, pcv)
+		p.cache.addPostConstruct(meta.Dir(), meta.PackageName(), typeName, pcv)
 	}
 	return nil
 }
@@ -60,8 +61,9 @@ func addAnnotatedTypeSpec[T any](p *Processor, node annotation.Node, builder fun
 		return err
 	}
 
+	meta := node.Meta()
 	if ok {
-		p.cache.addGenerator(node.Dir(), node.PackageName(), ts.Name.Name, builder(ts, a, node))
+		p.cache.addGenerator(meta.Dir(), meta.PackageName(), ts.Name.Name, builder(ts, a, node))
 	}
 	return nil
 }

@@ -54,8 +54,8 @@ func (p *Processor) Process(node annotation.Node) error {
 	}
 
 	k := key{
-		dir: node.Dir(),
-		pkg: node.PackageName(),
+		dir: node.Meta().Dir(),
+		pkg: node.Meta().PackageName(),
 	}
 
 	impCache, ok := p.impCache[k]
