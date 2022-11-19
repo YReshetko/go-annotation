@@ -53,7 +53,8 @@ func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impo
 		IsPointer:        g.annotation.Type == "pointer",
 		PostConstructs:   postConstructMethods(pcvs),
 	}
-	p, pdi := extractParameters(g.node, g.annotatedNode.FindImportByAlias)
+	lookup := g.annotatedNode.Lookup().FindImportByAlias
+	p, pdi := extractParameters(g.node, lookup)
 	if p.isParametrised {
 		tplData.IsParametrized = true
 		tplData.ParameterConstraints = p.constraints
@@ -61,7 +62,7 @@ func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impo
 		di.merge(pdi)
 	}
 
-	argsToProcess, adi := extractArguments(g.node, g.annotatedNode.FindImportByAlias, g.annotatedNode)
+	argsToProcess, adi := extractArguments(g.node, lookup, g.annotatedNode)
 	di.merge(adi)
 
 	for name, value := range argsToProcess.toInit {

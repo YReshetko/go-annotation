@@ -52,11 +52,11 @@ func (p *Processor) Process(node annotation.Node) error {
 	f, err := generator.NewFake(
 		mod,
 		typeName,
-		node.Dir(),
+		node.Meta().Dir(),
 		mockName,
 		a.SubPackage,
 		"",
-		node.Root(),
+		node.Meta().Root(),
 		p.cache,
 	)
 	if err != nil {
@@ -68,7 +68,7 @@ func (p *Processor) Process(node annotation.Node) error {
 		return fmt.Errorf("unable to generate mock for %s: %w", typeName, err)
 	}
 
-	outputFile := filepath.Join(node.Dir(), a.SubPackage, toSnakeCase(mockName)+".gen.go")
+	outputFile := filepath.Join(node.Meta().Dir(), a.SubPackage, toSnakeCase(mockName)+".gen.go")
 	if _, ok := p.out[outputFile]; ok {
 		return fmt.Errorf("attemption to save same file with different data twice: %s", outputFile)
 	}
@@ -78,7 +78,7 @@ func (p *Processor) Process(node annotation.Node) error {
 		if err != nil {
 			return fmt.Errorf("unable to ingest generated code for %s: %w", mockName, err)
 		}
-		toFile, err := filepath.Rel(node.Root(), outputFile)
+		toFile, err := filepath.Rel(node.Meta().Root(), outputFile)
 		if err != nil {
 			return fmt.Errorf("unable to build relativ path %s: %w", outputFile, err)
 		}
@@ -131,7 +131,7 @@ func extractTypeName(node annotation.Node) (string, generator.FakeMode, error) {
 		return "", mod, fmt.Errorf("expected mocked type one of [ast.TypeSpec, *ast.TypeDecl, *ast.File], but got %T", node.ASTNode())
 	}
 	if nameIdent.String() == "" {
-		return "", mod, fmt.Errorf("unable to prepare mock for interface in %s", node.Dir())
+		return "", mod, fmt.Errorf("unable to prepare mock for interface in %s", node.Meta().Dir())
 	}
 	return nameIdent.String(), mod, nil
 }

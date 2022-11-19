@@ -7,7 +7,7 @@ import (
 const (
 	modSubPath = "/pkg/mod"
 	srcSubPath = "/src"
-	version    = "0.0.19"
+	version    = "0.1.0"
 )
 
 var enironment *env

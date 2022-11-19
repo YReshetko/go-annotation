@@ -149,7 +149,7 @@ func newTypeByIdent(ident *ast.Ident, node annotation.Node, alias string, isPoin
 		return NewPrimitiveTypeBuilder().IsPointer(isPointer).Name(ident.String()).Build()
 	}
 
-	newNode, importPath, err := node.FindNodeByAlias(alias, ident.String())
+	newNode, importPath, err := node.Lookup().FindNodeByAlias(alias, ident.String())
 	if err != nil {
 		fmt.Println("WARN:", err.Error())
 		return nil

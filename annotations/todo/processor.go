@@ -30,7 +30,7 @@ type Info struct {
 
 func (p *Processor) Process(node annotation.Node) error {
 	if len(p.root) == 0 {
-		p.root = node.Root()
+		p.root = node.Meta().Root()
 	}
 	ans := annotation.FindAnnotations[TODO](node.Annotations())
 	fmt.Println(ans)
