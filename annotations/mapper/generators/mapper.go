@@ -3,6 +3,7 @@ package generators
 import (
 	"fmt"
 	"github.com/YReshetko/go-annotation/annotations/mapper/annotations"
+	cache2 "github.com/YReshetko/go-annotation/annotations/mapper/generators/cache"
 	"github.com/YReshetko/go-annotation/annotations/mapper/templates"
 	annotation "github.com/YReshetko/go-annotation/pkg"
 	"go/ast"
@@ -10,6 +11,7 @@ import (
 
 // @Builder(type="pointer")
 type MapperGenerator struct {
+	impCache   *cache2.ImportCache
 	node       annotation.Node
 	intType    *ast.InterfaceType
 	intName    string
@@ -40,6 +42,7 @@ func (mg *MapperGenerator) buildMethodGenerators() {
 		}
 
 		methodGen := newMethodGeneratorBuilder().
+			setImpCache(mg.impCache).
 			setNode(mg.node).
 			setName(methodName(method.Names)).
 			setInput(fieldsFromFiledList(ft.Params)).
@@ -55,7 +58,7 @@ func (mg *MapperGenerator) Generate() ([]byte, []Import, error) {
 	var methods []string
 	imports := make(map[Import]struct{})
 	for _, generator := range mg.mgs {
-		m, err := generator.generate(mg.structName, imports)
+		m, err := generator.generate(mg.structName)
 		if err != nil {
 			return nil, nil, fmt.Errorf("unable to generte method %s: %w", generator.name, err)
 		}

@@ -2,20 +2,23 @@ package generators
 
 import (
 	"fmt"
+	"github.com/YReshetko/go-annotation/annotations/mapper/generators/nodes"
 	"github.com/YReshetko/go-annotation/annotations/mapper/templates"
 )
 
-func isBothPrimitives(f1, f2 *fieldGenerator) bool {
-	return f1.primitiveGen != nil && f2.primitiveGen != nil
+func isBothPrimitives(f1, f2 nodes.Type) bool {
+	_, ok1 := f1.(*nodes.PrimitiveType)
+	_, ok2 := f2.(*nodes.PrimitiveType)
+	return ok1 && ok2
 }
 
-func mapPrimitives(toName, fromName string, toField, fromField *fieldGenerator, fromPrefix []string, c *cache) error {
-	if toField.primitiveGen.name == fromField.primitiveGen.name {
-		if toField.isPointer == fromField.isPointer {
+func mapPrimitives(toName, fromName string, toField, fromField *nodes.PrimitiveType, fromPrefix []string, c *cache, ic importCache) error {
+	if toField.Name() == fromField.Name() {
+		if toField.IsPointer() == fromField.IsPointer() {
 			c.addIfClause(fromPrefix, fmt.Sprintf("%s = %s", toName, fromName))
 			return nil
 		}
-		if toField.isPointer {
+		if toField.IsPointer() {
 			c.addIfClause(fromPrefix, fmt.Sprintf("%s = &%s", toName, fromName))
 			return nil
 		}
@@ -24,23 +27,21 @@ func mapPrimitives(toName, fromName string, toField, fromField *fieldGenerator, 
 		return nil
 	}
 
-	cnv, imp := getPrimitiveConverter(toField.primitiveGen.name, fromField.primitiveGen.name)
+	cnv, imp := getPrimitiveConverter(toField.Name(), fromField.Name())
 	if len(cnv) == 0 {
 		return nil
 	}
 	if len(imp) > 0 {
-		c.addImport(Import{
-			Import: imp,
-		})
+		ic.AddImport(imp)
 	}
 
 	cnvData, err := templates.Execute(templates.PrimitiveConverterFuncTemplate, map[string]interface{}{
 		"ReceiverName":      toName,
-		"SourceType":        fromField.primitiveGen.name,
-		"IsPointerReceiver": toField.isPointer,
-		"ReceiverType":      toField.primitiveGen.name,
+		"SourceType":        fromField.Name(),
+		"IsPointerReceiver": toField.IsPointer(),
+		"ReceiverType":      toField.Name(),
 		"MappingLine":       cnv,
-		"IsPointerSource":   fromField.isPointer,
+		"IsPointerSource":   fromField.IsPointer(),
 		"SourceName":        fromName,
 	})
 
@@ -48,7 +49,7 @@ func mapPrimitives(toName, fromName string, toField, fromField *fieldGenerator, 
 		return fmt.Errorf("unable to build mapper template: %w", err)
 	}
 
-	if fromField.isPointer {
+	if fromField.IsPointer() {
 		c.addIfClause(append(fromPrefix, fromName), string(cnvData))
 		return nil
 	}
@@ -56,7 +57,7 @@ func mapPrimitives(toName, fromName string, toField, fromField *fieldGenerator, 
 	return nil
 }
 
-func mapConstant(toName, toType, value string, IsPointerReceiver bool, c *cache) error {
+func mapConstant(toName, toType, value string, IsPointerReceiver bool, c *cache, ic importCache) error {
 	if toType == "string" {
 		if IsPointerReceiver {
 			interimVar := c.nextVar()
@@ -73,9 +74,7 @@ func mapConstant(toName, toType, value string, IsPointerReceiver bool, c *cache)
 		return nil
 	}
 	if len(imp) > 0 {
-		c.addImport(Import{
-			Import: imp,
-		})
+		ic.AddImport(imp)
 	}
 
 	cnvData, err := templates.Execute(templates.PrimitiveConverterFuncTemplate, map[string]interface{}{

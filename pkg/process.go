@@ -3,9 +3,6 @@ package annotation
 import (
 	"fmt"
 	goAST "go/ast"
-	"go/printer"
-	"go/token"
-	"os"
 	"path/filepath"
 
 	"github.com/YReshetko/go-annotation/internal/ast"
@@ -82,9 +79,9 @@ func moduleNodeProcessor(m module.Module) func(Pair[string, *goAST.File]) error 
 
 			return err == nil
 		})
-		if err != nil {
+		/*if err != nil {
 			printer.Fprint(os.Stdout, &token.FileSet{}, f)
-		}
+		}*/
 		return err
 	}
 }

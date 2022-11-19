@@ -31,7 +31,7 @@ func (m mapping) funcOrThisLine() string {
 	return m.function
 }
 
-// @Constructor(name="newOverloading", type="pointer")
+// @Constructor(name="newOverloading", type="pointer", exported="false")
 type overloading struct {
 	isIgnoreDefault bool
 	mappings        map[string]mapping // @Init

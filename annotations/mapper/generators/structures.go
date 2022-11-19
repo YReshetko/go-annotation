@@ -2,31 +2,26 @@ package generators
 
 import (
 	"fmt"
+	"github.com/YReshetko/go-annotation/annotations/mapper/generators/nodes"
 )
 
-func isBothStructures(f1, f2 *fieldGenerator) bool {
-	return f1.structGen != nil && f2.structGen != nil
+func isBothStructures(f1, f2 nodes.Type) bool {
+	_, ok1 := f1.(*nodes.StructType)
+	_, ok2 := f2.(*nodes.StructType)
+	return ok1 && ok2
 }
 
-func mapStructures(toName, fromName string, toField, fromField *fieldGenerator, fromPrefix []string, c *cache) error {
-	toNode, _, err := toField.node.FindNodeByAlias(toField.alias, toField.structGen.name)
-	if err != nil {
-		return fmt.Errorf("unable to preload node for %s: %w", toName, err)
-	}
-	fromNode, _, err := fromField.node.FindNodeByAlias(fromField.alias, fromField.structGen.name)
-	if err != nil {
-		return fmt.Errorf("unable to preload node for %s: %w", fromName, err)
-	}
-
-	if !toNode.IsSamePackage(fromNode) {
+func mapStructures(toName, fromName string, toField, fromField *nodes.StructType, fromPrefix []string, c *cache) error {
+	if !toField.Equal(fromField) {
+		// TODO resolve it by type mappers
 		return nil
 	}
 
-	if toField.isPointer == fromField.isPointer {
+	if toField.IsPointer() == fromField.IsPointer() {
 		c.addIfClause(fromPrefix, fmt.Sprintf("%s = %s", toName, fromName))
 		return nil
 	}
-	if toField.isPointer {
+	if toField.IsPointer() {
 		c.addIfClause(fromPrefix, fmt.Sprintf("%s = &%s", toName, fromName))
 		return nil
 	}

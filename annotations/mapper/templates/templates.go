@@ -32,7 +32,8 @@ func (_this_ {{ .TypeName }}) {{ .MethodName }}({{ .Arguments }}) {{ .ReturnType
 }
 `
 
-const newVariableTemplate = `{{ .VariableName }} := {{ if .IsPointer }}&{{ end }}{{ .Type }}{}`
+const newVariableTemplate = `{{ .VariableName }} := {{ .Declaration }}
+`
 
 const notNilSourceTemplate = `if {{ .SourceValue }} != nil {
 	{{ .Line }}
