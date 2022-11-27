@@ -80,18 +80,6 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod(in0 *Inner, in1 ThisFileStruct)
 		res := func() complex64 { o, _ := strconv.ParseComplex(v, 64); return complex64(o) }()
 		return &res
 	}(in1.PtrComplex64)
-	if in1.Int != nil {
-		out0.Int = *in1.Int
-	}
-	if in1.Float32 != nil {
-		out0.Float32 = func(v int) float32 {
-			res := float32(v)
-			return res
-		}(*in1.Float32)
-	}
-	if in0 != nil {
-		out0.PtrBool = in0.PtrBool
-	}
 	if in1.PtrFloat64 != nil {
 		out0.PtrFloat64 = func(v string) *float64 {
 			res := func() float64 { o, _ := strconv.ParseFloat(v, 64); return o }()
@@ -103,6 +91,18 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod(in0 *Inner, in1 ThisFileStruct)
 			res := func() complex128 { o, _ := strconv.ParseComplex(v, 128); return o }()
 			return &res
 		}(*in1.PtrComplex128)
+	}
+	if in1.Int != nil {
+		out0.Int = *in1.Int
+	}
+	if in1.Float32 != nil {
+		out0.Float32 = func(v int) float32 {
+			res := float32(v)
+			return res
+		}(*in1.Float32)
+	}
+	if in0 != nil {
+		out0.PtrBool = in0.PtrBool
 	}
 
 	return out0
@@ -126,12 +126,6 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod2(in0 Inner, in1 *ThisFileStruct
 			res := func() complex64 { o, _ := strconv.ParseComplex(v, 64); return complex64(o) }()
 			return &res
 		}(in1.PtrComplex64)
-		if in1.PtrComplex128 != nil {
-			out0.PtrComplex128 = func(v string) *complex128 {
-				res := func() complex128 { o, _ := strconv.ParseComplex(v, 128); return o }()
-				return &res
-			}(*in1.PtrComplex128)
-		}
 		if in1.Int != nil {
 			out0.Int = *in1.Int
 		}
@@ -146,6 +140,12 @@ func (_this_ PrimitivesMapperImpl) ConvertMethod2(in0 Inner, in1 *ThisFileStruct
 				res := func() float64 { o, _ := strconv.ParseFloat(v, 64); return o }()
 				return &res
 			}(*in1.PtrFloat64)
+		}
+		if in1.PtrComplex128 != nil {
+			out0.PtrComplex128 = func(v string) *complex128 {
+				res := func() complex128 { o, _ := strconv.ParseComplex(v, 128); return o }()
+				return &res
+			}(*in1.PtrComplex128)
 		}
 	}
 

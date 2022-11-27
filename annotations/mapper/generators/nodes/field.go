@@ -122,7 +122,7 @@ func newType(astExpr ast.Expr, node annotation.Node, impCache *cache.ImportCache
 			IsPointer(isPointer).
 			Build()
 	default:
-		fmt.Printf("unsupported field type: %t", expr)
+		fmt.Printf("unsupported field type: %T\n", expr)
 		//ast.Print(token.NewFileSet(), expr)
 	}
 	return nil
