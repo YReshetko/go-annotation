@@ -1,4 +1,4 @@
-module github.com/YReshetko/go-annotation/examples/with-mod
+module github.com/YReshetko/go-annotation/examples/deps/with-mod
 
 go 1.18
 
