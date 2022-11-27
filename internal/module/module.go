@@ -133,17 +133,31 @@ func (m *module) escapedPath(moduleName string) (string, bool) {
 		logger.Debug("escapedPath: invalid line token")
 		return "", false
 	}
-	p, err := module2.EscapePath(line.Token[0])
+	p, err := escapedPath(line)
 	if err != nil {
 		logger.Errorf("escapedPath: exc path err on %s: %s", line.Token[0], err.Error())
 		return "", false
 	}
-	v, err := module2.EscapeVersion(line.Token[1])
+	v, err := escapedVersion(line)
 	if err != nil {
 		logger.Errorf("escapedPath: exc version err: %s", err.Error())
 		return "", false
 	}
 	return p + "@" + v, true
+}
+
+func escapedPath(l *modfile.Line) (string, error) {
+	if l.Token[0] == "require" {
+		return module2.EscapePath(l.Token[1])
+	}
+	return module2.EscapePath(l.Token[0])
+}
+
+func escapedVersion(l *modfile.Line) (string, error) {
+	if l.Token[0] == "require" {
+		return module2.EscapeVersion(l.Token[2])
+	}
+	return module2.EscapeVersion(l.Token[1])
 }
 
 func findModuleLine(r []*modfile.Require, moduleName string) *modfile.Line {
