@@ -3,6 +3,7 @@ package module
 import (
 	"errors"
 	"fmt"
+	"github.com/YReshetko/go-annotation/internal/logger"
 	"path/filepath"
 	"strings"
 
@@ -55,6 +56,21 @@ func Find(m Module, importPath string) (Module, error) {
 func FilesInPackage(m Module, importPath string) []string {
 	if m == nil {
 		return nil
+	}
+
+	nativeModule, ok := m.(*module)
+	if !ok {
+		logger.Warnf("unable to cast module %s to native module", m.Root())
+		return nil
+	}
+
+	if nativeModule.isFromModCache() {
+		files := OfSlice(m.Files()).
+			Filter(isPotentialImport(importPath)).
+			Map(joinPath(m.Root())).
+			ToSlice()
+		//logger.Debugf("found files in cached module: %v", files)
+		return files
 	}
 	return OfSlice(m.Files()).
 		Map(joinPath(m.Root())).
@@ -143,5 +159,15 @@ func trimImportPath(importPath string) func(string) string {
 func contains(importPath string) func(string) bool {
 	return func(file string) bool {
 		return strings.Contains(file, importPath)
+	}
+}
+
+func isPotentialImport(importPath string) func(string) bool {
+	return func(file string) bool {
+		dir := filepath.Dir(file)
+		if dir == "." {
+			return true
+		}
+		return strings.HasSuffix(importPath, dir)
 	}
 }

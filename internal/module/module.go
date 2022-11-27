@@ -1,6 +1,8 @@
 package module
 
 import (
+	"github.com/YReshetko/go-annotation/internal/environment"
+	"github.com/YReshetko/go-annotation/internal/logger"
 	"strings"
 
 	"golang.org/x/mod/modfile"
@@ -32,6 +34,10 @@ func (m *module) Files() []string {
 
 func (m *module) Root() string {
 	return m.root
+}
+
+func (m *module) isFromModCache() bool {
+	return strings.Contains(m.root, environment.ModPath())
 }
 
 func (m *module) hasModFile() bool {
@@ -114,22 +120,27 @@ func (m *module) findClosestModuleName(importPath string) string {
 
 func (m *module) escapedPath(moduleName string) (string, bool) {
 	if m.mod == nil || len(m.mod.Require) == 0 {
+		logger.Debug("escapedPath: mod file nil or no required")
 		return "", false
 	}
 	line := findModuleLine(m.mod.Require, moduleName)
 	if line == nil {
+		logger.Debug("escapedPath: no module line")
 		return "", false
 	}
 
 	if len(line.Token) < 2 {
+		logger.Debug("escapedPath: invalid line token")
 		return "", false
 	}
 	p, err := module2.EscapePath(line.Token[0])
 	if err != nil {
+		logger.Errorf("escapedPath: exc path err on %s: %s", line.Token[0], err.Error())
 		return "", false
 	}
 	v, err := module2.EscapeVersion(line.Token[1])
 	if err != nil {
+		logger.Errorf("escapedPath: exc version err: %s", err.Error())
 		return "", false
 	}
 	return p + "@" + v, true

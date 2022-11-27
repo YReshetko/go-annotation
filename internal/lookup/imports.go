@@ -37,13 +37,16 @@ func getLocalPackageName(m module.Module, spec *ast.ImportSpec) string {
 		return importPath
 	}
 
+	//logger.Debugf("module is found for %s", importPath)
+
 	if m != nil {
+		filesInPackage := module.FilesInPackage(m, importPath)
 		// TODO review the assamption that the first file is a good for check
 		imp := OfSlice(m.Files()).
-			//Map(utils.Root).
-			Filter(hasPathSuffix(importPath)).
+			Filter(containsFile(filesInPackage)).
 			Map(fileToPackageName(m.Root())).
 			One()
+		//logger.Debugf("module is found for %s, checking %s", importPath, imp)
 		if strings.HasSuffix(imp, "_test") {
 			imp = imp[:strings.Index(imp, "_test")]
 		}
@@ -63,8 +66,13 @@ func fileToPackageName(root string) func(string) string {
 	}
 }
 
-func hasPathSuffix(path string) func(string) bool {
-	return func(s string) bool {
-		return strings.HasSuffix(path, utils.Root(s))
+func containsFile(files []string) func(string) bool {
+	return func(file string) bool {
+		for _, f := range files {
+			if strings.HasSuffix(f, file) {
+				return true
+			}
+		}
+		return false
 	}
 }

@@ -25,10 +25,10 @@ func init() {
 	cl := &chainLookup{}
 	cl.add(selfLookup{})
 	cl.add(subLookup{})
-	cl.add(workspaceLookup{})
+	//cl.add(workspaceLookup{})
 	cl.add(dependencyLookup{})
 	cl.add(stdLookup{})
-	cl.add(vendorLookup{})
+	//cl.add(vendorLookup{})
 
 	lookup = cl
 }

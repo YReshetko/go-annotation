@@ -15,7 +15,7 @@ func LastDir(s string) string {
 func Root(s string) string {
 	index := strings.LastIndex(s, "/")
 	if index == -1 {
-		return s
+		return ""
 	}
 	return s[:strings.LastIndex(s, "/")]
 }
