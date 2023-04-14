@@ -12,7 +12,7 @@ const validatorType = `type {{ .ValidatorName }} struct{}
 const validatorMethod = `func (v {{ .ValidatorName }}) IsValid(value {{ .TargetTypeName }}) bool {
 	{{ range .Snippets }}{{ . }}
 	{{ end }}
-	return false
+	return true
 }
 `
 
