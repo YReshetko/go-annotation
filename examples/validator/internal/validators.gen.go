@@ -25,7 +25,7 @@ func (v SomeStructWithAnonymousValidator) IsValid(value SomeStructWithAnonymous)
 		return false
 	}
 
-	return false
+	return true
 }
 
 type SomeStructWithEmbeddingValidator struct{}
@@ -41,7 +41,7 @@ func (v SomeStructWithEmbeddingValidator) IsValid(value SomeStructWithEmbedding)
 		return false
 	}
 
-	return false
+	return true
 }
 
 type AnotherStructWithEmbeddingValidator struct{}
@@ -60,7 +60,7 @@ func (v AnotherStructWithEmbeddingValidator) IsValid(value AnotherStructWithEmbe
 		return false
 	}
 
-	return false
+	return true
 }
 
 type SomeStructWithFuncValidator struct{}
@@ -73,7 +73,7 @@ func (v SomeStructWithFuncValidator) IsValid(value SomeStructWithFunc) bool {
 		return false
 	}
 
-	return false
+	return true
 }
 
 type PointerValidationValidator struct{}
@@ -158,7 +158,7 @@ func (v PointerValidationValidator) IsValid(value PointerValidation) bool {
 		return false
 	}
 
-	return false
+	return true
 }
 
 type UserValidator struct{}
@@ -183,7 +183,7 @@ func (v UserValidator) IsValid(value User) bool {
 		return false
 	}
 
-	return false
+	return true
 }
 
 type TaggedExampleValidator struct{}
@@ -199,7 +199,7 @@ func (v TaggedExampleValidator) IsValid(value TaggedExample) bool {
 		return false
 	}
 
-	return false
+	return true
 }
 
 type SomeStructWithRefValidator struct{}
@@ -275,7 +275,7 @@ func (v SomeStructWithRefValidator) IsValid(value SomeStructWithRef) bool {
 		return false
 	}
 
-	return false
+	return true
 }
 
 type SomeStructWithEmbeddingRefValidator struct{}
@@ -351,7 +351,7 @@ func (v SomeStructWithEmbeddingRefValidator) IsValid(value SomeStructWithEmbeddi
 		return false
 	}
 
-	return false
+	return true
 }
 
 type SomeStructWithMyTypeRefValidator struct{}
@@ -361,5 +361,5 @@ func (v SomeStructWithMyTypeRefValidator) IsValid(value SomeStructWithMyTypeRef)
 		return false
 	}
 
-	return false
+	return true
 }
