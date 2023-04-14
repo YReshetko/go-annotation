@@ -1,11 +1,10 @@
 package constructor
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
 	"path/filepath"
-
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/YReshetko/go-annotation/annotations/constructor/annotations"
 	"github.com/YReshetko/go-annotation/annotations/constructor/generators"
@@ -34,12 +33,12 @@ type generator interface {
 }
 
 func (p *Processor) Process(node annotation.Node) error {
-	return multierror.Append(
+	return errors.Join(
 		addAnnotatedTypeSpec[annotations.Constructor](p, node, newConstructorGenerator),
 		addAnnotatedTypeSpec[annotations.Optional](p, node, newOptionalGenerator),
 		addAnnotatedTypeSpec[annotations.Builder](p, node, newBuilderGenerator),
 		p.addPostConstruct(node),
-	).ErrorOrNil()
+	)
 }
 
 func (p *Processor) addPostConstruct(node annotation.Node) error {

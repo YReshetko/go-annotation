@@ -1,6 +1,6 @@
 module github.com/YReshetko/go-annotation
 
-go 1.18
+go 1.20
 
 require (
 	github.com/davecgh/go-spew v1.1.1
