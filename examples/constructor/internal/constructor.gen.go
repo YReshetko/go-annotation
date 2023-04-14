@@ -504,3 +504,50 @@ func NewTheThirdStruct(a SomeStructure, b *SomeStructure, c int, d int, fn func(
 
 	return returnValue
 }
+
+type CatalogConfigOption func(*catalogConfig)
+
+func NewCatalogConfig(opts ...CatalogConfigOption) catalogConfig {
+	rt := &catalogConfig{}
+	for _, o := range opts {
+		o(rt)
+	}
+
+	return *rt
+}
+
+func WithBaseURL(v string) CatalogConfigOption {
+	return func(rt *catalogConfig) {
+		rt.BaseURL = v
+	}
+}
+
+func WithOAuthKey(v string) CatalogConfigOption {
+	return func(rt *catalogConfig) {
+		rt.OAuthKey = v
+	}
+}
+
+func WithOAuthSecret(v string) CatalogConfigOption {
+	return func(rt *catalogConfig) {
+		rt.OAuthSecret = v
+	}
+}
+
+func WithPassword(v string) CatalogConfigOption {
+	return func(rt *catalogConfig) {
+		rt.Password = v
+	}
+}
+
+func WithUserAgent(v string) CatalogConfigOption {
+	return func(rt *catalogConfig) {
+		rt.UserAgent = v
+	}
+}
+
+func WithUsername(v string) CatalogConfigOption {
+	return func(rt *catalogConfig) {
+		rt.Username = v
+	}
+}
