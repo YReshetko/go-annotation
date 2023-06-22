@@ -179,6 +179,14 @@ func newNonPrimitiveType(astNode ast.Node, node annotation.Node, isPointer bool,
 				ImportPath(importPath).
 				AstStruct(innt).
 				Build()
+		case *ast.ArrayType:
+			return NewArrayTypeBuilder().
+				ImpCache(impCache).
+				ParentImport(parentImport).
+				Node(node).
+				AstArray(innt).
+				Node(node).
+				Build()
 		default:
 			fmt.Printf("unsupported internal loaded type %T\n", nnt.Type)
 			//ast.Print(token.NewFileSet(), astNode)

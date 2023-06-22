@@ -4,6 +4,7 @@ import (
 	"github.com/YReshetko/go-annotation/examples/mapper/internal/models/common"
 	"github.com/YReshetko/go-annotation/examples/mapper/internal/models/input"
 	"github.com/YReshetko/go-annotation/examples/mapper/internal/models/output"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -27,6 +28,17 @@ type ConstantMapper interface {
 	// @Mapping(target="String", const="Hello")
 	// @Mapping(target="PtrString", const="World")
 	Primitives() output.Primitives
+}
+
+// UUIDMapper example for arrays
+// @Mapper
+type UUIDMapper interface {
+	// @Mapping(target="UID", func="uuidToString(uuid.UID)")
+	FromUUID(uuid common.WithUUID) common.StringForUUID
+}
+
+func uuidToString(uuid *uuid.UUID) string {
+	return uuid.String()
 }
 
 // BaseStructuresMapper example of base structures mapper
