@@ -25,6 +25,7 @@ func TestFindImportByAlias(t *testing.T) {
 	}{
 		{"fmt", "fmt"},
 		{"mlog", "log"},
+		{"slog", "log/slog"},
 		{".", "github.com/davecgh/go-spew/spew"},
 		{"_", "github.com/davecgh/go-spew/spew"},
 		{"spew", "github.com/davecgh/go-spew/spew"},

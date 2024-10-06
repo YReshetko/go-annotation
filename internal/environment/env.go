@@ -57,11 +57,11 @@ func initEnv() {
 	cmd.Dir = enironment.ProjectRoot
 	data, err := cmd.Output()
 	if err != nil {
-		logger.Errorf("unable to get environment variables: %w", err)
+		logger.Errorf("unable to get environment variables: %s", err.Error())
 	} else {
 		err = json.Unmarshal(data, enironment)
 		if err != nil {
-			logger.Errorf("unable to unmarshal environment variables: %w", err)
+			logger.Errorf("unable to unmarshal environment variables: %s", err.Error())
 		}
 	}
 

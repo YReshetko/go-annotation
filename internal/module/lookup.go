@@ -109,6 +109,8 @@ func (s stdLookup) find(_ *module, importPath string) (*module, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to preload std lib")
 	}
+	importPath = filepath.Clean(importPath)
+
 	for _, f := range nm.Files() {
 		if strings.HasPrefix(f, importPath) {
 			return &nm, nil

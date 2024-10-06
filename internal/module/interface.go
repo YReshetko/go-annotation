@@ -64,6 +64,8 @@ func FilesInPackage(m Module, importPath string) []string {
 		return nil
 	}
 
+	importPath = filepath.Clean(importPath)
+
 	if nativeModule.isFromModCache() {
 		files := OfSlice(m.Files()).
 			Filter(isPotentialImport(importPath)).
@@ -92,6 +94,7 @@ func FilesInPackage(m Module, importPath string) []string {
 //		"internal/lookup/types.go"
 //		"internal/lookup/types_test.go"
 func FilesInDir(m Module, dir string) []string {
+	dir = filepath.Clean(dir)
 	return OfSlice(m.Files()).
 		Filter(hasPrefix(dir)).
 		Map(trimPrefix(dir)).
@@ -107,6 +110,7 @@ func FilesInDir(m Module, dir string) []string {
 // filePath - github.com/YReshetko/go-annotation/internal/module/module.go
 // return - /home/<some-home>/go/src/github.com/YReshetko/go-annotation/internal/module/module.go
 func AbsolutePath(m Module, filePath string) (string, bool) {
+	filePath = filepath.Clean(filePath)
 	path := OfSlice(m.Files()).
 		Filter(hasPostfix(filePath)).
 		Map(joinPath(m.Root())).
@@ -145,7 +149,8 @@ func joinPath(importPath string) func(string) string {
 
 func hasNoSubPath() func(string) bool {
 	return func(s string) bool {
-		return !strings.Contains(s, "/")
+		dir, _ := filepath.Split(s)
+		return len(dir) == 0
 	}
 }
 
