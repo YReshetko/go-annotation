@@ -69,10 +69,22 @@ func fileToPackageName(root string) func(string) string {
 func containsFile(files []string) func(string) bool {
 	return func(file string) bool {
 		for _, f := range files {
-			if strings.HasSuffix(f, file) {
+			if strings.HasSuffix(f, file) && isCompletePathSuffixMatch(f, file) {
 				return true
 			}
 		}
 		return false
 	}
+}
+
+// The check is required, because if we just check suffix for similar package ends:
+// log/example_test.go
+// log/slog/example_test.go
+// In this case both have equel suffix log/example_test.go, but this is completely different packages
+func isCompletePathSuffixMatch(str, suffix string) bool {
+	prefix := strings.TrimSuffix(str, suffix)
+	if len(prefix) == 0 {
+		return true
+	}
+	return prefix[len(prefix)-1] == '/' || prefix[len(prefix)-1] == '\\'
 }
