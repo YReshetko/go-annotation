@@ -1,0 +1,19 @@
+Subject: [PATCH] fix lookup issue on differences for import path and module files
+---
+Index: internal/module/lookup.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/module/lookup.go b/internal/module/lookup.go
+--- a/internal/module/lookup.go	(revision ed02ecee8d8c02a5095659f4e53c98cfe7dd6c74)
++++ b/internal/module/lookup.go	(revision 106f3319384ce161bad2ec7ac2ba99cd4ebec885)
+@@ -109,6 +109,8 @@
+ 	if err != nil {
+ 		return nil, fmt.Errorf("unable to preload std lib")
+ 	}
++	importPath = filepath.Clean(importPath)
++
+ 	for _, f := range nm.Files() {
+ 		if strings.HasPrefix(f, importPath) {
+ 			return &nm, nil

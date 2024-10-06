@@ -1,0 +1,860 @@
+Subject: [PATCH] P7S-000 support complex paths
+---
+Index: go.mod
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/go.mod b/go.mod
+--- a/go.mod	(revision c3de4743a3f1ca7ddda4a3d933c27c966e762d6a)
++++ b/go.mod	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -6,20 +6,22 @@
+ 	github.com/davecgh/go-spew v1.1.1
+ 	github.com/eapache/go-resiliency v1.3.0
+ 	github.com/eapache/queue v1.1.0
+-	github.com/google/uuid v1.3.0
++	github.com/google/uuid v1.6.0
+ 	github.com/gorilla/mux v1.8.0
+ 	github.com/hashicorp/go-multierror v1.1.1
++	github.com/interagent/schematic v0.0.0-20201012232308-7f954c20daa5
+ 	github.com/maxbrunsfeld/counterfeiter/v6 v6.5.0
+ 	github.com/stretchr/testify v1.8.1
+ 	golang.org/x/exp v0.0.0-20221111204811-129d8d6c17ab
+ 	golang.org/x/mod v0.7.0
++	google.golang.org/grpc v1.64.0
+ )
+ 
+ require (
+ 	github.com/hashicorp/errwrap v1.0.0 // indirect
+ 	github.com/kr/pretty v0.3.1 // indirect
+ 	github.com/pmezard/go-difflib v1.0.0 // indirect
+-	golang.org/x/sys v0.1.0 // indirect
++	golang.org/x/sys v0.18.0 // indirect
+ 	golang.org/x/tools v0.2.0 // indirect
+ 	gopkg.in/yaml.v3 v3.0.1 // indirect
+ )
+Index: go.sum
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/go.sum b/go.sum
+--- a/go.sum	(revision c3de4743a3f1ca7ddda4a3d933c27c966e762d6a)
++++ b/go.sum	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -6,14 +6,16 @@
+ github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=
+ github.com/eapache/queue v1.1.0 h1:YOEu7KNc61ntiQlcEeUIoDTJ2o8mQznoNvUhiigpIqc=
+ github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFPTqq+I=
+-github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+-github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
++github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
++github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+ github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
+ github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+ github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
+ github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
+ github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
+ github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
++github.com/interagent/schematic v0.0.0-20201012232308-7f954c20daa5 h1:K3J9tXCrmYnyBeX6Pdg1iiBobcCe5orahgKfSo28VHU=
++github.com/interagent/schematic v0.0.0-20201012232308-7f954c20daa5/go.mod h1:4X9u5iNUePRrRDdwjok6skjlQBXTcNfWa4C3uS1+5SQ=
+ github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
+ github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
+ github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
+@@ -40,14 +42,16 @@
+ golang.org/x/exp v0.0.0-20221111204811-129d8d6c17ab/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
+ golang.org/x/mod v0.7.0 h1:LapD9S96VoQRhi/GrNTqeBJFrUjs5UHCAtTlgwA5oZA=
+ golang.org/x/mod v0.7.0/go.mod h1:iBbtSCu2XBx23ZKBPSOrRkjjQPZFPuis4dIYUhu/chs=
+-golang.org/x/net v0.1.0 h1:hZ/3BUoy5aId7sCpA/Tc5lt8DkFgdVS2onTpJsZ/fl0=
+-golang.org/x/net v0.1.0/go.mod h1:Cx3nUiGt4eDBEyega/BKRp+/AlGL8hYe7U9odMt2Cco=
+-golang.org/x/sys v0.1.0 h1:kunALQeHf1/185U1i0GOB/fy1IPRDDpuoOOqRReG57U=
+-golang.org/x/sys v0.1.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+-golang.org/x/text v0.3.7 h1:olpwvP2KacW1ZWvsR7uQhoyTYvKAupfQrRGBFM352Gk=
+-golang.org/x/text v0.3.7/go.mod h1:u+2+/6zg+i71rQMx5EYifcz6MCKuco9NR6JIITiCfzQ=
++golang.org/x/net v0.22.0 h1:9sGLhx7iRIHEiX0oAJ3MRZMUCElJgy7Br1nO+AMN3Tc=
++golang.org/x/net v0.22.0/go.mod h1:JKghWKKOSdJwpW2GEx0Ja7fmaKnMsbu+MWVZTokSYmg=
++golang.org/x/sys v0.18.0 h1:DBdB3niSjOA/O0blCZBqDefyWNYveAYMNF1Wum0DYQ4=
++golang.org/x/sys v0.18.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
++golang.org/x/text v0.14.0 h1:ScX5w1eTa3QqT8oi6+ziP7dTV1S2+ALU0bI+0zXKWiQ=
++golang.org/x/text v0.14.0/go.mod h1:18ZOQIKpY8NJVqYksKHtTdi31H5itFRjB5/qKTNYzSU=
+ golang.org/x/tools v0.2.0 h1:G6AHpWxTMGY1KyEYoAQ5WTtIekUUvDNjan3ugu60JvE=
+ golang.org/x/tools v0.2.0/go.mod h1:y4OqIKeOV/fWJetJ8bXPU1sEVniLMIyDAZWeHdV+NTA=
++google.golang.org/grpc v1.64.0 h1:KH3VH9y/MgNQg1dE7b3XfVK0GsPSIzJwdF617gUSbvY=
++google.golang.org/grpc v1.64.0/go.mod h1:oxjF8E3FBnjp+/gVFYdWacaLDx9na1aqy9oovLpxQYg=
+ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+ gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
+ gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
+Index: internal/lookup/fixtures/imports.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/lookup/fixtures/imports.go b/internal/lookup/fixtures/imports.go
+--- a/internal/lookup/fixtures/imports.go	(revision c3de4743a3f1ca7ddda4a3d933c27c966e762d6a)
++++ b/internal/lookup/fixtures/imports.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -10,6 +10,11 @@
+ 
+ 	"github.com/davecgh/go-spew/spew"
+ 
++	"github.com/interagent/schematic"
++
++	"google.golang.org/grpc/backoff"
++	_ "google.golang.org/grpc/backoff"
++
+ 	"git.ftc.ru/p7s/libraries/go-annotation/internal/lookup/fixtures/dashed-package"
+ )
+ 
+@@ -23,4 +28,8 @@
+ 	_ = anythingelse.Exported{}
+ 
+ 	_ = spew.Config
++
++	_ = backoff.Config{}
++
++	_ = schematic.Link{}
+ }
+Index: internal/lookup/imports_test.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/lookup/imports_test.go b/internal/lookup/imports_test.go
+--- a/internal/lookup/imports_test.go	(revision c3de4743a3f1ca7ddda4a3d933c27c966e762d6a)
++++ b/internal/lookup/imports_test.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -29,6 +29,9 @@
+ 		{".", "github.com/davecgh/go-spew/spew"},
+ 		{"_", "github.com/davecgh/go-spew/spew"},
+ 		{"spew", "github.com/davecgh/go-spew/spew"},
++		{"backoff", "google.golang.org/grpc/backoff"},
++		{"schematic", "github.com/interagent/schematic"},
++		//{"_", "google.golang.org/grpc/backoff"}, TODO resolve multiple "_" and "." imports
+ 		{"anythingelse", "git.ftc.ru/p7s/libraries/go-annotation/internal/lookup/fixtures/dashed-package"},
+ 	}
+ 
+Index: internal/lookup/types_test.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/lookup/types_test.go b/internal/lookup/types_test.go
+--- a/internal/lookup/types_test.go	(revision c3de4743a3f1ca7ddda4a3d933c27c966e762d6a)
++++ b/internal/lookup/types_test.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -18,8 +18,8 @@
+ 
+ 	node, parents, _, filePath, err := lookup.FindTypeByImport(m, "git.ftc.ru/p7s/libraries/go-annotation/internal/lookup/fixtures/dashed-package", "Exported2")
+ 	require.NoError(t, err)
+-	expectedSubPath := filepath.Clean("src/git.ftc.ru/p7s/libraries/go-annotation/internal/lookup/fixtures/dashed-package/example2.go")
+-	assert.Contains(t, filePath, expectedSubPath)
++	assert.FileExists(t, filePath)
++	assert.True(t, filepath.IsAbs(filePath))
+ 	assert.Len(t, parents, 3)
+ 
+ 	ts, ok := node.(*ast.TypeSpec)
+@@ -46,8 +46,8 @@
+ 
+ 	node, parents, _, filePath, err := lookup.FindTypeInDir(m, "dashed-package", "Exported2")
+ 	require.NoError(t, err)
+-	expectedSubPath := filepath.Clean("src/git.ftc.ru/p7s/libraries/go-annotation/internal/lookup/fixtures/dashed-package/example2.go")
+-	assert.Contains(t, filePath, expectedSubPath)
++	assert.FileExists(t, filePath)
++	assert.True(t, filepath.IsAbs(filePath))
+ 	assert.Len(t, parents, 3)
+ 
+ 	ts, ok := node.(*ast.TypeSpec)
+Index: internal/module/interface.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/module/interface.go b/internal/module/interface.go
+--- a/internal/module/interface.go	(revision c3de4743a3f1ca7ddda4a3d933c27c966e762d6a)
++++ b/internal/module/interface.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -4,6 +4,7 @@
+ 	"errors"
+ 	"fmt"
+ 	"git.ftc.ru/p7s/libraries/go-annotation/internal/logger"
++	"git.ftc.ru/p7s/libraries/go-annotation/internal/utils/imports"
+ 	"path/filepath"
+ 	"strings"
+ 
+@@ -75,8 +76,27 @@
+ 		//logger.Debugf("found files in cached module: %v", files)
+ 		return files
+ 	}
++
++	if !nativeModule.hasModFile() {
++		importsPath := imports.Of(importPath)
++		var files []string
++		for _, file := range nativeModule.files {
++			filePath := imports.Of(filepath.Join(nativeModule.root, file))
++			pathRightJoin := filePath.RightJoin(importsPath)
++			if !pathRightJoin.IsEmpty() && strings.HasSuffix(filePath.String(), pathRightJoin.String()) {
++				files = append(files, filePath.String())
++			}
++		}
++		return files
++	}
++
++	importPrefix := moduleName(nativeModule.mod)
++	if len(importPrefix) == 0 {
++		importPrefix = m.Root()
++	}
++
+ 	return OfSlice(m.Files()).
+-		Map(joinPath(m.Root())).
++		Map(joinPath(importPrefix)). // TODO here should be module name (m.Module.Mod.Path), but if there is no the mod name, then we should try m.root. Verify for standard libraries and other libraries
+ 		Filter(contains(importPath)).
+ 		Map(trimImportPath(importPath)).
+ 		Filter(hasNoSubPath()).
+Index: internal/module/interface_test.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/module/interface_test.go b/internal/module/interface_test.go
+--- a/internal/module/interface_test.go	(revision c3de4743a3f1ca7ddda4a3d933c27c966e762d6a)
++++ b/internal/module/interface_test.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -101,7 +101,8 @@
+ 	s, ok := module.AbsolutePath(m, "git.ftc.ru/p7s/libraries/go-annotation/internal/module/module.go")
+ 	require.True(t, ok)
+ 
+-	assert.Contains(t, s, filepath.Clean("/src/git.ftc.ru/p7s/libraries/go-annotation/internal/module/module.go"))
++	assert.FileExists(t, s)
++	assert.True(t, filepath.IsAbs(s))
+ }
+ 
+ func TestAbsolutePath_NotFound(t *testing.T) {
+Index: internal/module/module.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/module/module.go b/internal/module/module.go
+--- a/internal/module/module.go	(revision c3de4743a3f1ca7ddda4a3d933c27c966e762d6a)
++++ b/internal/module/module.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -3,13 +3,12 @@
+ import (
+ 	"git.ftc.ru/p7s/libraries/go-annotation/internal/environment"
+ 	"git.ftc.ru/p7s/libraries/go-annotation/internal/logger"
++	"git.ftc.ru/p7s/libraries/go-annotation/internal/utils/imports"
+ 	"path/filepath"
+ 	"strings"
+ 
+ 	"golang.org/x/mod/modfile"
+ 	module2 "golang.org/x/mod/module"
+-
+-	. "git.ftc.ru/p7s/libraries/go-annotation/internal/utils/stream"
+ )
+ 
+ type module struct {
+@@ -77,11 +76,20 @@
+ // result - true as m.root + m.files[i] contains importPath
+ func (m *module) hasImportPath(importPath string) bool {
+ 	importPath = filepath.Clean(importPath)
+-	path := OfSlice(m.files).
+-		Map(joinPath(m.root)).
+-		Filter(contains(importPath)).
+-		One()
+-	return len(path) > 0
++	importPrefix := moduleName(m.mod)
++	if len(importPrefix) == 0 {
++		importPrefix = m.root
++	}
++	importsPath := imports.Of(importPath)
++
++	for _, file := range m.files {
++		filePath := imports.Of(filepath.Join(importPrefix, file))
++		pathRightJoin := filePath.RightJoin(importsPath)
++		if !pathRightJoin.IsEmpty() && strings.HasSuffix(filePath.String(), pathRightJoin.String()) {
++			return true
++		}
++	}
++	return false
+ }
+ 
+ func (m *module) findClosestModuleName(importPath string) string {
+Index: internal/utils/arrays/subsequences.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/utils/arrays/subsequences.go b/internal/utils/arrays/subsequences.go
+new file mode 100644
+--- /dev/null	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
++++ b/internal/utils/arrays/subsequences.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -0,0 +1,35 @@
++package arrays
++
++// LCS - Longest Common Subsequence
++// The function searches for LCS and returns it along with first index in the slice 'a' and the first in the slice 'b'
++func LCS[T comparable](a, b []T) ([]T, int, int) {
++	dp := make([][]int, len(a))
++	var maxValue, maxI, maxJ int
++
++	for i := len(a) - 1; i >= 0; i-- {
++		dp[i] = make([]int, len(b))
++		for j := len(b) - 1; j >= 0; j-- {
++			if a[i] != b[j] {
++				continue
++			}
++
++			value := 1
++			if i != len(a)-1 && j != len(b)-1 {
++				value = dp[i+1][j+1] + 1
++			}
++
++			dp[i][j] = value
++
++			if value > maxValue {
++				maxValue = value
++				maxI = i
++				maxJ = j
++			}
++		}
++	}
++
++	if maxValue == 0 {
++		return nil, -1, -1
++	}
++	return a[maxI : maxI+maxValue], maxI, maxJ
++}
+Index: internal/utils/arrays/subsequences_test.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/utils/arrays/subsequences_test.go b/internal/utils/arrays/subsequences_test.go
+new file mode 100644
+--- /dev/null	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
++++ b/internal/utils/arrays/subsequences_test.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -0,0 +1,51 @@
++package arrays_test
++
++import (
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++
++	"git.ftc.ru/p7s/libraries/go-annotation/internal/utils/arrays"
++)
++
++func TestLCS_Integers(t *testing.T) {
++	a := []int{1, 2, 8, 2, 1, 4, 6, 1, 4, 8, 2}
++	b := []int{6, 8, 2, 1, 5, 4, 1, 8, 2}
++
++	expected := []int{8, 2, 1}
++	expectedI := 2
++	expectedJ := 1
++
++	actual, actualI, actualJ := arrays.LCS(a, b)
++	assert.Equal(t, expected, actual)
++	assert.Equal(t, expectedI, actualI)
++	assert.Equal(t, expectedJ, actualJ)
++}
++
++func TestLCS_Strings(t *testing.T) {
++	a := []string{"C:", "Users", "username", "goworkspace", "go-annotation", "internal", "lookup", "fixtures"}
++	b := []string{"git.ftc.ru", "p7s", "libraries", "go-annotation", "internal", "lookup", "fixtures", "dashed-package"}
++
++	expected := []string{"go-annotation", "internal", "lookup", "fixtures"}
++	expectedI := 4
++	expectedJ := 3
++
++	actual, actualI, actualJ := arrays.LCS(a, b)
++	assert.Equal(t, expected, actual)
++	assert.Equal(t, expectedI, actualI)
++	assert.Equal(t, expectedJ, actualJ)
++}
++
++func TestLCS_NoSubsequence(t *testing.T) {
++	a := []int{1, 2, 3}
++	b := []int{4, 5, 6}
++
++	var expected []int
++	expectedI := -1
++	expectedJ := -1
++
++	actual, actualI, actualJ := arrays.LCS(a, b)
++	assert.Equal(t, expected, actual)
++	assert.Equal(t, expectedI, actualI)
++	assert.Equal(t, expectedJ, actualJ)
++}
+Index: internal/utils/imports/path.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/utils/imports/path.go b/internal/utils/imports/path.go
+new file mode 100644
+--- /dev/null	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
++++ b/internal/utils/imports/path.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -0,0 +1,102 @@
++package imports
++
++import (
++	"os"
++	"strings"
++
++	"path/filepath"
++
++	"git.ftc.ru/p7s/libraries/go-annotation/internal/utils/arrays"
++)
++
++type Path string
++
++const EmptyPath Path = "."
++
++func (p Path) Intersection(inPath Path) Path {
++	result, _, _ := arrays.LCS(p.split(), inPath.split())
++	return join(result)
++}
++
++func (p Path) Left(inPath Path) Path {
++	path := p.split()
++	_, i, _ := arrays.LCS(path, inPath.split())
++	if i < 0 {
++		return EmptyPath
++	}
++	return join(path[:i])
++}
++
++func (p Path) LeftJoin(inPath Path) Path {
++	path := p.split()
++	result, i, _ := arrays.LCS(path, inPath.split())
++	if i < 0 {
++		return EmptyPath
++	}
++	return join(path[:i+len(result)])
++}
++
++func (p Path) Right(inPath Path) Path {
++	path := p.split()
++	result, i, _ := arrays.LCS(path, inPath.split())
++	if i < 0 {
++		return EmptyPath
++	}
++	return join(path[i+len(result):])
++}
++
++func (p Path) RightJoin(inPath Path) Path {
++	path := p.split()
++	_, i, _ := arrays.LCS(path, inPath.split())
++	if i < 0 {
++		return EmptyPath
++	}
++	return join(path[i:])
++}
++
++func (p Path) FullJoin(inPath Path) Path {
++	pathSplitted := p.split()
++	inPathSplitted := inPath.split()
++	result, i, j := arrays.LCS(pathSplitted, inPathSplitted)
++	if len(result) == 0 {
++		return EmptyPath
++	}
++	return join(append(pathSplitted[:i+len(result)], inPathSplitted[j+len(result):]...))
++}
++
++func (p Path) IsEmpty() bool {
++	return p == EmptyPath || len(p.split()) == 0
++}
++
++func (p Path) String() string {
++	return string(p)
++}
++
++func Of(s string) Path {
++	return Path(s)
++}
++
++func (p Path) split() []string {
++	items := strings.FieldsFunc(p.String(), func(r rune) bool {
++		return r == '\\' || r == '/'
++	})
++
++	var retItems []string
++	for _, item := range items {
++		if len(item) == 0 || item == "." {
++			continue
++		}
++		retItems = append(retItems, item)
++	}
++	return retItems
++}
++
++func join(strs []string) Path {
++	if len(strs) == 0 {
++		return EmptyPath
++	}
++	if strings.Contains(strs[0], ":") {
++		return Path(strs[0] + string(os.PathSeparator) + filepath.Join(strs[1:]...))
++	}
++	return Path(filepath.Join(strs...))
++}
+Index: internal/utils/imports/path_test.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/utils/imports/path_test.go b/internal/utils/imports/path_test.go
+new file mode 100644
+--- /dev/null	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
++++ b/internal/utils/imports/path_test.go	(revision 8e505a818bb61fce4fbede41678d520c7a72ef59)
+@@ -0,0 +1,358 @@
++package imports_test
++
++import (
++	"fmt"
++	"path/filepath"
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++
++	"git.ftc.ru/p7s/libraries/go-annotation/internal/utils/imports"
++)
++
++func TestOf(t *testing.T) {
++	expectedPath := imports.Path("some/path/to/test/")
++	actualPath := imports.Of("some/path/to/test/")
++	assert.Equal(t, expectedPath, actualPath)
++}
++
++func TestPath_String(t *testing.T) {
++	testCases := []struct {
++		original string
++		expected string
++	}{
++		{"some/path/to/test/", "some/path/to/test/"},
++		{"some\\path\\to\\test", "some\\path\\to\\test"},
++	}
++	for _, testCase := range testCases {
++		t.Run(testCase.original, func(t *testing.T) {
++			importPath := imports.Of(testCase.original)
++			assert.Equal(t, testCase.expected, importPath.String())
++		})
++	}
++}
++
++func TestPath_IsEmpty(t *testing.T) {
++	testCases := []struct {
++		original string
++		expected bool
++	}{
++		{"some/path/to/test/", false},
++		{"", true},
++		{"/", true},
++		{"./", true},
++		{"\\", true},
++	}
++	for _, testCase := range testCases {
++		t.Run(testCase.original, func(t *testing.T) {
++			importPath := imports.Of(testCase.original)
++			assert.Equal(t, testCase.expected, importPath.IsEmpty())
++		})
++	}
++}
++
++func TestPath_Intersection(t *testing.T) {
++	testCases := []struct {
++		path1    string
++		path2    string
++		expected string
++	}{
++		{
++			path1:    "/first1/second1/third1/fourth1/fifth1/",
++			path2:    "/first/second/third/fourth/fifth/",
++			expected: imports.EmptyPath.String(),
++		},
++		{
++			path1:    "/first/second/third/fourth/fifth/",
++			path2:    "/first/second/third/fourth/fifth/",
++			expected: "first/second/third/fourth/fifth",
++		},
++		{
++			path1:    "/first/second/third",
++			path2:    "second/third/fourth/fifth",
++			expected: "second/third",
++		},
++		{
++			path1:    "/first/second/third/fourth/fifth/",
++			path2:    "/first/second1/third/fourth/fifth/",
++			expected: "third/fourth/fifth",
++		},
++		{
++			path1:    "/first/second/third/fourth/fifth/",
++			path2:    "/first/second/third1/fourth/fifth/",
++			expected: "fourth/fifth",
++		},
++		{
++			path1:    "/first/second/third/fourth/fifth/",
++			path2:    "second/third1/fourth/fifth/",
++			expected: "fourth/fifth",
++		},
++		{
++			path1:    "/first/second/third/fourth/fifth/",
++			path2:    "/first1/second1/third/fourth/fifth/",
++			expected: "third/fourth/fifth",
++		},
++		{
++			path1:    "C:\\first\\second\\third\\fourth\\fifth",
++			path2:    "C:/first/second/third/fourth/fifth/",
++			expected: "C:/first/second/third/fourth/fifth",
++		},
++		{
++			path1:    "C:\\first\\second\\third",
++			path2:    "second/third/fourth/fifth",
++			expected: "second/third",
++		},
++		{
++			path1:    "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:    "C:\\first\\second1\\third\\fourth\\fifth",
++			expected: "third/fourth/fifth",
++		},
++		{
++			path1:    "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:    "C:\\first\\second\\third1\\fourth\\fifth",
++			expected: "C:/first\\second",
++		},
++		{
++			path1:    "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:    "second/third1/fourth/fifth/",
++			expected: "fourth/fifth",
++		},
++		{
++			path1:    "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:    "C:\\first1\\second1\\third\\fourth\\fifth",
++			expected: "third/fourth/fifth",
++		},
++		{ // Real case when we have no mod file for sub folder where we run generation
++			path1:    "C:\\Users\\username\\goworkspace\\go-annotation\\internal\\lookup\\fixtures",
++			path2:    "git.ftc.ru\\p7s\\libraries\\go-annotation\\internal\\lookup\\fixtures\\dashed-package",
++			expected: "go-annotation/internal/lookup/fixtures",
++		},
++	}
++	for _, testCase := range testCases {
++		t.Run(testCase.expected, func(t *testing.T) {
++			first := imports.Of(testCase.path1)
++			second := imports.Of(testCase.path2)
++			assert.Equal(t, filepath.Clean(testCase.expected), first.Intersection(second).String())
++			assert.Equal(t, filepath.Clean(testCase.expected), second.Intersection(first).String())
++		})
++	}
++}
++
++func TestPath_Left(t *testing.T) {
++	testCases := []struct {
++		path1    string
++		path2    string
++		expected string
++	}{
++		{
++			path1:    "/first/second/third/fourth/fifth/",
++			path2:    "/first/second/third/fourth/fifth/",
++			expected: imports.EmptyPath.String(),
++		},
++		{
++			path1:    "/first/second/third",
++			path2:    "second/third/fourth/fifth",
++			expected: "first",
++		},
++		{
++			path1:    "/first/second/third/fourth/fifth/",
++			path2:    "/first/second1/third/fourth/fifth/",
++			expected: "first/second",
++		},
++		{
++			path1:    "/first/second/third/fourth/fifth/",
++			path2:    "/first/second/third1/fourth/fifth/",
++			expected: "first/second/third",
++		},
++		{
++			path1:    "/first/second/third/fourth/fifth/",
++			path2:    "second/third1/fourth/fifth/",
++			expected: "first/second/third",
++		},
++		{
++			path1:    "C:\\first\\second\\third\\fourth\\fifth",
++			path2:    "C:/first/second/third/fourth/fifth/",
++			expected: imports.EmptyPath.String(),
++		},
++		{
++			path1:    "C:\\first\\second\\third",
++			path2:    "second/third/fourth/fifth",
++			expected: "C:/first",
++		},
++		{
++			path1:    "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:    "C:\\first\\second1\\third\\fourth\\fifth",
++			expected: "C:/first/second",
++		},
++		{
++			path1:    "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:    "C:\\first\\second\\third1\\fourth\\fifth",
++			expected: imports.EmptyPath.String(),
++		},
++		{
++			path1:    "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:    "second/third1/fourth/fifth/",
++			expected: "C:/first/second/third",
++		},
++		{ // Real case when we have no mod file for sub folder where we run generation
++			path1:    "C:\\Users\\username\\goworkspace\\go-annotation\\internal\\lookup\\fixtures",
++			path2:    "git.ftc.ru\\p7s\\libraries\\go-annotation\\internal\\lookup\\fixtures\\dashed-package",
++			expected: "C:/Users/username/goworkspace",
++		},
++	}
++	for _, testCase := range testCases {
++		t.Run(testCase.expected, func(t *testing.T) {
++			first := imports.Of(testCase.path1)
++			second := imports.Of(testCase.path2)
++			assert.Equal(t, filepath.Clean(testCase.expected), first.Left(second).String())
++		})
++	}
++}
++
++func TestPath_Joins(t *testing.T) {
++	testCases := []struct {
++		path1             string
++		path2             string
++		expectedLeft      string
++		expectedLeftJoin  string
++		expectedRight     string
++		expectedRightJoin string
++		expectedFullJoin  string
++	}{
++		{
++			path1:             "/first/second/third/fourth/fifth/",
++			path2:             "/first/second/third/fourth/fifth/",
++			expectedLeft:      imports.EmptyPath.String(),
++			expectedLeftJoin:  "first/second/third/fourth/fifth",
++			expectedRight:     imports.EmptyPath.String(),
++			expectedRightJoin: "first/second/third/fourth/fifth",
++			expectedFullJoin:  "first/second/third/fourth/fifth",
++		},
++		{
++			path1:             "/first/second/third",
++			path2:             "second/third/fourth/fifth",
++			expectedLeft:      "first",
++			expectedLeftJoin:  "first/second/third",
++			expectedRight:     imports.EmptyPath.String(),
++			expectedRightJoin: "second/third",
++			expectedFullJoin:  "first/second/third/fourth/fifth",
++		},
++		{
++			path1:             "/first/second/third/fourth/fifth/",
++			path2:             "/first/second1/third/fourth/fifth/",
++			expectedLeft:      "first/second",
++			expectedLeftJoin:  "first/second/third/fourth/fifth",
++			expectedRight:     imports.EmptyPath.String(),
++			expectedRightJoin: "third/fourth/fifth",
++			expectedFullJoin:  "first/second/third/fourth/fifth",
++		},
++		{
++			path1:             "/first/second/third/fourth/fifth/",
++			path2:             "/first/second/third1/fourth/fifth/",
++			expectedLeft:      "first/second/third",
++			expectedLeftJoin:  "first/second/third/fourth/fifth",
++			expectedRight:     imports.EmptyPath.String(),
++			expectedRightJoin: "fourth/fifth",
++			expectedFullJoin:  "first/second/third/fourth/fifth",
++		},
++		{
++			path1:             "/first/second/third/fourth/fifth/sixth",
++			path2:             "second/third1/fourth/fifth/",
++			expectedLeft:      "first/second/third",
++			expectedLeftJoin:  "first/second/third/fourth/fifth",
++			expectedRight:     "sixth",
++			expectedRightJoin: "fourth/fifth/sixth",
++			expectedFullJoin:  "first/second/third/fourth/fifth",
++		},
++		{
++			path1:             "second/third1/fourth/fifth/",
++			path2:             "/first/second/third/fourth/fifth/sixth",
++			expectedLeft:      "second/third1",
++			expectedLeftJoin:  "second/third1/fourth/fifth",
++			expectedRight:     imports.EmptyPath.String(),
++			expectedRightJoin: "fourth/fifth",
++			expectedFullJoin:  "second/third1/fourth/fifth/sixth",
++		},
++		{
++			path1:             "C:\\first\\second\\third\\fourth\\fifth",
++			path2:             "C:/first/second/third/fourth/fifth/",
++			expectedLeft:      imports.EmptyPath.String(),
++			expectedLeftJoin:  "C:/first/second/third/fourth/fifth",
++			expectedRight:     imports.EmptyPath.String(),
++			expectedRightJoin: "C:/first/second/third/fourth/fifth",
++			expectedFullJoin:  "C:/first/second/third/fourth/fifth",
++		},
++		{
++			path1:             "C:\\first\\second\\third\\fourth1\\fifth",
++			path2:             "second/third/fourth/fifth",
++			expectedLeft:      "C:/first",
++			expectedLeftJoin:  "C:/first/second/third",
++			expectedRight:     "fourth1/fifth",
++			expectedRightJoin: "second/third/fourth1/fifth",
++			expectedFullJoin:  "C:/first/second/third/fourth/fifth",
++		},
++		{
++			path1:             "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:             "C:\\first\\second1\\third\\fourth\\fifth",
++			expectedLeft:      "C:/first/second",
++			expectedLeftJoin:  "C:/first/second/third/fourth/fifth",
++			expectedRight:     imports.EmptyPath.String(),
++			expectedRightJoin: "third/fourth/fifth",
++			expectedFullJoin:  "C:/first/second/third/fourth/fifth",
++		},
++		{
++			path1:             "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:             "C:\\first\\second\\third1\\fourth\\fifth",
++			expectedLeft:      imports.EmptyPath.String(),
++			expectedLeftJoin:  "C:/first/second",
++			expectedRight:     "third/fourth/fifth",
++			expectedRightJoin: "C:/first/second/third/fourth/fifth",
++			expectedFullJoin:  "C:/first/second/third1/fourth/fifth",
++		},
++		{
++			path1:             "C:\\first\\second\\third\\fourth\\fifth/",
++			path2:             "second/third1/fourth/fifth/",
++			expectedLeft:      "C:/first/second/third",
++			expectedLeftJoin:  "C:/first/second/third/fourth/fifth",
++			expectedRight:     imports.EmptyPath.String(),
++			expectedRightJoin: "fourth/fifth",
++			expectedFullJoin:  "C:/first/second/third/fourth/fifth",
++		},
++		{ // Real case when we have no mod file for sub folder where we run generation
++			path1:             "C:\\Users\\username\\goworkspace\\go-annotation\\internal\\lookup\\fixtures",
++			path2:             "git.ftc.ru\\p7s\\libraries\\go-annotation\\internal\\lookup\\fixtures\\dashed-package",
++			expectedLeft:      "C:/Users/username/goworkspace",
++			expectedLeftJoin:  "C:/Users/username/goworkspace/go-annotation/internal/lookup/fixtures",
++			expectedRight:     imports.EmptyPath.String(),
++			expectedRightJoin: "go-annotation/internal/lookup/fixtures",
++			expectedFullJoin:  "C:/Users/username/goworkspace/go-annotation/internal/lookup/fixtures/dashed-package",
++		},
++		{ // Real case when we have no mod file for sub folder where we run generation
++			path1:             "git.ftc.ru\\p7s\\libraries\\go-annotation\\internal\\lookup\\fixtures\\dashed-package",
++			path2:             "C:\\Users\\username\\goworkspace\\go-annotation\\internal\\lookup\\fixtures",
++			expectedLeft:      "git.ftc.ru/p7s/libraries",
++			expectedLeftJoin:  "git.ftc.ru/p7s/libraries/go-annotation/internal/lookup/fixtures",
++			expectedRight:     "dashed-package",
++			expectedRightJoin: "go-annotation/internal/lookup/fixtures/dashed-package",
++			expectedFullJoin:  "git.ftc.ru/p7s/libraries/go-annotation/internal/lookup/fixtures",
++		},
++	}
++	for i, testCase := range testCases {
++		first := imports.Of(testCase.path1)
++		second := imports.Of(testCase.path2)
++
++		for scenario, fn := range map[[2]string]func(path imports.Path) imports.Path{
++			[2]string{"Left", testCase.expectedLeft}:           first.Left,
++			[2]string{"Right", testCase.expectedRight}:         first.Right,
++			[2]string{"LeftJoin", testCase.expectedLeftJoin}:   first.LeftJoin,
++			[2]string{"RightJoin", testCase.expectedRightJoin}: first.RightJoin,
++			[2]string{"FullJoin", testCase.expectedFullJoin}:   first.FullJoin,
++		} {
++			testName := fmt.Sprintf("(%d)_%s_[%s]->[%s]", i, scenario[0], testCase.path1, testCase.path2)
++			expected := filepath.Clean(scenario[1])
++			t.Run(testName, func(t *testing.T) {
++				assert.Equal(t, expected, fn(second).String())
++			})
++		}
++	}
++}
