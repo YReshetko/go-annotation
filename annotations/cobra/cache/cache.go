@@ -2,7 +2,6 @@ package cache
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -25,9 +24,9 @@ func NewCache() *Cache {
 }
 
 type item struct {
-	handlers []templates.Handler
-	flags    []templates.Flag
-	command  annotations.Cobra
+	Handlers []templates.Handler
+	Flags    []templates.Flag
+	Command  annotations.Cobra
 }
 
 func (c *Cache) AddHandler(pkg, typeName string, handler templates.Handler) {
@@ -36,7 +35,7 @@ func (c *Cache) AddHandler(pkg, typeName string, handler templates.Handler) {
 		typeName: typeName,
 	}
 	i := c.m[k]
-	i.handlers = append(i.handlers, handler)
+	i.Handlers = append(i.Handlers, handler)
 	c.m[k] = i
 }
 
@@ -46,7 +45,7 @@ func (c *Cache) AddFlag(pkg, typeName string, flag templates.Flag) {
 		typeName: typeName,
 	}
 	i := c.m[k]
-	i.flags = append(i.flags, flag)
+	i.Flags = append(i.Flags, flag)
 	c.m[k] = i
 }
 
@@ -56,7 +55,7 @@ func (c *Cache) AddCommandAnnotation(pkg, typeName string, cmd annotations.Cobra
 		typeName: typeName,
 	}
 	i := c.m[k]
-	i.command = cmd
+	i.Command = cmd
 	c.m[k] = i
 }
 
@@ -77,43 +76,176 @@ type sortedItem struct {
 }
 
 type itemNode struct {
-	value sortedItem
-	nodes []itemNode
+	Value sortedItem
+	Nodes []*itemNode
+}
+
+func (n *itemNode) add(usages []string, item sortedItem) bool {
+	if len(usages) == 0 {
+		return false
+	}
+	if len(usages) == 1 {
+		item.Value.Command.Usage = usages[0]
+		n.Nodes = append(n.Nodes, &itemNode{
+			Value: item,
+		})
+		return true
+	}
+	for _, node := range n.Nodes {
+
+		if node.Value.Value.Command.Usage == usages[0] {
+			node.add(usages[1:], item)
+			return true
+		}
+	}
+	return false
 }
 
 func (c *Cache) GetInitCommands() (map[buildTagName]templates.InitCommands, error) {
 	sortedItems := c.sortedItems()
-	err := validateItems(sortedItems)
+	builds, err := buildTrees(sortedItems)
 	if err != nil {
 		return nil, err
 	}
+	out := map[buildTagName]templates.InitCommands{}
+	for name, node := range builds {
+		tmp := initCommands(node)
+		tmp.BuildTag = name
+		out[name] = tmp
+	}
 
-	printJson(sortedItems)
-	return map[buildTagName]templates.InitCommands{}, nil
+	//printJson(builds)
+	return out, nil
 }
 
-func validateItems(items []sortedItem) error {
-	if len(items) == 0 {
-		return nil
+type importCache struct {
+	imports map[string]templates.Import
+	index   int
+	aliases map[string]struct{}
+}
+
+func newImportCache() *importCache {
+	return &importCache{
+		imports: map[string]templates.Import{},
+		index:   0,
+		aliases: map[string]struct{}{},
 	}
-	if len(items[0].Usage) != 1 {
-		return errors.New("root command must have single word in usage section of @Cobra annotation")
+}
+
+func (c *importCache) add(pkg string) string {
+	imp, ok := c.imports[pkg]
+	if ok {
+		return imp.Alias
 	}
-	if len(items) == 1 {
-		return nil
+	pathItems := strings.Split(pkg, "/")
+	alias := pathItems[len(pathItems)-1]
+	if _, ok := c.aliases[alias]; !ok {
+		alias = fmt.Sprintf("_imp%d", c.index)
+		c.index++
 	}
-	
-	return nil
+	c.aliases[alias] = struct{}{}
+	c.imports[pkg] = templates.Import{
+		Alias:   alias,
+		Package: pkg,
+	}
+	return alias
+}
+
+func (c *importCache) getImports() []templates.Import {
+	out := make([]templates.Import, 0, len(c.imports))
+	for _, t := range c.imports {
+		out = append(out, t)
+	}
+	return out
+}
+
+func namesGenerator() func() string {
+	index := 0
+	return func() string {
+		index++
+		return fmt.Sprintf("_cmd%d", index)
+	}
+}
+
+func initCommands(root *itemNode) templates.InitCommands {
+	if len(root.Nodes) > 1 {
+		root.Value = sortedItem{
+			Key:   root.Nodes[0].Value.Key,
+			Value: item{Command: annotations.Cobra{Usage: "cli"}},
+			Usage: []string{"cli"},
+		}
+	} else if len(root.Nodes) == 1 {
+		root = root.Nodes[0]
+	} else {
+		return templates.InitCommands{}
+	}
+
+	cache := newImportCache()
+	names := namesGenerator()
+	commands := collectCommands(cache, names, "root", "", root)
+
+	return templates.InitCommands{
+		Imports:  cache.getImports(),
+		Commands: commands,
+	}
+}
+
+func collectCommands(impCache *importCache, names func() string, varName, parentVarName string, root *itemNode) []templates.Command {
+	cmd := templates.Command{
+		IsRoot:        varName == "root",
+		VarName:       varName,
+		ParentVarName: parentVarName,
+		Use:           root.Value.Value.Command.Usage,
+		Example:       root.Value.Value.Command.Example,
+		Short:         root.Value.Value.Command.Short,
+		Long:          root.Value.Value.Command.Long,
+		SilenceUsage:  root.Value.Value.Command.SilenceUsage,
+		SilenceErrors: root.Value.Value.Command.SilenceError,
+		Flags:         root.Value.Value.Flags,
+		Handlers:      root.Value.Value.Handlers,
+	}
+	for i, handler := range cmd.Handlers {
+		handler.ExecutorPackageAlias = impCache.add(root.Value.Key.pkg)
+		handler.ExecutorTypeName = root.Value.Key.typeName
+		cmd.Handlers[i] = handler
+	}
+	out := []templates.Command{cmd}
+	for _, node := range root.Nodes {
+		newVarName := names()
+		out = append(
+			out,
+			collectCommands(impCache, names, newVarName, varName, node)...,
+		)
+	}
+	return out
+}
+
+func buildTrees(sortedItems []sortedItem) (map[buildTagName]*itemNode, error) {
+	builds := map[buildTagName]*itemNode{}
+	for _, s := range sortedItems {
+		for _, tag := range s.BuildTags {
+			root, ok := builds[tag]
+			if !ok {
+				root = &itemNode{}
+			}
+			ok = root.add(s.Usage, s)
+			if !ok {
+				return nil, fmt.Errorf("unable to find parent command for %s", strings.Join(s.Usage, " "))
+			}
+			builds[tag] = root
+		}
+	}
+	return builds, nil
 }
 
 func (c *Cache) sortedItems() []sortedItem {
 	sortedItems := make([]sortedItem, 0, len(c.m))
 	for k, v := range c.m {
-		usages := strings.Split(v.command.Usage, " ")
+		usages := strings.Split(v.Command.Usage, " ")
 		usages = slices.DeleteFunc(usages, func(s string) bool {
 			return len(strings.TrimSpace(s)) == 0
 		})
-		buildTags := strings.Split(v.command.Build, ",")
+		buildTags := strings.Split(v.Command.Build, ",")
 		for i, tag := range buildTags {
 			buildTags[i] = strings.TrimSpace(tag)
 		}

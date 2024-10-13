@@ -12,8 +12,9 @@ type Import struct {
 }
 
 type Command struct {
-	IsRoot  bool
-	VarName string
+	IsRoot        bool
+	VarName       string
+	ParentVarName string
 
 	Use           string
 	Example       string

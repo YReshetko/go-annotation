@@ -1,10 +1,10 @@
 package cobra
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"go/ast"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -151,11 +151,16 @@ func getFlag(field *ast.Field) (templates.Flag, bool) {
 	if !ok {
 		return templates.Flag{}, false
 	}
+
 	flagNameValues := strings.Split(flagNameValue, ",")
 	for i, value := range flagNameValues {
 		flagNameValues[i] = strings.TrimSpace(value)
 	}
 	if len(flagNameValues) == 0 {
+		return templates.Flag{}, false
+	}
+
+	if slices.Contains(flagNameValues, "inherited") {
 		return templates.Flag{}, false
 	}
 
@@ -181,9 +186,25 @@ func (p *Processor) Output() map[string][]byte {
 	if err != nil {
 		panic(err)
 	}
-	data, _ := json.MarshalIndent(initCommands, "", "  ")
-	fmt.Print("Init commands for template:\n", string(data))
-	return map[string][]byte{}
+
+	out := map[string][]byte{}
+	for buildTagName, commands := range initCommands {
+		path := filepath.Join(p.outputRoot, buildTagName+".gen.go")
+		data, err := templates.Execute(templates.InitCommandsTpl, commands)
+		if err != nil {
+			panic(err)
+		}
+		out[path] = data
+	}
+
+	path := filepath.Join(p.outputRoot, "main.gen.go")
+	data, err := templates.Execute(templates.MainFileTpl, struct{}{})
+	if err != nil {
+		panic(err)
+	}
+
+	out[path] = data
+	return out
 }
 
 func (p *Processor) Version() string {

@@ -34,7 +34,7 @@ func init() {
 	{{- if	.Shorthand -}}
 		P("{{ .Name }}", "{{ .Shorthand }}", {{ if eq .Type "String" }}"{{ .DefaultValue }}"{{ else }}{{ .DefaultValue }}{{ end }}, "{{ .Description }}")
 	{{ else -}}
-		("{{ .Name }}", {{ if eq .Type "String" }}"{{ .DefaultValue }}"{{ else }}{{ .DefaultValue }}{{ end }}, "{{ .Description }}")
+		("{{ .Name }}", {{ if eq .Type "String" }}"{{ .DefaultValue }}"{{ else }}{{ if eq .Type "Bool" }}{{ eq .DefaultValue "true" }}{{ else }}{{ .DefaultValue }}{{ end }}{{ end }}, "{{ .Description }}")
 	{{- end }}
 	{{ if .IsRequired -}}
 	if err := {{ $varName }}.{{ if .IsPersistent }}MarkPersistentFlagRequired{{ else }}MarkFlagRequired{{ end }}("{{ .Name }}"); err != nil {
@@ -59,7 +59,8 @@ func init() {
 		{{- end }}
 	}
 	{{- end }}
-
+	
+	{{ if .ParentVarName }}{{ .ParentVarName }}.AddCommand({{ .VarName }}){{ end }}
 	{{ end }}
 }
 `

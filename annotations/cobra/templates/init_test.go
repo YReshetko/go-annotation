@@ -79,7 +79,8 @@ func TestExecute_InitCommands(t *testing.T) {
 						},
 					},
 					{
-						VarName: "child",
+						VarName:       "child",
+						ParentVarName: "root",
 						Handlers: []templates.Handler{
 							{
 								MethodName:           "Run1",

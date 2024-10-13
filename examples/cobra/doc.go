@@ -1,0 +1,2 @@
+// @CobraOutput
+package main

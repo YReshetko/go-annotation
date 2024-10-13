@@ -65,4 +65,5 @@ func init() {
 		}
 		return executor.Run5(cmd, args)
 	}
+	root.AddCommand(child)
 }
