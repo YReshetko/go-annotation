@@ -2,6 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"time"
+	
 	"github.com/spf13/cobra"
 )
 
@@ -16,9 +18,11 @@ import (
 //
 // )
 type ChildCommand struct {
-	Output string `flag:"output,required" short:"o" description:"output file name"`
-	Num    int    `flag:"num" short:"n" default:"42" description:"some number for command"`
-	IsOK   bool   `flag:"is-ok,inherited"`
+	Output string        `flag:"output,required" short:"o" description:"output file name"`
+	Num    int           `flag:"num" short:"n" default:"42" description:"some number for command"`
+	Num1   int32         `flag:"num" short:"n" default:"42" description:"some number for command"`
+	IsOK   bool          `flag:"is-ok,inherited"`
+	Dur    time.Duration `flag:"dur,inherited"`
 }
 
 // Run - @CobraRun command

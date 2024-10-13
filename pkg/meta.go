@@ -32,3 +32,7 @@ func (n *meta) PackageName() string {
 	}
 	return ""
 }
+
+func (n *meta) LocalPackage() string {
+	return n.module.LocalPackageOf(n.Dir())
+}
