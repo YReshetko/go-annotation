@@ -85,7 +85,7 @@ func TestExecute_InitCommands(t *testing.T) {
 							{
 								MethodName:           "Run1",
 								ExecutorPackageAlias: "a1",
-								ExecutorTypeName:     "RootCommandExecutor",
+								ExecutorTypeName:     "ChildCommandExecutor",
 								IsPreRun:             false,
 								IsPostRun:            false,
 								IsPersistentRun:      false,
@@ -94,7 +94,7 @@ func TestExecute_InitCommands(t *testing.T) {
 							{
 								MethodName:           "Run2",
 								ExecutorPackageAlias: "a1",
-								ExecutorTypeName:     "RootCommandExecutor",
+								ExecutorTypeName:     "ChildCommandExecutor",
 								IsPreRun:             true,
 								IsPostRun:            false,
 								IsPersistentRun:      false,
@@ -103,7 +103,7 @@ func TestExecute_InitCommands(t *testing.T) {
 							{
 								MethodName:           "Run3",
 								ExecutorPackageAlias: "a1",
-								ExecutorTypeName:     "RootCommandExecutor",
+								ExecutorTypeName:     "ChildCommandExecutor",
 								IsPreRun:             false,
 								IsPostRun:            true,
 								IsPersistentRun:      false,
@@ -112,7 +112,7 @@ func TestExecute_InitCommands(t *testing.T) {
 							{
 								MethodName:           "Run4",
 								ExecutorPackageAlias: "a1",
-								ExecutorTypeName:     "RootCommandExecutor",
+								ExecutorTypeName:     "ChildCommandExecutor",
 								IsPreRun:             false,
 								IsPostRun:            true,
 								IsPersistentRun:      true,
@@ -121,7 +121,7 @@ func TestExecute_InitCommands(t *testing.T) {
 							{
 								MethodName:           "Run5",
 								ExecutorPackageAlias: "a1",
-								ExecutorTypeName:     "RootCommandExecutor",
+								ExecutorTypeName:     "ChildCommandExecutor",
 								IsPreRun:             true,
 								IsPostRun:            false,
 								IsPersistentRun:      true,

@@ -27,7 +27,7 @@ func init() {
 	child := &cobra.Command{}
 	child.Use = ""
 	child.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := a1.RootCommandExecutor{}
+		executor := a1.ChildCommandExecutor{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -35,7 +35,7 @@ func init() {
 		return nil
 	}
 	child.PreRunE = func(cmd *cobra.Command, args []string) error {
-		executor := a1.RootCommandExecutor{}
+		executor := a1.ChildCommandExecutor{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ func init() {
 		return nil
 	}
 	child.PostRunE = func(cmd *cobra.Command, args []string) error {
-		executor := a1.RootCommandExecutor{}
+		executor := a1.ChildCommandExecutor{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -51,16 +51,16 @@ func init() {
 		return nil
 	}
 	child.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
-		executor := a1.RootCommandExecutor{}
-		if err := parseFlags(cmd, &executor); err != nil {
+		executor := a1.ChildCommandExecutor{}
+		if err := parsePersistFlags(cmd, &executor); err != nil {
 			return err
 		}
 		executor.Run4(cmd, args)
 		return nil
 	}
 	child.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		executor := a1.RootCommandExecutor{}
-		if err := parseFlags(cmd, &executor); err != nil {
+		executor := a1.ChildCommandExecutor{}
+		if err := parsePersistFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.Run5(cmd, args)
