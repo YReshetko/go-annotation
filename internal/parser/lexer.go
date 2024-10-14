@@ -1,15 +1,15 @@
 package parser
 
 type lexer struct {
-	input        string
+	input        []rune
 	position     int  // current position in input (points to current char)
 	readPosition int  // current reading position in input (after current char)
-	ch           byte // current char under examination
+	ch           rune // current char under examination
 }
 
 func newLexer(input string) *lexer {
 	l := &lexer{
-		input: input,
+		input: []rune(input),
 	}
 	// The sign of reading completion is ch=0, in ASCII it's 'NUL'.
 	// So, we need initially read character to move on if input is not empty
@@ -38,7 +38,7 @@ func (l *lexer) nextToken() token {
 	default:
 		if l.isLetter(l.ch) {
 			lit := l.readIdentifier()
-			return l.newToken(IDENT, lit)
+			return l.newToken(IDENT, string(lit))
 		} else {
 			tok = l.newToken(ILLEGAL, string(l.ch))
 		}
@@ -57,22 +57,22 @@ func (l *lexer) readChar() {
 	l.readPosition++
 }
 
-func (l *lexer) peekChar() byte {
+func (l *lexer) peekChar() rune {
 	if l.readPosition >= len(l.input) {
 		return 0
 	}
 	return l.input[l.readPosition]
 }
 
-func (l *lexer) isLetter(ch byte) bool {
+func (l *lexer) isLetter(ch rune) bool {
 	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_'
 }
 
-func (l *lexer) isDigit(ch byte) bool {
+func (l *lexer) isDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9'
 }
 
-func (l *lexer) readIdentifier() string {
+func (l *lexer) readIdentifier() []rune {
 	position := l.position
 	for l.isLetter(l.ch) || l.isDigit(l.ch) {
 		l.readChar()
