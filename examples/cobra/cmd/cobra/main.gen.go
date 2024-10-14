@@ -148,6 +148,38 @@ func fieldSetter[T any, V any](extract func(string) (T, error), converter func(T
 	setter(convertedValue)
 	return nil
 }
+func parsePersistFlags(cmd *cobra.Command, executor any) error {
+	if reflect.TypeOf(executor).Kind() != reflect.Pointer {
+		return fmt.Errorf("expected pointer to a structure, but got '%s' of '%T'", reflect.TypeOf(executor).Kind().String(), executor)
+	}
+	if reflect.TypeOf(executor).Elem().Kind() != reflect.Struct {
+		return fmt.Errorf("expected executor shuld be a structure type, but got  '%s' of '%T'", reflect.TypeOf(executor).Elem().Kind(), executor)
+	}
+	target := reflect.ValueOf(executor).Elem()
+	sourceType := reflect.TypeOf(executor).Elem()
+	for i := 0; i < sourceType.NumField(); i++ {
+		field := sourceType.Field(i)
+		flagName, isPersistent, _, ok := flagName(field.Tag, "flag")
+		if !ok || !isPersistent {
+			continue
+		}
+		if !target.Field(i).CanSet() {
+			return fmt.Errorf("unable to set '%s' flag to '%T.%s', the field should be addressible and exported", flagName, executor, field.Name)
+		}
+		setter, ok := resolveSetter(field)
+		if !ok {
+			return fmt.Errorf("the receiver type '%T.%s' is not primitive, 'time.Duration', or implements 'MarshalFlag(string) error' method", executor, field.Name)
+		}
+		flagSet := cmd.PersistentFlags()
+		if err := setter(flagSet, target.Field(i), flagName); err != nil {
+			flagSet = cmd.InheritedFlags()
+			if err := setter(flagSet, target.Field(i), flagName); err != nil {
+				return fmt.Errorf("unable to set flag %s: %w", flagName, err)
+			}
+		}
+	}
+	return nil
+}
 func parseFlags(cmd *cobra.Command, executor any) error {
 	if reflect.TypeOf(executor).Kind() != reflect.Pointer {
 		return fmt.Errorf("expected pointer to a structure, but got '%s' of '%T'", reflect.TypeOf(executor).Kind().String(), executor)
@@ -178,7 +210,7 @@ func parseFlags(cmd *cobra.Command, executor any) error {
 			return fmt.Errorf("the receiver type '%T.%s' is not primitive, 'time.Duration', or implements 'MarshalFlag(string) error' method", executor, field.Name)
 		}
 		if err := setter(flagSet, target.Field(i), flagName); err != nil {
-			return fmt.Errorf("unable to set value to '%T.%s': %w", executor, field.Name, err)
+			return fmt.Errorf("unable to set flag %s: %w", flagName, err)
 		}
 	}
 	return nil

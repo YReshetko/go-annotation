@@ -54,13 +54,29 @@ var astTypesToFlagType = map[string]FlagType{
 	"int16":   Int16FlagType,
 	"int32":   Int32FlagType,
 	"int64":   Int64FlagType,
-	"unt":     UintFlagType,
-	"unt8":    Uint8FlagType,
-	"unt16":   Uint16FlagType,
-	"unt32":   Uint32FlagType,
-	"unt64":   Uint64FlagType,
+	"uint":    UintFlagType,
+	"uint8":   Uint8FlagType,
+	"uint16":  Uint16FlagType,
+	"uint32":  Uint32FlagType,
+	"uint64":  Uint64FlagType,
 	"float32": Float32FlagType,
 	"float64": Float64FlagType,
+}
+
+var flagTypeStringDefaultValues = map[FlagType]string{
+	BoolFlagType:    "false",
+	IntFlagType:     "0",
+	Int8FlagType:    "0",
+	Int16FlagType:   "0",
+	Int32FlagType:   "0",
+	Int64FlagType:   "0",
+	UintFlagType:    "0",
+	Uint8FlagType:   "0",
+	Uint16FlagType:  "0",
+	Uint32FlagType:  "0",
+	Uint64FlagType:  "0",
+	Float32FlagType: "0",
+	Float64FlagType: "0",
 }
 
 func FlagTypeByASTPrimitive(astType string) FlagType {
@@ -69,6 +85,14 @@ func FlagTypeByASTPrimitive(astType string) FlagType {
 		return StringFlagType
 	}
 	return t
+}
+
+func FlagTypeDefaultValue(flagType FlagType) string {
+	v, ok := flagTypeStringDefaultValues[flagType]
+	if !ok {
+		return ""
+	}
+	return v
 }
 
 type Flag struct {

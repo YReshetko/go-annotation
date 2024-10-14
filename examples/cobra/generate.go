@@ -1,2 +1,2 @@
-//go:generate go run cmd/main.go .
+//go:generate go run cmd/annotation/main.go .
 package main

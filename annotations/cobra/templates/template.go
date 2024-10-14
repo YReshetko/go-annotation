@@ -46,7 +46,6 @@ func ExecuteTemplate(tpl *template.Template, data any) ([]byte, error) {
 	out := bytes.NewBufferString("")
 	for ok := scanner.Scan(); ok; ok = scanner.Scan() {
 		line := scanner.Text()
-		fmt.Println(line)
 		if len(strings.TrimSpace(line)) == 0 {
 			continue
 		}

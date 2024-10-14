@@ -9,7 +9,6 @@ import (
 // RootCommand with
 // @Cobra(
 //
-//	build = "user,ci",
 //	usage = "cli",
 //	example = "cli [-F file | -D dir] ... [-f format] profile",
 //	short = "Root command of the application (short)",
@@ -35,7 +34,7 @@ func (c RootCommand) PreRun(cmd *cobra.Command, agrs []string) error {
 }
 
 // PersistPreRun - @CobraPersistPreRun command
-func (c RootCommand) PersistPreRun(cmd *cobra.Command, agrs []string) error {
-	fmt.Println("Root persist pre run command", c)
-	return nil
-}
+//func (c RootCommand) PersistPreRun(cmd *cobra.Command, agrs []string) error {
+//	fmt.Println("Root persist pre run command", c)
+//	return nil
+//}

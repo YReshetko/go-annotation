@@ -170,11 +170,17 @@ func getFlag(field *ast.Field) (templates.Flag, bool) {
 		fieldTypeName = fieldTypeIdent.Name
 	}
 
+	flagType := templates.FlagTypeByASTPrimitive(fieldTypeName)
+	defaultValue := tagValues["default"]
+	if len(defaultValue) == 0 {
+		defaultValue = templates.FlagTypeDefaultValue(flagType)
+	}
+
 	return templates.Flag{
-		Type:         templates.FlagTypeByASTPrimitive(fieldTypeName),
+		Type:         flagType,
 		Name:         flagNameValues[0],
 		Shorthand:    tagValues["short"],
-		DefaultValue: tagValues["default"],
+		DefaultValue: defaultValue,
 		Description:  tagValues["description"],
 		IsRequired:   slices.Contains(flagNameValues, "required"),
 		IsPersistent: slices.Contains(flagNameValues, "persist"),

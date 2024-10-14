@@ -48,7 +48,7 @@ func init() {
 	{{- if .IsPersistentRun }}Persistent{{ end }}
 	{{- if .IsPreRun }}Pre{{ else }}{{ if .IsPostRun }}Post{{ end }}{{ end }}RunE = func(cmd *cobra.Command, args []string) error {
 		executor := {{ .ExecutorPackageAlias }}.{{ .ExecutorTypeName }}{}
-		if err := parseFlags(cmd, &executor); err != nil {
+		if err := {{- if .IsPersistentRun }}parsePersistFlags{{ else }}parseFlags{{ end }}(cmd, &executor); err != nil {
 			return err
 		}
 		{{ if .HasReturn -}}

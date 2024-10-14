@@ -114,6 +114,13 @@ func (c *Cache) GetInitCommands() (map[buildTagName]templates.InitCommands, erro
 		out[name] = tmp
 	}
 
+	if len(out) == 1 {
+		for k, v := range out {
+			v.BuildTag = ""
+			out[k] = v
+		}
+	}
+
 	//printJson(builds)
 	return out, nil
 }
@@ -139,7 +146,7 @@ func (c *importCache) add(pkg string) string {
 	}
 	pathItems := strings.Split(pkg, "/")
 	alias := pathItems[len(pathItems)-1]
-	if _, ok := c.aliases[alias]; !ok {
+	if _, ok := c.aliases[alias]; ok {
 		alias = fmt.Sprintf("_imp%d", c.index)
 		c.index++
 	}
