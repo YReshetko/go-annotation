@@ -19,6 +19,8 @@ type Meta interface {
 	FileName() string
 	// PackageName returns current package name
 	PackageName() string
+	// LocalPackageOf returns the file package
+	LocalPackage() string
 }
 
 // Lookup provides API to retrieve related AST entities by dependency for a node at processing time

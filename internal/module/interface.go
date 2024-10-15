@@ -12,6 +12,7 @@ import (
 
 type Module interface {
 	Root() string
+	LocalPackageOf(path string) string
 	Files() []string
 }
 
@@ -48,11 +49,12 @@ func Find(m Module, importPath string) (Module, error) {
 // Module.Files - [internal/module/lookup.go...]
 // importPath - github.com/YReshetko/go-annotation/internal/module
 // Then the function returns all files in internal/module dir with package prefix:
-// 		"github.com/YReshetko/go-annotation/internal/module/load.go"
-//		"github.com/YReshetko/go-annotation/internal/module/interface.go"
-//		"github.com/YReshetko/go-annotation/internal/module/interface_test.go"
-//		"github.com/YReshetko/go-annotation/internal/module/lookup.go"
-//		"github.com/YReshetko/go-annotation/internal/module/module.go"
+//
+//	"github.com/YReshetko/go-annotation/internal/module/load.go"
+//	"github.com/YReshetko/go-annotation/internal/module/interface.go"
+//	"github.com/YReshetko/go-annotation/internal/module/interface_test.go"
+//	"github.com/YReshetko/go-annotation/internal/module/lookup.go"
+//	"github.com/YReshetko/go-annotation/internal/module/module.go"
 func FilesInPackage(m Module, importPath string) []string {
 	if m == nil {
 		return nil
@@ -89,10 +91,11 @@ func FilesInPackage(m Module, importPath string) []string {
 // Module.Files - [internal/lookup/imports.go...]
 // dir - internal/lookup
 // Then the function returns all files in internal/lookup dir with no prefixes:
-//		"internal/lookup/imports.go"
-//		"internal/lookup/imports_test.go"
-//		"internal/lookup/types.go"
-//		"internal/lookup/types_test.go"
+//
+//	"internal/lookup/imports.go"
+//	"internal/lookup/imports_test.go"
+//	"internal/lookup/types.go"
+//	"internal/lookup/types_test.go"
 func FilesInDir(m Module, dir string) []string {
 	dir = filepath.Clean(dir)
 	return OfSlice(m.Files()).

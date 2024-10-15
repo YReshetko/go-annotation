@@ -3,6 +3,7 @@ package module
 import (
 	"github.com/YReshetko/go-annotation/internal/environment"
 	"github.com/YReshetko/go-annotation/internal/logger"
+	"github.com/YReshetko/go-annotation/internal/utils/imports"
 	"strings"
 
 	"golang.org/x/mod/modfile"
@@ -34,6 +35,10 @@ func (m *module) Files() []string {
 
 func (m *module) Root() string {
 	return m.root
+}
+
+func (m *module) LocalPackageOf(path string) string {
+	return imports.Of(path).Right(imports.Of(environment.GoHome())).String()
 }
 
 func (m *module) isFromModCache() bool {
