@@ -1,0 +1,8 @@
+package main
+import (
+	"github.com/spf13/cobra"
+	"git.com/some/path"
+	"git.com/some/another/path"
+	)
+func init() {
+}

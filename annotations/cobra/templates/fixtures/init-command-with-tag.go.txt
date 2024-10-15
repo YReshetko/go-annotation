@@ -1,0 +1,69 @@
+//go:build test
+package main
+import (
+	"github.com/spf13/cobra"
+	a1 "git.com/some/path"
+	a2 "git.com/some/another/path"
+	)
+func init() {
+	root = &cobra.Command{}
+	root.Use = "use"
+	root.Example = "example"
+	root.Short = "short"
+	root.Long = "long"
+	root.SilenceUsage = true
+	root.SilenceErrors = true
+	root.Flags().StringP("flag1", "f", "10", "my flag 1")
+	root.Flags().Int("flag2", 10, "my flag 2")
+	root.Flags().BoolP("flag3", "f", true, "my flag 3")
+	if err := root.MarkFlagRequired("flag3"); err != nil {
+		fatal(err)
+	}
+	root.PersistentFlags().Float32P("flag4", "f", 3.14, "my flag 4")
+	root.PersistentFlags().Uint32("flag5", 3, "my flag 5")
+	if err := root.MarkPersistentFlagRequired("flag5"); err != nil {
+		fatal(err)
+	}
+	child := &cobra.Command{}
+	child.Use = ""
+	child.RunE = func(cmd *cobra.Command, args []string) error {
+		executor := a1.ChildCommandExecutor{}
+		if err := parseFlags(cmd, &executor); err != nil {
+			return err
+		}
+		executor.Run1(cmd, args)
+		return nil
+	}
+	child.PreRunE = func(cmd *cobra.Command, args []string) error {
+		executor := a1.ChildCommandExecutor{}
+		if err := parseFlags(cmd, &executor); err != nil {
+			return err
+		}
+		executor.Run2(cmd, args)
+		return nil
+	}
+	child.PostRunE = func(cmd *cobra.Command, args []string) error {
+		executor := a1.ChildCommandExecutor{}
+		if err := parseFlags(cmd, &executor); err != nil {
+			return err
+		}
+		executor.Run3(cmd, args)
+		return nil
+	}
+	child.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
+		executor := a1.ChildCommandExecutor{}
+		if err := parsePersistFlags(cmd, &executor); err != nil {
+			return err
+		}
+		executor.Run4(cmd, args)
+		return nil
+	}
+	child.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		executor := a1.ChildCommandExecutor{}
+		if err := parsePersistFlags(cmd, &executor); err != nil {
+			return err
+		}
+		return executor.Run5(cmd, args)
+	}
+	root.AddCommand(child)
+}
