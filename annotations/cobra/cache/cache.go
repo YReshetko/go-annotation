@@ -3,6 +3,7 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"slices"
 	"strings"
 
@@ -144,7 +145,7 @@ func (c *importCache) add(pkg string) string {
 	if ok {
 		return imp.Alias
 	}
-	pathItems := strings.Split(pkg, "/")
+	pathItems := strings.Split(pkg, string(os.PathSeparator))
 	alias := pathItems[len(pathItems)-1]
 	if _, ok := c.aliases[alias]; ok {
 		alias = fmt.Sprintf("_imp%d", c.index)
@@ -153,7 +154,7 @@ func (c *importCache) add(pkg string) string {
 	c.aliases[alias] = struct{}{}
 	c.imports[pkg] = templates.Import{
 		Alias:   alias,
-		Package: pkg,
+		Package: strings.ReplaceAll(pkg, string(os.PathSeparator), "/"),
 	}
 	return alias
 }
