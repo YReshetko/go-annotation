@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -137,9 +138,26 @@ func addCobraCommand(node annotation.Node, cache *cache.Cache) error {
 	return nil
 }
 
+func cutFlagTags(tags string) []string {
+	exps := []*regexp.Regexp{
+		regexp.MustCompile(`flag:".*?"`),
+		regexp.MustCompile(`short:".*?"`),
+		regexp.MustCompile(`default:".*?"`),
+		regexp.MustCompile(`description:".*?"`),
+	}
+	out := make([]string, 0, 4)
+	for _, exp := range exps {
+		s := exp.FindString(tags)
+		if len(s) > 0 {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
 func getFlag(field *ast.Field) (templates.Flag, bool) {
 	tagValues := map[string]string{}
-	for _, value := range strings.Split(strings.Trim(field.Tag.Value, "`"), " ") {
+	for _, value := range cutFlagTags(strings.Trim(field.Tag.Value, "`")) {
 		kv := strings.Split(value, ":")
 		if len(kv) != 2 {
 			continue
