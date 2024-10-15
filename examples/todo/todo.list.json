@@ -1,7 +1,7 @@
 [
 	{
 		"code_line": "Internal string\n",
-		"message": "Refactor the structure\n",
+		"message": "Переработать логику\n",
 		"type_decl": "ExploringTodoComment"
 	}
 ]
