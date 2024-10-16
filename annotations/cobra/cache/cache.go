@@ -30,6 +30,45 @@ type item struct {
 	Command  annotations.Cobra
 }
 
+func (i *item) cmp(it *item) int {
+	if i == nil || it == nil {
+		return 0
+	}
+	if i.Command.Usage < it.Command.Usage {
+		return -1
+	}
+	if i.Command.Usage > it.Command.Usage {
+		return 1
+	}
+	return 0
+}
+
+func (i *item) sort() {
+	if i == nil {
+		return
+	}
+
+	slices.SortFunc(i.Handlers, func(a, b templates.Handler) int {
+		if a.MethodName < b.MethodName {
+			return -1
+		}
+		if a.MethodName > b.MethodName {
+			return 1
+		}
+		return 0
+	})
+
+	slices.SortFunc(i.Flags, func(a, b templates.Flag) int {
+		if a.Name < b.Name {
+			return -1
+		}
+		if a.Name > b.Name {
+			return 1
+		}
+		return 0
+	})
+}
+
 func (c *Cache) AddHandler(pkg, typeName string, handler templates.Handler) {
 	k := key{
 		pkg:      pkg,
@@ -76,9 +115,59 @@ type sortedItem struct {
 	BuildTags []string
 }
 
+func (i *sortedItem) sort() {
+	if i == nil {
+		i.Value.sort()
+	}
+}
+
+func (i *sortedItem) cmp(it *sortedItem) int {
+	if i == nil || it == nil {
+		return 0
+	}
+	return i.Value.cmp(&it.Value)
+}
+
+func (i *sortedItem) copy() sortedItem {
+	if i == nil {
+		return sortedItem{}
+	}
+	handlers := make([]templates.Handler, len(i.Value.Handlers))
+	copy(handlers, i.Value.Handlers)
+	flags := make([]templates.Flag, len(i.Value.Flags))
+	copy(flags, i.Value.Flags)
+	usage := make([]string, len(i.Usage))
+	copy(usage, i.Usage)
+	tags := make([]string, len(i.BuildTags))
+	copy(tags, i.BuildTags)
+	return sortedItem{
+		Key: i.Key,
+		Value: item{
+			Handlers: handlers,
+			Flags:    flags,
+			Command:  i.Value.Command,
+		},
+		Usage:     usage,
+		BuildTags: tags,
+	}
+}
+
 type itemNode struct {
 	Value sortedItem
 	Nodes []*itemNode
+}
+
+func (n *itemNode) sort() {
+	if n == nil {
+		return
+	}
+	n.Value.sort()
+	slices.SortFunc(n.Nodes, func(a, b *itemNode) int {
+		return a.Value.cmp(&b.Value)
+	})
+	for _, node := range n.Nodes {
+		node.sort()
+	}
 }
 
 func (n *itemNode) add(usages []string, item sortedItem) bool {
@@ -110,6 +199,7 @@ func (c *Cache) GetInitCommands() (map[buildTagName]templates.InitCommands, erro
 	}
 	out := map[buildTagName]templates.InitCommands{}
 	for name, node := range builds {
+		node.sort()
 		tmp := initCommands(node)
 		tmp.BuildTag = name
 		out[name] = tmp
@@ -236,7 +326,8 @@ func buildTrees(sortedItems []sortedItem) (map[buildTagName]*itemNode, error) {
 			if !ok {
 				root = &itemNode{}
 			}
-			ok = root.add(s.Usage, s)
+			ns := s.copy()
+			ok = root.add(ns.Usage, ns)
 			if !ok {
 				return nil, fmt.Errorf("unable to find parent command for %s", strings.Join(s.Usage, " "))
 			}
