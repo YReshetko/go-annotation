@@ -9,13 +9,13 @@ package main
 import (
 	commands "github.com/YReshetko/go-annotation/examples/cobra/commands"
 	create "github.com/YReshetko/go-annotation/examples/cobra/commands/create"
-	_imp1 "github.com/YReshetko/go-annotation/examples/cobra/commands/create/resources"
+	_imp2 "github.com/YReshetko/go-annotation/examples/cobra/commands/create/resources"
 	delete "github.com/YReshetko/go-annotation/examples/cobra/commands/delete"
-	resources "github.com/YReshetko/go-annotation/examples/cobra/commands/delete/resources"
+	_imp1 "github.com/YReshetko/go-annotation/examples/cobra/commands/delete/resources"
 	get "github.com/YReshetko/go-annotation/examples/cobra/commands/get"
-	_imp2 "github.com/YReshetko/go-annotation/examples/cobra/commands/get/resources"
+	_imp0 "github.com/YReshetko/go-annotation/examples/cobra/commands/get/resources"
 	update "github.com/YReshetko/go-annotation/examples/cobra/commands/update"
-	_imp0 "github.com/YReshetko/go-annotation/examples/cobra/commands/update/resources"
+	resources "github.com/YReshetko/go-annotation/examples/cobra/commands/update/resources"
 	"github.com/spf13/cobra"
 )
 
@@ -25,12 +25,12 @@ func init() {
 	root.Example = "cli [-F file | -D dir] ... [-f format] profile"
 	root.Short = "Root command of the application (short)"
 	root.Long = "Root command of the application (long)"
-	root.Flags().StringP("output", "o", "", "output")
+	root.Flags().StringP("output", "o", "", "output file name")
 	if err := root.MarkFlagRequired("output"); err != nil {
 		fatal(err)
 	}
-	root.Flags().Int("num", 42, "some")
-	root.PersistentFlags().BoolP("is-ok", "i", true, "some")
+	root.Flags().Int("num", 42, "some number for command")
+	root.PersistentFlags().BoolP("is-ok", "i", true, "some persistent flag")
 	root.RunE = func(cmd *cobra.Command, args []string) error {
 		executor := commands.RootCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
@@ -46,52 +46,50 @@ func init() {
 		return executor.PreRun(cmd, args)
 	}
 	_cmd1 := &cobra.Command{}
-	_cmd1.Use = "delete"
-	_cmd1.Example = "cli delete [-R strategy] resource"
-	_cmd1.Short = "Delete command of the application (short)"
-	_cmd1.Long = "Delete command of the application (long)"
+	_cmd1.Use = "update"
+	_cmd1.Example = "cli update [-F field -V value] resource"
+	_cmd1.Short = "Update command of the application (short)"
+	_cmd1.Long = "Update command of the application (long)"
+	_cmd1.Flags().StringP("first", "f", "", "Flag 1 description")
+	_cmd1.Flags().IntP("second", "s", 42, "Flag 2 description")
+	_cmd1.Flags().Uint8P("third", "t", 8, "Flag 3 description")
+	_cmd1.PersistentFlags().Float64("fourth", 3.14, "PI")
+	_cmd1.Flags().Bool("fifth", false, "")
+	_cmd1.Flags().Uint16("sixth", 0, "")
+	_cmd1.PersistentFlags().StringP("dur", "d", "12s", "Duration flag description")
 	_cmd1.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := delete.DeleteCommand{}
+		executor := update.UpdateCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.Run(cmd, args)
 	}
+	_cmd1.PreRunE = func(cmd *cobra.Command, args []string) error {
+		executor := update.UpdateCommand{}
+		if err := parseFlags(cmd, &executor); err != nil {
+			return err
+		}
+		return executor.PreRun(cmd, args)
+	}
 	_cmd1.PostRunE = func(cmd *cobra.Command, args []string) error {
-		executor := delete.DeleteCommand{}
+		executor := update.UpdateCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.PostRun(cmd, args)
 	}
-	_cmd1.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
-		executor := delete.DeleteCommand{}
-		if err := parsePersistFlags(cmd, &executor); err != nil {
-			return err
-		}
-		return executor.PersistPostRun(cmd, args)
-	}
 	root.AddCommand(_cmd1)
 	_cmd2 := &cobra.Command{}
-	_cmd2.Use = "user"
-	_cmd2.Example = "cli delete user -g male -n John -l Doe -s 5"
-	_cmd2.Short = "Delete user command of the application (short)"
-	_cmd2.Long = "Delete user command of the application (long)"
-	_cmd2.Flags().StringP("gender", "g", "", "User")
-	if err := _cmd2.MarkFlagRequired("gender"); err != nil {
-		fatal(err)
-	}
-	_cmd2.Flags().StringP("name", "n", "", "User")
-	if err := _cmd2.MarkFlagRequired("name"); err != nil {
-		fatal(err)
-	}
-	_cmd2.Flags().StringP("lastname", "l", "", "User")
-	_cmd2.Flags().StringP("state", "s", "", "State")
-	if err := _cmd2.MarkFlagRequired("state"); err != nil {
+	_cmd2.Use = "address"
+	_cmd2.Example = "cli update address -a 'Some street, 14'"
+	_cmd2.Short = "Update address command of the application (short)"
+	_cmd2.Long = "Update address command of the application (long)"
+	_cmd2.Flags().StringP("addr", "a", "", "")
+	if err := _cmd2.MarkFlagRequired("addr"); err != nil {
 		fatal(err)
 	}
 	_cmd2.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := resources.UserCommand{}
+		executor := resources.AddressCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -99,16 +97,25 @@ func init() {
 	}
 	_cmd1.AddCommand(_cmd2)
 	_cmd3 := &cobra.Command{}
-	_cmd3.Use = "address"
-	_cmd3.Example = "cli delete address -a 'Some street, 14'"
-	_cmd3.Short = "Delete address command of the application (short)"
-	_cmd3.Long = "Delete address command of the application (long)"
-	_cmd3.Flags().StringP("addr", "a", "", "Address")
-	if err := _cmd3.MarkFlagRequired("addr"); err != nil {
+	_cmd3.Use = "user"
+	_cmd3.Example = "cli update user -g male -n John -l Doe -s 5"
+	_cmd3.Short = "Get user command of the application (short)"
+	_cmd3.Long = "Get user command of the application (long)"
+	_cmd3.Flags().StringP("gender", "g", "", "")
+	if err := _cmd3.MarkFlagRequired("gender"); err != nil {
+		fatal(err)
+	}
+	_cmd3.Flags().StringP("name", "n", "", "User name")
+	if err := _cmd3.MarkFlagRequired("name"); err != nil {
+		fatal(err)
+	}
+	_cmd3.Flags().StringP("lastname", "l", "", "User last name")
+	_cmd3.Flags().StringP("state", "s", "", "State is a value from 1 to 5")
+	if err := _cmd3.MarkFlagRequired("state"); err != nil {
 		fatal(err)
 	}
 	_cmd3.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := resources.AddressCommand{}
+		executor := resources.UserCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -116,54 +123,61 @@ func init() {
 	}
 	_cmd1.AddCommand(_cmd3)
 	_cmd4 := &cobra.Command{}
-	_cmd4.Use = "update"
-	_cmd4.Example = "cli update [-F field -V value] resource"
-	_cmd4.Short = "Update command of the application (short)"
-	_cmd4.Long = "Update command of the application (long)"
-	_cmd4.Flags().StringP("first", "f", "", "Flag")
-	_cmd4.Flags().IntP("second", "s", 42, "Flag")
-	_cmd4.Flags().Uint8P("third", "t", 8, "Flag")
-	_cmd4.PersistentFlags().Float64("fourth", 3.14, "PI")
+	_cmd4.Use = "get"
+	_cmd4.Example = "cli get [-F format] resource"
+	_cmd4.Short = "Get command of the application (short)"
+	_cmd4.Long = "Get command of the application (long)"
+	_cmd4.Flags().StringP("first", "f", "", "Flag 1 description")
+	_cmd4.Flags().IntP("second", "s", 42, "Flag 2 description")
+	_cmd4.Flags().Uint8P("third", "t", 8, "Flag 3 description")
+	_cmd4.Flags().Float64("fourth", 3.14, "PI")
 	_cmd4.Flags().Bool("fifth", false, "")
 	_cmd4.Flags().Uint16("sixth", 0, "")
-	_cmd4.PersistentFlags().StringP("dur", "d", "12s", "Duration")
+	_cmd4.PersistentFlags().StringP("dur", "d", "12s", "Duration flag description")
 	_cmd4.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := update.UpdateCommand{}
+		executor := get.GetCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.Run(cmd, args)
 	}
 	_cmd4.PreRunE = func(cmd *cobra.Command, args []string) error {
-		executor := update.UpdateCommand{}
+		executor := get.GetCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.PreRun(cmd, args)
 	}
 	_cmd4.PostRunE = func(cmd *cobra.Command, args []string) error {
-		executor := update.UpdateCommand{}
+		executor := get.GetCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.PostRun(cmd, args)
 	}
+	_cmd4.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
+		executor := get.GetCommand{}
+		if err := parsePersistFlags(cmd, &executor); err != nil {
+			return err
+		}
+		return executor.PersistPostRun(cmd, args)
+	}
 	root.AddCommand(_cmd4)
 	_cmd5 := &cobra.Command{}
 	_cmd5.Use = "user"
-	_cmd5.Example = "cli update user -g male -n John -l Doe -s 5"
+	_cmd5.Example = "cli get user -g male -n John -l Doe -s 5"
 	_cmd5.Short = "Get user command of the application (short)"
 	_cmd5.Long = "Get user command of the application (long)"
-	_cmd5.Flags().StringP("gender", "g", "", "User")
+	_cmd5.Flags().StringP("gender", "g", "", "")
 	if err := _cmd5.MarkFlagRequired("gender"); err != nil {
 		fatal(err)
 	}
-	_cmd5.Flags().StringP("name", "n", "", "User")
+	_cmd5.Flags().StringP("name", "n", "", "User name")
 	if err := _cmd5.MarkFlagRequired("name"); err != nil {
 		fatal(err)
 	}
-	_cmd5.Flags().StringP("lastname", "l", "", "User")
-	_cmd5.Flags().StringP("state", "s", "", "State")
+	_cmd5.Flags().StringP("lastname", "l", "", "User last name")
+	_cmd5.Flags().StringP("state", "s", "", "State is a value from 1 to 5")
 	if err := _cmd5.MarkFlagRequired("state"); err != nil {
 		fatal(err)
 	}
@@ -177,10 +191,10 @@ func init() {
 	_cmd4.AddCommand(_cmd5)
 	_cmd6 := &cobra.Command{}
 	_cmd6.Use = "address"
-	_cmd6.Example = "cli update address -a 'Some street, 14'"
-	_cmd6.Short = "Update address command of the application (short)"
-	_cmd6.Long = "Update address command of the application (long)"
-	_cmd6.Flags().StringP("addr", "a", "", "Address")
+	_cmd6.Example = "cli get address -a 'Some street, 14'"
+	_cmd6.Short = "Get address command of the application (short)"
+	_cmd6.Long = "Get address command of the application (long)"
+	_cmd6.Flags().StringP("addr", "a", "", "")
 	if err := _cmd6.MarkFlagRequired("addr"); err != nil {
 		fatal(err)
 	}
@@ -193,26 +207,26 @@ func init() {
 	}
 	_cmd4.AddCommand(_cmd6)
 	_cmd7 := &cobra.Command{}
-	_cmd7.Use = "create"
-	_cmd7.Example = "cli create [-F file] resource"
-	_cmd7.Short = "Create command of the application (short)"
-	_cmd7.Long = "Create command of the application (long)"
+	_cmd7.Use = "delete"
+	_cmd7.Example = "cli delete [-R strategy] resource"
+	_cmd7.Short = "Delete command of the application (short)"
+	_cmd7.Long = "Delete command of the application (long)"
 	_cmd7.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := create.CreateCommand{}
+		executor := delete.DeleteCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.Run(cmd, args)
 	}
 	_cmd7.PostRunE = func(cmd *cobra.Command, args []string) error {
-		executor := create.CreateCommand{}
+		executor := delete.DeleteCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.PostRun(cmd, args)
 	}
 	_cmd7.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
-		executor := create.CreateCommand{}
+		executor := delete.DeleteCommand{}
 		if err := parsePersistFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -220,25 +234,16 @@ func init() {
 	}
 	root.AddCommand(_cmd7)
 	_cmd8 := &cobra.Command{}
-	_cmd8.Use = "user"
-	_cmd8.Example = "cli create user -g male -n John -l Doe -s 5"
-	_cmd8.Short = "Create user command of the application (short)"
-	_cmd8.Long = "Create user command of the application (long)"
-	_cmd8.Flags().StringP("gender", "g", "", "User")
-	if err := _cmd8.MarkFlagRequired("gender"); err != nil {
-		fatal(err)
-	}
-	_cmd8.Flags().StringP("name", "n", "", "User")
-	if err := _cmd8.MarkFlagRequired("name"); err != nil {
-		fatal(err)
-	}
-	_cmd8.Flags().StringP("lastname", "l", "", "User")
-	_cmd8.Flags().StringP("state", "s", "", "State")
-	if err := _cmd8.MarkFlagRequired("state"); err != nil {
+	_cmd8.Use = "address"
+	_cmd8.Example = "cli delete address -a 'Some street, 14'"
+	_cmd8.Short = "Delete address command of the application (short)"
+	_cmd8.Long = "Delete address command of the application (long)"
+	_cmd8.Flags().StringP("addr", "a", "", "")
+	if err := _cmd8.MarkFlagRequired("addr"); err != nil {
 		fatal(err)
 	}
 	_cmd8.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := _imp1.UserCommand{}
+		executor := _imp1.AddressCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -246,16 +251,25 @@ func init() {
 	}
 	_cmd7.AddCommand(_cmd8)
 	_cmd9 := &cobra.Command{}
-	_cmd9.Use = "address"
-	_cmd9.Example = "cli create address -a 'Some street, 14'"
-	_cmd9.Short = "Create address command of the application (short)"
-	_cmd9.Long = "Create address command of the application (long)"
-	_cmd9.Flags().StringP("addr", "a", "", "Address")
-	if err := _cmd9.MarkFlagRequired("addr"); err != nil {
+	_cmd9.Use = "user"
+	_cmd9.Example = "cli delete user -g male -n John -l Doe -s 5"
+	_cmd9.Short = "Delete user command of the application (short)"
+	_cmd9.Long = "Delete user command of the application (long)"
+	_cmd9.Flags().StringP("gender", "g", "", "")
+	if err := _cmd9.MarkFlagRequired("gender"); err != nil {
+		fatal(err)
+	}
+	_cmd9.Flags().StringP("name", "n", "", "User name")
+	if err := _cmd9.MarkFlagRequired("name"); err != nil {
+		fatal(err)
+	}
+	_cmd9.Flags().StringP("lastname", "l", "", "User last name")
+	_cmd9.Flags().StringP("state", "s", "", "State is a value from 1 to 5")
+	if err := _cmd9.MarkFlagRequired("state"); err != nil {
 		fatal(err)
 	}
 	_cmd9.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := _imp1.AddressCommand{}
+		executor := _imp1.UserCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -263,40 +277,26 @@ func init() {
 	}
 	_cmd7.AddCommand(_cmd9)
 	_cmd10 := &cobra.Command{}
-	_cmd10.Use = "get"
-	_cmd10.Example = "cli get [-F format] resource"
-	_cmd10.Short = "Get command of the application (short)"
-	_cmd10.Long = "Get command of the application (long)"
-	_cmd10.Flags().StringP("first", "f", "", "Flag")
-	_cmd10.Flags().IntP("second", "s", 42, "Flag")
-	_cmd10.Flags().Uint8P("third", "t", 8, "Flag")
-	_cmd10.Flags().Float64("fourth", 3.14, "PI")
-	_cmd10.Flags().Bool("fifth", false, "")
-	_cmd10.Flags().Uint16("sixth", 0, "")
-	_cmd10.PersistentFlags().StringP("dur", "d", "12s", "Duration")
+	_cmd10.Use = "create"
+	_cmd10.Example = "cli create [-F file] resource"
+	_cmd10.Short = "Create command of the application (short)"
+	_cmd10.Long = "Create command of the application (long)"
 	_cmd10.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := get.GetCommand{}
+		executor := create.CreateCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.Run(cmd, args)
 	}
-	_cmd10.PreRunE = func(cmd *cobra.Command, args []string) error {
-		executor := get.GetCommand{}
-		if err := parseFlags(cmd, &executor); err != nil {
-			return err
-		}
-		return executor.PreRun(cmd, args)
-	}
 	_cmd10.PostRunE = func(cmd *cobra.Command, args []string) error {
-		executor := get.GetCommand{}
+		executor := create.CreateCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
 		return executor.PostRun(cmd, args)
 	}
 	_cmd10.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
-		executor := get.GetCommand{}
+		executor := create.CreateCommand{}
 		if err := parsePersistFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -304,16 +304,25 @@ func init() {
 	}
 	root.AddCommand(_cmd10)
 	_cmd11 := &cobra.Command{}
-	_cmd11.Use = "address"
-	_cmd11.Example = "cli get address -a 'Some street, 14'"
-	_cmd11.Short = "Get address command of the application (short)"
-	_cmd11.Long = "Get address command of the application (long)"
-	_cmd11.Flags().StringP("addr", "a", "", "Address")
-	if err := _cmd11.MarkFlagRequired("addr"); err != nil {
+	_cmd11.Use = "user"
+	_cmd11.Example = "cli create user -g male -n John -l Doe -s 5"
+	_cmd11.Short = "Create user command of the application (short)"
+	_cmd11.Long = "Create user command of the application (long)"
+	_cmd11.Flags().StringP("gender", "g", "", "")
+	if err := _cmd11.MarkFlagRequired("gender"); err != nil {
+		fatal(err)
+	}
+	_cmd11.Flags().StringP("name", "n", "", "User name")
+	if err := _cmd11.MarkFlagRequired("name"); err != nil {
+		fatal(err)
+	}
+	_cmd11.Flags().StringP("lastname", "l", "", "User last name")
+	_cmd11.Flags().StringP("state", "s", "", "State is a value from 1 to 5")
+	if err := _cmd11.MarkFlagRequired("state"); err != nil {
 		fatal(err)
 	}
 	_cmd11.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := _imp2.AddressCommand{}
+		executor := _imp2.UserCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
@@ -321,25 +330,16 @@ func init() {
 	}
 	_cmd10.AddCommand(_cmd11)
 	_cmd12 := &cobra.Command{}
-	_cmd12.Use = "user"
-	_cmd12.Example = "cli get user -g male -n John -l Doe -s 5"
-	_cmd12.Short = "Get user command of the application (short)"
-	_cmd12.Long = "Get user command of the application (long)"
-	_cmd12.Flags().StringP("gender", "g", "", "User")
-	if err := _cmd12.MarkFlagRequired("gender"); err != nil {
-		fatal(err)
-	}
-	_cmd12.Flags().StringP("name", "n", "", "User")
-	if err := _cmd12.MarkFlagRequired("name"); err != nil {
-		fatal(err)
-	}
-	_cmd12.Flags().StringP("lastname", "l", "", "User")
-	_cmd12.Flags().StringP("state", "s", "", "State")
-	if err := _cmd12.MarkFlagRequired("state"); err != nil {
+	_cmd12.Use = "address"
+	_cmd12.Example = "cli create address -a 'Some street, 14'"
+	_cmd12.Short = "Create address command of the application (short)"
+	_cmd12.Long = "Create address command of the application (long)"
+	_cmd12.Flags().StringP("addr", "a", "", "")
+	if err := _cmd12.MarkFlagRequired("addr"); err != nil {
 		fatal(err)
 	}
 	_cmd12.RunE = func(cmd *cobra.Command, args []string) error {
-		executor := _imp2.UserCommand{}
+		executor := _imp2.AddressCommand{}
 		if err := parseFlags(cmd, &executor); err != nil {
 			return err
 		}
