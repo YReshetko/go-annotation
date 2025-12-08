@@ -64,7 +64,7 @@ func (c *chainLookup) find(m *module, importPath string) (*module, error) {
 		return cmod, nil
 	}
 	err := multierror.Append(lookupErr, chainErr)
-	return cmod, err.ErrorOrNil()
+	return nil, err.ErrorOrNil()
 }
 
 func (c *chainLookup) add(lookup moduleLookup) {
