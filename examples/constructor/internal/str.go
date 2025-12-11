@@ -85,8 +85,9 @@ func (s StackQueueStruct[T, V]) postConstruct3() {
 }
 
 // @PostConstruct(priority="5")
-func (s StackQueueStruct[T, V]) postConstruct1() {
+func (s StackQueueStruct[T, V]) postConstruct1() error {
 	fmt.Println(s, "-1")
+	return nil
 }
 
 // @PostConstruct(priority="6")
@@ -117,7 +118,7 @@ type StructEmbedding[T comparable, V constraints.Integer] struct {
 }
 
 func Validation() {
-	_ = NewStackQueueStructOptional[int, int](
+	_, _ = NewStackQueueStructOptional[int, int](
 		WithSQSA[int, int]([]int{}),
 		WithSQSBuff[int, int](bytes.Buffer{}),
 		WithSQSFn[int, int](func(i **SomeStructure) AnotherStruct {
@@ -128,7 +129,7 @@ func Validation() {
 	)
 
 	nsb := NewStackQueueStructBuilder[bool, int]()
-	_ = nsb.BuildSimpField(false).BuildAField(stack[bool]{}).Build()
+	_, _ = nsb.BuildSimpField(false).BuildAField(stack[bool]{}).Build()
 
 	fp := false
 	c := complex128(10)

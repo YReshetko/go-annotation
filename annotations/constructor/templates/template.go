@@ -18,13 +18,32 @@ package {{ .PackageName }}
 `
 
 const constructorTemplate = `
-func {{ .FunctionName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]{{ end }}({{ range .Arguments }} {{.}}, {{ end }}) {{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
+func {{ .FunctionName -}}
+     {{- if .IsParametrized }}[{{ .ParameterConstraints }}]{{ end -}}
+	 (
+	 {{- range .Arguments }} 
+	 {{.}}, 
+	 {{- end }}
+	 )
+	 {{- if .ReturnsError -}}
+     ({{- if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}, error) {
+	 {{- else }}
+	 {{- if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
+	 {{- end }}
 	returnValue := {{ if .IsPointer }}&{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
-		{{ range .Fields }} {{ .Name }}: {{ .Value }},
-	{{ end }}}
-	{{ range .PostConstructs }}returnValue.{{ . }}()
+	{{- range .Fields }} 
+		{{ .Name }}: {{ .Value }},
+	{{- end }}
+	}
+	{{ range .PostConstructs }}
+	{{ if .ReturnsError -}}
+	if err := returnValue.{{ .MethodName }}(); err != nil {return returnValue, err}
+	{{- else -}}
+	returnValue.{{ .MethodName }}()
+	{{- end -}}
 	{{ end }}
-	return returnValue
+	
+	return returnValue{{ if .ReturnsError -}}, nil {{ end }}
 }
 `
 
@@ -33,16 +52,30 @@ type {{ .OptionalTypeName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}
 `
 
 const optionalConstructorTemplate = `
-func {{ .FunctionName }}{{ if .IsParametrized }}[{{ .ParameterConstraints }}]{{ end }}(opts ...{{ .OptionalTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}){{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
+func {{ .FunctionName -}}
+	{{- if .IsParametrized }}[{{ .ParameterConstraints }}]{{ end -}}
+	(opts ...{{ .OptionalTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }})
+	{{- if .ReturnsError -}}
+	({{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}, error) {
+	{{- else -}}
+	{{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
+	{{- end }}
 	rt := &{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}{
 		{{ range .Fields }} {{ .Name }}: {{ .Value }},
 		{{ end }}}
 	for _, o := range opts{
 		o(rt)
 	}
-	{{ range .PostConstructs }}rt.{{ . }}()
+	{{ $isPostConstruct := .IsPointer }}
+	{{ range .PostConstructs }}
+	{{ if .ReturnsError -}}
+	if err := rt.{{ .MethodName }}(); err != nil {return {{ if not $isPostConstruct }}*{{ end }}rt, err }
+	{{- else -}}
+	rt.{{ .MethodName }}()
+	{{- end -}}
 	{{ end }}
-	return {{ if not .IsPointer }}*{{ end }}rt
+
+	return {{ if not .IsPointer }}*{{ end }}rt{{ if .ReturnsError -}}, nil {{ end }}
 }
 `
 
@@ -75,17 +108,31 @@ func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end
 `
 
 const builderBuildMethodTemplate = `
-func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}) {{ .BuildMethodName }}() {{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}{
+func (b *{{ .BuilderTypeName }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}) {{ .BuildMethodName }}() 
+	{{- if .ReturnsError -}}
+	({{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}, error) {
+	{{- else -}}
+	{{ if .IsPointer }}*{{ end }}{{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }} {
+	{{- end }}
+
 	out := {{ .ReturnType }}{{ if .IsParametrized }}[{{ .Parameters }}]{{ end }}{}
 	{{ range .Fields }}if b.{{ .FakeName }} == nil {
 		b.{{ .FakeName }} = {{ .Value }}
 	}
 	{{ end }}
 	{{ range .Arguments }}out.{{ .Name }} = b.{{ .FakeName }}
+	{{ end -}}
+
+	{{ $isPostConstruct := .IsPointer }}
+	{{ range .PostConstructs }}
+	{{ if .ReturnsError -}}
+	if err := out.{{ .MethodName }}(); err != nil {return {{ if $isPostConstruct }}&{{ end }}out, err }
+	{{- else -}}
+	out.{{ .MethodName }}()
+	{{- end -}}
 	{{ end }}
-	{{ range .PostConstructs }}out.{{ . }}()
-	{{ end }}
-	return {{ if .IsPointer }}&{{ end }}out
+
+	return {{ if .IsPointer }}&{{ end }}out{{ if .ReturnsError -}}, nil {{ end }}
 }
 `
 

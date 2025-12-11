@@ -1,11 +1,12 @@
 package generators
 
 import (
+	"go/ast"
+	"sort"
+
 	"github.com/YReshetko/go-annotation/annotations/constructor/annotations"
 	"github.com/YReshetko/go-annotation/annotations/constructor/templates"
 	annotation "github.com/YReshetko/go-annotation/pkg"
-	"go/ast"
-	"sort"
 )
 
 type OptionalValues struct {
@@ -20,7 +21,8 @@ type OptionalValues struct {
 		Name  string
 		Value string
 	}
-	PostConstructs []string
+	PostConstructs []PostConstructValues
+	ReturnsError   bool
 }
 
 type WithValues struct {
@@ -51,7 +53,8 @@ func (g *OptionalGenerator) Generate(pcvs []PostConstructValues) ([]byte, []Impo
 		FunctionName:     g.annotation.BuildConstructorName(g.node.Name.String()),
 		ReturnType:       g.node.Name.Name,
 		IsPointer:        g.annotation.Type == "pointer",
-		PostConstructs:   postConstructMethods(pcvs),
+		PostConstructs:   sortPostConstructs(pcvs),
+		ReturnsError:     hasAnyErrorReturned(pcvs),
 	}
 	lookup := g.annotatedNode.Lookup().FindImportByAlias
 	p, pdi := extractParameters(g.node, lookup)
