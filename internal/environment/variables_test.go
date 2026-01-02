@@ -10,10 +10,10 @@ import (
 
 func TestGoPath(t *testing.T) {
 	// TODO Make it independent on local environment
-	assert.Equal(t, "/home/yury/go", environment.GoPath())
+	assert.Equal(t, "/home/yury/go/go1.25.5", environment.GoPath())
 }
 
 func TestModPath(t *testing.T) {
 	// TODO Make it independent on local environment
-	assert.Equal(t, "/home/yury/go/pkg/mod", environment.ModPath())
+	assert.Equal(t, "/home/yury/go/go1.25.5/pkg/mod", environment.ModPath())
 }

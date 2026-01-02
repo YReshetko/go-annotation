@@ -10,7 +10,7 @@ help: ## Display the Makefile helper
 setup: ## Downloads and installs all libraries and dependencies for the project
 	@go mod tidy
 	@go get -d -v ./...
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2
+	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.7.2
 
 .PHONY: test
 test: ## Runs unit tests against the codebase
